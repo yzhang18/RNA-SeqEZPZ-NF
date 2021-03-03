@@ -1,0 +1,59 @@
+# modified 2021/02/02 by CT to determine nsub and avoid error in vst
+PCAPlot <- function (object, group=NULL,counts.trans,varInt,typeTrans, ntop = min(500, nrow(counts.trans)), 
+                     col, batch=NULL,outfile = TRUE,batchRem=FALSE) 
+{
+  if (typeTrans == "VST") {
+	# calculate the number of rows with counts >5 to determine nsub and avoid error
+	nsub=sum(rowMeans(assays(object)$counts)>5)
+	if(nsub>=1000){
+	 deseq.trans <- vst(object,blind=FALSE,nsub=1000)
+	}else{
+	 deseq.trans <- varianceStabilizingTransformation(object,blind=FALSE)
+	}
+  }else  {
+    deseq.trans <- rlog(object,blind=FALSE)
+  } 
+
+  if (outfile & !batchRem){ 
+
+    png(filename = "figures/PCA.png", width = cairoSizeWrapper(1800 * 
+         2), height = cairoSizeWrapper(1800), res = 300)
+  }  
+  if (outfile & batchRem){ 
+    png(filename = "figures/PCA_batchRem.png", width = cairoSizeWrapper(1800 * 
+         2), height = cairoSizeWrapper(1800), res = 300)
+  }
+  if(batchRem){
+    mat <- assay(deseq.trans)
+    mat <- limma::removeBatchEffect(mat,colData(deseq.trans)[,batch])
+    assay(deseq.trans) <- mat
+  }
+  
+  pcaData <- DESeq2::plotPCA(deseq.trans, intgroup = varInt ,ntop=ntop,returnData=TRUE)
+  percentVar <- round(100 * attr(pcaData, "percentVar"))
+  ngroup=length(unique(group))
+  if(!is.null(batch)) {
+    pcaData$batch = colData(deseq.trans)[,batch]
+    p<-ggplot(pcaData, aes(x = PC1, y = PC2, color = group, shape = batch)) +
+      geom_point(size =5) +
+      xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+      ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+      coord_fixed() +
+	  scale_color_manual(values=col)
+  } else{
+    p<-ggplot(pcaData, aes(x = PC1, y = PC2, color = group,shape=batch)) +
+      geom_point(size =5) +
+      xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+      ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+      coord_fixed() +
+	  scale_color_manual(values=col)
+  }
+  print(p)
+  rv = apply(counts.trans, 1, var, na.rm = TRUE)
+  pca = prcomp(t(counts.trans[order(rv, decreasing = TRUE), 
+                              ][1:ntop, ]))
+  if (outfile) 
+    dev.off()
+  return(invisible(pcaData$x))
+}
+

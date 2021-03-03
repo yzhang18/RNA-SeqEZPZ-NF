@@ -942,7 +942,7 @@ observeEvent(input$insert_set, {
 		set.seed(1)
 		s4 <- tab0.s4.up()
 		venn.up <- plot_euler(s4=s4,colors=colors,cex=cex,venn.opts=venn.opts,title="Up-regulation")
-		s4 <- tab0.s4.up()
+		s4 <- tab0.s4.dwn()
 		venn.dwn <- plot_euler(s4=s4,colors=colors,cex=cex,venn.opts=venn.opts,title="Down-regulation")
 		grid.arrange(venn.up,venn.dwn,padding=unit(pad,"line"),ncol=2,
 			top="",left="",right="",bottom="")

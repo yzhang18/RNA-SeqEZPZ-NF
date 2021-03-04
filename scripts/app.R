@@ -356,8 +356,8 @@ ui <- fluidPage(
   # server
 server <- function(input, output,session) {
 
-write.table(isolate(session$clientData$url_port),file="/mnt/outputs/port.txt",
-	quote=FALSE,row.names=FALSE,col.names=FALSE)
+#write.table(isolate(session$clientData$url_port),file="/mnt/outputs/port.txt",
+#	quote=FALSE,row.names=FALSE,col.names=FALSE)
 
 #### processing > 3 groups
 value <- reactiveVal(2)

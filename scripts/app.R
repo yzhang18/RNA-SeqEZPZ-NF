@@ -1,5 +1,8 @@
 # this app is based on compare_gene_list.R
 
+# remove user library path to avoid confusion
+if(length(.libPaths())>1) .libPaths(.libPaths()[-1])
+
 library(shiny)
 library(GeneOverlap)
 library(gridExtra)

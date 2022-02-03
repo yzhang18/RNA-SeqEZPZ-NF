@@ -143,6 +143,8 @@ img_name=rnaseq-pipe-container.sif
 $(cp $img_dir/scripts/run_align_create_tracks_rna.sh $log_dir/run_align_create_tracks_rna.sh)
 
 # getting samples info from samples.txt
+$(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)
+$(mv samples_tmp.txt samples.txt)
 groupname_array=($(awk '!/#/ {print $1}' samples.txt))
 repname_array=($(awk '!/#/ {print $3}' samples.txt))
 email=$(awk '!/#/ {print $5;exit}' samples.txt | tr -d '[:space:]')

@@ -1,24 +1,29 @@
 #!/bin/bash
 
+# script connecting all the individual scripts to do full rnaseq analysis
 # How to run
 # cd <project_dir>
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
+# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
 # Examples:
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
+# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
 # to run with specific time limit:
-# /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_rnaseq_full.sh \
-#        time=DD-HH:MM:SS &> run_rnaseq_full.out &
+# 	/apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh \
+#        	time=DD-HH:MM:SS &> run_rnaseq_full.out &
 # 
-# by default, alignment is done to human reference genome hg19 unless specified 'genome=hg38':
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_rnaseq_full.sh genome=hg38 &> run_rnaseq_full.out &
+# by default, alignment is done to human reference genome hg19 unless specified using 'genome=hg38':
+# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh genome=hg38 &> run_rnaseq_full.out &
 # 
 # or to do nothing but echo all commands:
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_rnaseq_full.sh run=echo &> run_rnaseq_full.out &
+# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh run=echo &> run_rnaseq_full.out &
 # 
-# or to change a bunch of parameters:
-# /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_rnaseq_full.sh run=echo \
-#     idr_pval=0.08 mean_treat=100 log2fc=2 padj=1 time=DD-HH:MM:SS \
+# or to change a bunch of parameters at once:
+# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh run=echo \
+#     padj=1 time=DD-HH:MM:SS \
 # &> run_rnaseq_full.out &
+# 
+# or to run and printing all trace commands (i.e. set -x):
+# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh run=debug &> run_rnaseq_full.out &
+
 
 #set -x
 set -e
@@ -29,7 +34,7 @@ dummy=$(dos2unix -k samples.txt)
 # set 'run' to echo to simply echoing all commands
 # set to empty to run all commands
 # clear variable used for optional arguments
-unset run time
+unset run time PYTHONPATH
 # get command line arguments
 while [[ "$#" -gt 0 ]]; do
 	if [[ $1 == "run"* ]];then
@@ -50,7 +55,7 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 
 	if [[ $1 == "help" ]];then
-		echo 'usage: bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out'
+		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun differential RNA-seq analysis'
@@ -61,10 +66,13 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e '\tdisplay this help and exit'
 		echo run=echo
 		echo -e "\tdo not run, echo all commands. Default is running all commands"
+		echo -e "if set to "debug", it will run with "set -x""
+		echo -e ""
 		echo -e "genome=hg19"
 		echo -e "\tset reference genome. Default is hg19. Other option: hg38"
 		echo padj=0.05
-		echo -e "\tset FDR of binding sites (as calculated by DiffBind/DESeq2) < 0.05. Default=0.05"
+		echo -e "\tset FDR of differential genes (as calculated by DESeq2) < 0.05. Default=0.05"
+		echo -e ""
 		echo -e "time=<default>"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
 		echo -e "Default=1-00:00:00"
@@ -72,6 +80,7 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 done
 # set default parameters
+debug=0
 if [[ -z "$run" ]];then
 	run=
 fi
@@ -84,13 +93,20 @@ fi
 if [[ -z "$ref_ver" ]];then
 	ref_ver=hg19
 fi
+if [[ $run == "debug"* ]];then
+        set -x
+        run=
+        debug=1
+fi
+
 
 # project directory
 proj_dir=$(pwd)
 cd $proj_dir
 
 # singularity image directory
-img_dir=/gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity
+# found based on location of this script
+img_dir=$(dirname $(dirname $(readlink -f $0)))
 
 # IMPORTANT: It is assumed that:
 # scripts to run analysis are in $img_dir/scripts

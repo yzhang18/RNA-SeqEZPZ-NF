@@ -1,17 +1,23 @@
 #!/bin/bash
 
+# script to trim fastq files and run quality control
 # How to run:
 # cd <project_dir>
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_trim_qc.sh &> run_trim_qc.out &
+# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh &> run_trim_qc.out &
 # Examples:
-# cd ~/Steve/virtual_server/project1
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_trim_qc.sh &> run_trim_qc.out &
+# cd project1
+# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh &> run_trim_qc.out &
 #
 # or to run with specific time limit:
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_trim_qc.sh time=DD-HH:MM:SS  &> run_trim_qc.out &
+# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh time=DD-HH:MM:SS  &> run_trim_qc.out &
 #
 # or to do nothing but echo all commands:
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_trim_qc.sh run=echo &> run_trim_qc.out &
+# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh run=echo &> run_trim_qc.out &
+#
+# or to run and printing all trace commands (i.e. set -x):
+# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh run=debug &> run_trim_qc.out &
+#
+
 
 #set -x
 set -e
@@ -21,6 +27,8 @@ echo Start trimming reads for low quality/adapter sequences then run Quality Con
 # converting samples.txt to unix format to remove any invisible extra characters
 dummy=$(dos2unix -k samples.txt)
 
+# clear python path to prevent mixed up of python packages
+unset PYTHONPATH
 # clear variable used for optional arguments
 unset run time
 # get command line arguments
@@ -35,7 +43,7 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 
 	if [[ $1 == "help" ]];then
-		echo 'usage: bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out'
+		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun trim and qc for RNA-seq samples'
@@ -46,6 +54,7 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e '\tdisplay this help and exit'
 		echo run=echo
 		echo -e "\tdo not run, echo all commands. Default is running all commands"
+                echo -e "if set to "debug", it will run with "set -x""
 		echo -e "time=<default>"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
 		echo -e "Default=1-00:00:00"
@@ -53,12 +62,19 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 done
 # set default parameters
+debug=0
 if [[ -z "$run" ]];then
 	run=
 fi
 if [[ -z "$time" ]];then
 	time=1-00:00:00
 fi
+if [[ $run == "debug"* ]];then
+        set -x
+        run=
+        debug=1
+fi
+
 # project directory
 proj_dir=$(pwd)
 cd $proj_dir
@@ -78,7 +94,8 @@ echo "All other logs and scripts ran will be stored in $log_dir"
 echo ""
 
 # singularity image directory
-img_dir=/gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity
+# find based on location of this script
+img_dir=$(dirname $(dirname $(readlink -f $0)))
 
 # singularity image name
 img_name=rnaseq-pipe-container.sif
@@ -125,7 +142,8 @@ for file in $(find fastq/ -type f -print);do
 		# $groupname $repname $string_pair1 \
 		# $string_pair2
 		# execute inside singularity
-		tmp_jid=$(SINGULARITYENV_run=$run \
+		tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
+		SINGULARITYENV_run=$run \
 		SINGULARITYENV_prefix=$prefix \
 		SINGULARITYENV_file=$file \
 		SINGULARITYENV_string_pair1=$string_pair1 \
@@ -152,10 +170,11 @@ for file in $(find fastq/ -type f -print);do
 done
 
 ##### run multiqc
-jid2=$(SINGULARITYENV_run=$run \
-		SINGULARITYENV_proj_dir=$proj_dir \
-		SINGULARITYENV_input_dir=/mnt/outputs/fastqc_rslt \
-		$run sbatch --output=$log_dir/multiqc.out \
+jid2=$(SINGULARITYENV_PYTHONPATH= \
+	SINGULARITYENV_run=$run \
+	SINGULARITYENV_proj_dir=$proj_dir \
+	SINGULARITYENV_input_dir=/mnt/outputs/fastqc_rslt \
+	$run sbatch --output=$log_dir/multiqc.out \
 		--job-name=multiqc \
 		--partition=general \
 		--mail-type=FAIL \

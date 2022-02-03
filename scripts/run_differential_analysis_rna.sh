@@ -2,27 +2,34 @@
 
 # How to run
 # cd <project_dir>
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
 # Examples:
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+#
 # by default, alignment is done to human reference genome hg19 (genome=hg19) unless specified genome=hg38:
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_differential_analysis_rna.sh genome=hg38 &> run_differential_analysis_rna.out &
+# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh genome=hg38 &> run_differential_analysis_rna.out &
+#
 # or to do nothing but echo all commands:
-# bash /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_differential_analysis_rna.sh run=echo &> run_differential_analysis_rna.out &
-# change a bunch of parameters:
-# /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/scripts/run_differential_analysis_rna.sh run=echo \
-#     idr_pval=0.08 mean_treat=100 log2fc=2 padj=1 \
+# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh run=echo &> run_differential_analysis_rna.out &
+#
+# or to change FDR of differential analysis:
+# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh padj=1 \
 # &> run_differential_analysis_rna.out &
+#
+# or to run and printing all trace commands (i.e. set -x):
+# bash ~/Steve/virtual_server/cut-n-tag-singularity/scripts/run_create_tracks.sh run=debug &> run_create_tracks.out &
 
 #set -x
 set -e
 date
 # converting samples.txt to unix format to remove any invisible extra characters
 dummy=$(dos2unix -k samples.txt)
-# set 'run' to echo to simply echoing all commands
-# set to empty to run all commands
+
 # clear variable used for optional arguments
-unset run idr_pval log2fc padj mean_treat
+unset run time padj
+# clear PYTHONPATH so packages are not confused when running the container
+unset PYTHONPATH
+
 # get command line arguments
 while [[ "$#" -gt 0 ]]; do
 	if [[ $1 == "run"* ]];then
@@ -42,7 +49,7 @@ while [[ "$#" -gt 0 ]]; do
 		shift
 	fi
 	if [[ $1 == "help" ]];then
-		echo 'usage: bash /home/gdlessnicklab/share/simg/rna-singularity/scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
+		echo 'usage: bash rna-singularity/scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun differential RNA-seq analysis'
@@ -53,6 +60,8 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e '\tdisplay this help and exit'
 		echo run=echo
 		echo -e "\tdo not run, echo all commands. Default is running all commands"
+		echo -e "if set to "debug", it will run with "set -x""
+		echo -e ""
 		echo -e "genome=hg19"
 		echo -e "\tset reference genome. Default is hg19. Other option: hg38"
 		echo -e ""
@@ -65,6 +74,7 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 done
 # set default parameters
+debug=0
 if [[ -z "$run" ]];then
 	run=
 fi
@@ -77,6 +87,12 @@ fi
 if [[ -z "$ref_ver" ]];then
 	ref_ver=hg19
 fi
+if [[ $run == "debug"* ]];then
+        set -x
+        run=
+        debug=1
+fi
+
 # specify version of reference genome options hg19 or hg38
 if [[ $ref_ver == 'hg19' ]]; then
 	gtf_file=Homo_sapiens.GRCh37.75.gtf
@@ -110,7 +126,8 @@ echo ""
 ncpus=15
 
 # singularity image directory
-img_dir=/gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity
+# find based on location of this script
+img_dir=$(dirname $(dirname $(readlink -f $0)))
 
 # singularity image name
 img_name=rnaseq-pipe-container.sif
@@ -143,25 +160,26 @@ for i in "${!groupname_array[@]}"; do
 	# 
 	cd $proj_dir
 	# set -x
-	tmp_jid=$(SINGULARITYENV_run=$run \
-			SINGULARITYENV_ncpus=$ncpus \
-			SINGULARITYENV_prefix=$prefix \
-			SINGULARITYENV_gtf_file=$gtf_file \
-			SINGULARITYENV_ref_ver=$ref_ver \
-			$run sbatch --output=$log_dir/featureCounts_${prefix}.out \
-				--cpus-per-task $ncpus \
-				--partition=himem \
-				--mail-type=FAIL \
-				--mail-user=$email \
-				--job-name=feature_ct \
-				--time=$time \
-				--mem=32G \
-				--wrap "singularity exec \
-					--bind $proj_dir:/mnt \
-					--bind $img_dir/scripts:/scripts \
-					--bind $img_dir/ref:/ref \
-					$img_dir/$img_name \
-					/bin/bash /scripts/feature_counts_simg.sbatch"| cut -f 4 -d' ')
+	tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
+		SINGULARITYENV_run=$run \
+		SINGULARITYENV_ncpus=$ncpus \
+		SINGULARITYENV_prefix=$prefix \
+		SINGULARITYENV_gtf_file=$gtf_file \
+		SINGULARITYENV_ref_ver=$ref_ver \
+		$run sbatch --output=$log_dir/featureCounts_${prefix}.out \
+			--cpus-per-task $ncpus \
+			--partition=himem \
+			--mail-type=FAIL \
+			--mail-user=$email \
+			--job-name=feature_ct \
+			--time=$time \
+			--mem=32G \
+			--wrap "singularity exec \
+				--bind $proj_dir:/mnt \
+				--bind $img_dir/scripts:/scripts \
+				--bind $img_dir/ref:/ref \
+				$img_dir/$img_name \
+				/bin/bash /scripts/feature_counts_simg.sbatch"| cut -f 4 -d' ')
 	echo "Counting number of reads in each feature for $prefix job id: $tmp_jid"
 	echo "See log in $log_dir/featureCounts_${prefix}.out"
 	echo ""
@@ -184,10 +202,11 @@ req_mem=${req_mem}G
 echo "Running differential genes analysis using DESeq2 and SARTools...."
 echo "See log is in $log_dir/run_sartools.out"
 echo ""
-jid6=$(SINGULARITYENV_run=$run \
-		SINGULARITYENV_padj=$padj \
-		SINGULARITYENV_email=$email \
-		$run sbatch --output=$log_dir/run_sartools.out \
+jid6=$(SINGULARITYENV_PYTHONPATH= \
+	SINGULARITYENV_run=$run \
+	SINGULARITYENV_padj=$padj \
+	SINGULARITYENV_email=$email \
+	$run sbatch --output=$log_dir/run_sartools.out \
 		--job-name=run_sartools \
 		--partition=himem \
 		--mail-type=FAIL \
@@ -220,7 +239,8 @@ if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; the
 fi	
 				
 ##### re-run final multiqc
-jid7=$(SINGULARITYENV_run=$run \
+jid7=$(SINGULARITYENV_PYTHONPATH= \
+	SINGULARITYENV_run=$run \
 		SINGULARITYENV_proj_dir=$proj_dir \
 		SINGULARITYENV_input_dir=/mnt/outputs \
 		$run sbatch --output=$log_dir/multiqc.out \

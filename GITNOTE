@@ -1,0 +1,4 @@
+before changes will be made in master branch. After that these changes will be pushed to apps_opt branch
+The above was done because of file location etc that was different in master versus apps_opt branch.
+However, I have now realized it's not the purpose of git to do this. So, now I'm going to make changes in master branch
+and make path relative to scripts' location. I haven't figured out what to do with comments.

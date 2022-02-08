@@ -2,31 +2,108 @@
 
 # script to create genome STAR index
 # How to run:
-# cd <project_dir>
+# cd <my_project_dir>
 # bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh &> run_star_index.out &
 # Examples:
 # cd ~/project1
 # bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh &> run_star_index.out &
 #
-# or to do nothing but echo all commands:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh echo &> run_star_index.out &
+# or to run with specific time limit:
+# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh time=DD-HH:MM:SS  &> run_star_index.out &
 #
+# by default, alignment is done to human reference genome hg19 unless specified genome=hg38:
+# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh genome=hg38 &> run_align.out &
+# available genome hg19 or hg38
+# if using other genome, genome file (.fasta or fa) and gtf file need to be in <my_project_dir>/ref/<genome.name> dir
+# and set as follows: genome=<genome_name> 
+#
+# or to do nothing but echo all commands:
+# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh run=echo &> run_star_index.out &
+#
+# or to run and printing all trace commands (i.e. set -x):
+# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh run=debug &> run_star_index.out &
 
 # set -x
+set -e
 date
-# set 'run' to echo to simply echoing all commands
-# set to empty to run all commands
-if [ "$#" -eq 1 ] ; then
-  run=$1
-else
-  run=
+echo ""
+
+# clear python path to avoid mix up
+unset PYTHONPATH
+# get command line arguments
+while [[ "$#" -gt 0 ]]; do
+        if [[ $1 == "run"* ]];then
+                run=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
+        if [[ $1 == "time"* ]];then
+                time=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
+        if [[ $1 == "genome"* ]];then
+                ref_ver=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
+
+        if [[ $1 == "help" ]];then
+                echo 'usage:  /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh &> run_star_index.out & '
+                echo ''
+                echo DESCRIPTION
+                echo -e '\tcreating genome index using STAR'
+                echo ''
+                echo OPTIONS
+                echo ''
+                echo help
+                echo -e '\tdisplay this help and exit'
+                echo run=echo
+                echo -e "\tdo not run, echo all commands. Default is running all commands"
+                echo -e "if set to "debug", it will run with "set -x""
+                echo ''
+                echo -e "genome=hg19"
+                echo -e "\tset reference genome. Default is hg19. Other options: hg38"
+                echo -e "\tif using genome other than hg19 or hg38, need to put .fa in ref/<genome-name> dir"
+                echo -e "genome=<genome-name> and <genome-name>.fa must be in ref/<genome-name>/<genome.name>.fa"
+                echo -e ""
+                echo -e "time=<default>"
+                echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
+                echo -e "Default=1-00:00:00"
+                exit
+        fi
+done
+
+# set default parameters
+# variable to turn on tracing i.e. set -x
+debug=0
+echo $run
+if [[ -z "$run" ]];then
+        run=
 fi
+if [[ -z "$time" ]];then
+        time=1-00:00:00
+fi
+if [[ -z "$ref_ver" ]];then
+        ref_ver=hg19
+fi
+
+if [[ $run == "debug"* ]];then
+        set -x
+        run=
+        debug=1
+fi
+
 # project directory
 proj_dir=$(pwd)
 cd $proj_dir
 
+# this will be used to print messages as jobs are running
+out_file=$proj_dir/run_star_index.out
+
 # specify number of cpus for star, bamCompare and bigwigCompare
 ncpus=20
+max_cpu=$(lscpu | grep 'CPU(s):' | head -n 1 | awk '{print $2}')
+if [[ $max_cpu -lt $ncpus ]]; then
+	ncpus=$max_cpu
+fi
 
 # singularity image directory
 # find based on location of this script
@@ -38,33 +115,70 @@ img_name=rnaseq-pipe-container.sif
 # scripts to run analysis are in $img_dir/scripts
 # reference to run analysis are in $img_dir/ref
 
-# specify version of reference genome options hg19 or hg38
-ref_ver=hg38
-if [[ $ref_ver == 'hg19' ]]; then
-	gtf_file=Homo_sapiens.GRCh37.75.gtf
-	fasta_file=human_g1k_v37_decoy.fasta
-elif [[ $ref_ver == 'hg38' ]]; then
-	fasta_file=hg38.analysisSet.fa
-	gtf_file=hg38.refGene.gtf
+echo -e "Generating STAR genome index and get chromosome sizes file.\n"
+skip_run_star_index=0
+### specify reference genome
+# if ref genome is not in $img_dir/ref, set genome_dir to  project dir
+genome_dir=$img_dir/ref/$ref_ver
+if [[ ! -d $genome_dir ]];then
+	genome_dir=$proj_dir/ref/$ref_ver
+	if [[ ! -d $genome_dir ]];then
+		echo -e "${genome_dir} not found. Please put genome file and gtf file in ${genome_dir}. \n"
+	fi
 fi
+gtf_file=$(find $genome_dir -name *.gtf | xargs basename)
+fasta_file=$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 # this is where star index will be stored
-work_dir=$img_dir/ref/${ref_ver}/STAR_index
+star_index_dir=$genome_dir/STAR_index
+work_dir=$star_index_dir
 echo "all outputs will be stored in $work_dir"
-if [ ! -d $work_dir ]; then
-	mkdir -p $work_dir
+# check whether STAR_index exist and not empty
+if [ -d "$work_dir" ];then
+	if [ -z "$(ls -A $work_dir)" ];then
+		echo -e "Generating STAR index.\n"
+	else
+		# genome index exist, exit script
+        	echo -e "run_star_index.sh was not run since genome index already exist.\n"
+        	skip_run_star_index=1
+	fi
+else
+	# genome index doesn't exist, run script
+	echo -e "Generating STAR index.\n"
 fi
-log_dir=$work_dir/logs
+
+log_dir=$proj_dir/outputs/logs
 if [ ! -d $log_dir ]; then
 	mkdir -p $log_dir
 fi
+
+if [[ ! $skip_run_star_index == 1 ]];then
 echo "See $proj_dir/run_star_index.out to check the analysis progress"
 echo "all other logs will be stored in $log_dir"
 echo "log files contain all the commands run"
 echo ""
 
-#### generate index ####
+# copying this script for records
+$(cp $img_dir/scripts/run_star_index.sh $log_dir/run_star_index.sh)
 
-tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
+# converting samples.txt to unix format
+dummy=$(dos2unix -k samples.txt)
+# getting samples info from samples.txt
+# remove trailing tabs, leading and trailing quotations
+$(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)
+$(mv samples_tmp.txt samples.txt)
+groupname_array=($(awk '!/#/ {print $1}' samples.txt))
+repname_array=($(awk '!/#/ {print $3}' samples.txt))
+email=$(awk '!/#/ {print $5;exit}' samples.txt | tr -d '[:space:]')
+filename_string_array=($(awk '!/#/ {print $6}' samples.txt))
+string_pair1_array=($(awk '!/#/ {print $7}' samples.txt))
+string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
+
+if [[ $email == "NA" ]];then
+        email=
+fi
+
+#### generate index ####
+jid0=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_run=$run \
 		SINGULARITYENV_ncpus=$ncpus \
 		SINGULARITYENV_prefix=$prefix \
@@ -76,14 +190,35 @@ tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
 			--partition=himem \
 			--mail-type=FAIL \
 			--mail-user=$email \
-			--job-name=star \
+			--job-name=star_index \
 			--wrap "singularity exec \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
-				--bind $img_dir/ref:/ref \
+				--bind $genome_dir:/ref \
 				$img_dir/$img_name \
 				/bin/bash /scripts/star_index_simg.sbatch"| cut -f 4 -d' ')
-echo "Generating STAR index job id: $tmp_jid"
+echo "Generating STAR index job id: $jid0"
 echo ""
-#set +x	
 
+# check to make sure jobs are completed. Print messages if not.
+msg_ok="run_star_index.sh completed successfully.\n"
+msg_ok="${msg_ok}STAR index files are in ${genome_dir}/STAR_index.\n"
+msg_fail="One of the steps in run_star_index.sh failed\n"
+jid_to_check=$jid0
+check_run_star_index_jid=$($run sbatch \
+        --output=$log_dir/check_run_star_index.out \
+        --mail-type=END \
+        --mail-user=$email \
+        --wait \
+        --time=$time \
+        --parsable \
+        --job-name=check_run_star_index \
+        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail",debug="$debug" \
+	--wrap "bash $img_dir/scripts/check_job.sh")
+fi # skip run_star_index
+cp $proj_dir/samples.txt $log_dir/
+# reset run variable accordingly
+if [ $debug == 1 ];then
+	run=debug
+fi
+set +x

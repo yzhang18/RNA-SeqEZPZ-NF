@@ -25,8 +25,6 @@ date
 # converting samples.txt to unix format to remove any invisible extra characters
 dummy=$(dos2unix -k samples.txt)
 
-# clear variable used for optional arguments
-unset run time padj
 # clear PYTHONPATH so packages are not confused when running the container
 unset PYTHONPATH
 
@@ -49,7 +47,7 @@ while [[ "$#" -gt 0 ]]; do
 		shift
 	fi
 	if [[ $1 == "help" ]];then
-		echo 'usage: bash rna-singularity/scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
+		echo 'usage: bash /apps/opt/rnaseq-pipeline//scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun differential RNA-seq analysis'
@@ -93,16 +91,22 @@ if [[ $run == "debug"* ]];then
         debug=1
 fi
 
-# specify version of reference genome options hg19 or hg38
-if [[ $ref_ver == 'hg19' ]]; then
-	gtf_file=Homo_sapiens.GRCh37.75.gtf
-	fasta_file=human_g1k_v37_decoy.fasta
-	genome_size=2864785220
-elif [[ $ref_ver == 'hg38' ]]; then
-	fasta_file=hg38.analysisSet.fa
-	gtf_file=hg38.ensGene.gtf
-	genome_size=2913022398
+echo -e "\nRunning differential analysis with $ref_ver as reference. \n"
+
+### specify reference genome
+# if ref genome is not in $img_dir/ref, set genome_dir to  project dir
+genome_dir=$img_dir/ref/$ref_ver
+if [[ ! -d $genome_dir ]];then
+        genome_dir=$proj_dir/ref/$ref_ver
 fi
+gtf_file=$(find $genome_dir -name *.gtf | xargs basename)
+fasta_file=$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
+chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
+star_index_dir=$genome_dir/STAR_index
+
+# calculate genome_size
+genome_size=$(grep -v ">" $genome_dir/$fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
+chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
 
 # project directory
 proj_dir=$(pwd)
@@ -122,8 +126,12 @@ echo "See $proj_dir/run_differential_analysis_rna.out to check the analysis prog
 echo "All other logs and scripts ran will be stored in $log_dir"
 echo ""
 
-# specify number of cpus for star, bamCompare and bigwigCompare, featureCounts
+# specify number of cpus for featureCounts
 ncpus=15
+max_cpu=$(lscpu | grep 'CPU(s):' | head -n 1 | awk '{print $2}')
+if [[ $max_cpu -lt $ncpus ]]; then
+        ncpus=$max_cpu
+fi
 
 # singularity image directory
 # find based on location of this script
@@ -173,13 +181,13 @@ for i in "${!groupname_array[@]}"; do
 			--partition=himem \
 			--mail-type=FAIL \
 			--mail-user=$email \
-			--job-name=feature_ct \
+			--job-name=featureCounts \
 			--time=$time \
 			--mem=32G \
 			--wrap "singularity exec \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
-				--bind $img_dir/ref:/ref \
+				--bind $genome_dir:/ref \
 				$img_dir/$img_name \
 				/bin/bash /scripts/feature_counts_simg.sbatch"| cut -f 4 -d' ')
 	echo "Counting number of reads in each feature for $prefix job id: $tmp_jid"
@@ -290,3 +298,7 @@ jid8=$($run sbatch --dependency=afterok:$jid7 \
 		--job-name=run_differential_analysis_rna \
 		--export message="$message",proj_dir=$proj_dir \
 		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_differential_analysis_rna.out"| cut -f 4 -d' ')
+
+if [ $debug == 1 ];then
+	run=debug
+fi

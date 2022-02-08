@@ -20,9 +20,8 @@ run.DESeq2 <- function (counts, target, varInt, batch = NULL, locfunc = "median"
     levelRef <- levels(colData(dds)[, varInt])[comp[1]]
     levelTest <- levels(colData(dds)[, varInt])[comp[2]]
     results[[paste0(levelTest, "_vs_", levelRef)]] <- results(dds, 
-                                                              contrast = c(varInt, levelTest, levelRef), pAdjustMethod = pAdjustMethod, 
-                                                              cooksCutoff = cooksCutoff, independentFiltering = independentFiltering, 
-                                                              alpha = alpha)
+	contrast = c(varInt, levelTest, levelRef), pAdjustMethod = pAdjustMethod, 
+	cooksCutoff = cooksCutoff, independentFiltering = independentFiltering, alpha = alpha)
     cat(paste("Comparison", levelTest, "vs", levelRef, "done\n"))
   }
   return(list(dds = dds, results = results, sf = sizeFactors(dds)))

@@ -29,8 +29,6 @@ dummy=$(dos2unix -k samples.txt)
 
 # clear python path to prevent mixed up of python packages
 unset PYTHONPATH
-# clear variable used for optional arguments
-unset run time
 # get command line arguments
 while [[ "$#" -gt 0 ]]; do
 	if [[ $1 == "run"* ]];then
@@ -240,4 +238,9 @@ state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 	scancel $tmp
 	echo -e "multiqc failed. Please check multiqc.out in $log_dir\n"
+fi
+
+# reset run variable
+if [ $debug == 1 ];then
+	run=debug
 fi

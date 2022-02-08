@@ -19,7 +19,7 @@
 # or to run and printing all trace commands (i.e. set -x):
 # bash /apps/opt/rnaseq-pipeline/scripts/run_align_create_tracks_rna.sh run=debug &> run_align_create_tracks_rna.out &
 
-# set -x
+#set -x
 set -e
 date
 # converting samples.txt to unix format to remove any invisible extra characters
@@ -28,8 +28,6 @@ dummy=$(dos2unix -k samples.txt)
 # clear python path to avoid reading in user's package sites
 unset PYTHONPATH
 
-# clear variable used for optional arguments
-unset run time
 # get command line arguments
 while [[ "$#" -gt 0 ]]; do
 	if [[ $1 == "run"* ]];then
@@ -61,7 +59,7 @@ while [[ "$#" -gt 0 ]]; do
 		echo ''
 		echo -e "genome=hg19"
 		echo -e "\tset reference genome. Default is hg19. Other option: hg38"
-                echo -e "\tif using genome other than hg19 or hg38, need to put .fa in ref/<genome-name> dir"
+                echo -e "\tif using genome other than hg19 or hg38, need to put .fa or .fasta and gtf files in ref/<genome-name> dir"
 		echo -e ""
 		echo -e "time=<default>"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
@@ -94,19 +92,21 @@ fi
 
 echo -e "\nAligning reads to $ref_ver and create tracks for visualization"
 
-
-# specify version of reference genome options hg19 or hg38
-if [[ $ref_ver == 'hg19' ]]; then
-	gtf_file=Homo_sapiens.GRCh37.75.gtf
-	fasta_file=human_g1k_v37_decoy.fasta
-	chr_info=chromInfo_human_g1k_v37_decoy.fasta
-	genome_size=2864785220
-elif [[ $ref_ver == 'hg38' ]]; then
-	fasta_file=hg38.analysisSet.fa
-	gtf_file=hg38.ensGene.gtf
-	chr_info=hg38.analysisSet.chrom.sizes
-	genome_size=2913022398
+### specify reference genome
+# if ref genome is not in $img_dir/ref, set genome_dir to  project dir
+genome_dir=$img_dir/ref/$ref_ver
+if [[ ! -d $genome_dir ]];then
+        genome_dir=$proj_dir/ref/$ref_ver
 fi
+echo $genome_dir
+gtf_file=$(find $genome_dir -name *.gtf | xargs basename)
+fasta_file=$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
+chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
+star_index_dir=$genome_dir/STAR_index
+
+# calculate genome_size
+genome_size=$(grep -v ">" $genome_dir/$fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
+chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
 
 # project directory
 proj_dir=$(pwd)
@@ -127,7 +127,11 @@ echo "All other logs including scripts ran will be stored in $log_dir"
 echo ""
 
 # specify number of cpus for star, bamCompare and bigwigCompare
-ncpus=15
+ncpus=20
+max_cpu=$(lscpu | grep 'CPU(s):' | head -n 1 | awk '{print $2}')
+if [[ $max_cpu -lt $ncpus ]]; then
+        ncpus=$max_cpu
+fi
 
 # singularity image directory
 # find based on location of this script
@@ -151,8 +155,6 @@ email=$(awk '!/#/ {print $5;exit}' samples.txt | tr -d '[:space:]')
 filename_string_array=($(awk '!/#/ {print $6}' samples.txt))
 string_pair1_array=($(awk '!/#/ {print $7}' samples.txt))
 string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
-
-genome_dir=$img_dir/ref/$ref_ver
 
 #### alignment ####
 # STAR first pass
@@ -201,7 +203,7 @@ for i in "${!groupname_array[@]}"; do
 			--wrap "singularity exec \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
-				--bind $img_dir/ref:/ref \
+				--bind $genome_dir:/ref \
 				$img_dir/$img_name \
 				/bin/bash /scripts/star_pass1_simg.sbatch"| cut -f 4 -d' ')
 	echo "Running STAR first pass for $prefix job id: $tmp_jid"
@@ -232,21 +234,20 @@ do
         sleep 10
         state=($(squeue -j $check_jid3 -h))
 done
-			
+
 reason=$(squeue -j $tmp -o "%R" -h)
 state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 	scancel $tmp
 	echo -e "STAR 1st pass run failed. Please check star_pass1_* files in $log_dir\n"
 	exit
-fi	
-	
+fi
 # STAR second pass
 genomeForPass2=$work_dir/STAR_2pass/GenomeForPass2
 
 # get all the junctions files for input to 2nd pass alignment
 cd $genomeForPass2
-sjFiles=($(find `pwd` -name '*_SJ.out.tab.Pass1.sjdb'))		
+sjFiles=($(find `pwd` -name '*_SJ.out.tab.Pass1.sjdb'))
 sjFiles=$(printf " %s" "${sjFiles[@]}")
 sjFiles=${sjFiles:1}
 sjFiles=${sjFiles//$genomeForPass2/..\/STAR_2pass\/GenomeForPass2}
@@ -254,7 +255,7 @@ sjFiles=${sjFiles//$genomeForPass2/..\/STAR_2pass\/GenomeForPass2}
 cd $proj_dir
 # initialize job ids
 jid4=
-for i in "${!groupname_array[@]}"; do 
+for i in "${!groupname_array[@]}"; do
 	groupname=${groupname_array[$i]}
 	repname=${repname_array[$i]}
 	string_pair1=${string_pair1_array[$i]}
@@ -301,7 +302,7 @@ for i in "${!groupname_array[@]}"; do
 				--wrap "singularity exec \
 					--bind $proj_dir:/mnt \
 					--bind $img_dir/scripts:/scripts \
-					--bind $img_dir/ref:/ref \
+					--bind $genome_dir:/ref \
 					$img_dir/$img_name \
 					/bin/bash /scripts/star_pass2_simg.sbatch"| cut -f 4 -d' ')
 	echo "Running STAR second pass for $prefix job id: $tmp_jid"
@@ -359,6 +360,7 @@ if [[ n_rep -gt 1 ]]; then
 		echo $all_files_rep_cmd
 		# find groupname
 		cd $proj_dir
+		#echo $chr_info
 		groupname=$(awk -v file=$file 'file ~ $1 {print $1;exit}' samples.txt)
 		tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
 		SINGULARITYENV_run=$run \
@@ -378,7 +380,7 @@ if [[ n_rep -gt 1 ]]; then
 					--time=$time \
 					--wrap "singularity exec \
 						--bind $proj_dir:/mnt \
-						--bind $img_dir/ref:/ref \
+						--bind $genome_dir:/ref \
 						--bind $img_dir/scripts:/scripts \
 						$img_dir/$img_name \
 							/bin/bash /scripts/combinebw_simg.sbatch"| cut -f 4 -d' ')
@@ -460,3 +462,7 @@ tmp=$($run sbatch --dependency=afterok:$jid4c \
 		--export message="$message",proj_dir=$proj_dir \
 		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_align_create_tracks_rna.out"| cut -f 4 -d' ')
 
+# reset run variable
+if [ $debug == 1 ];then
+	run=debug
+fi

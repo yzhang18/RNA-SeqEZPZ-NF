@@ -8,7 +8,7 @@ cd /mnt/outputs/trim
 source activate rna_env
 echo "STAR version " $(STAR --version)
 set -x
-genomeDir=/ref/$ref_ver/STAR_index
+genomeDir=/ref/STAR_index
 mkdir -p ../STAR_2pass/Pass2
 runDir=../STAR_2pass/Pass2
 export OMP_NUM_THREADS=$ncpus

@@ -87,7 +87,7 @@ assignInNamespace("volcanoPlot",volcanoPlot,ns="SARTools")
 source(file.path(scriptDir,'writeReport.DESeq2.R'))
 assignInNamespace("writeReport.DESeq2",writeReport.DESeq2,ns="SARTools")
 
-projectName <- "RNA-seq differential analysis" # name of the project
+projectName <- "RNA-seq_differential_analysis" # name of the project
 # figures folder name will be appended with folder.name
 folder.name="Differential_analysis_result"
 author <- email                     # author of the statistical analysis/report

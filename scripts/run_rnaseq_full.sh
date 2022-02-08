@@ -95,10 +95,7 @@ if [[ -z "$ref_ver" ]];then
 fi
 if [[ $run == "debug"* ]];then
         set -x
-        run=
-        debug=1
 fi
-
 
 # project directory
 proj_dir=$(pwd)
@@ -117,15 +114,24 @@ echo -e "All outputs will be stored in $work_dir\n"
 log_dir=$work_dir/logs
 echo -e "Logs and scripts ran will be stored in $log_dir\n"
 
+### check and run star index if it doesn't exist
+echo ""
+echo Check and generate STAR index if genome has not been indexed yet.
+echo ""
+
+. $img_dir/scripts/run_star_index.sh run=$run time=$time genome=$ref_ver &> run_star_index.out
+
+# copying this script for records
+$(cp $img_dir/scripts/run_rnaseq_full.sh $log_dir/run_rnaseq_full.sh)
+
+echo run=$run
+
 ### trimming and QC
 echo ""
 echo Trimming and QC.....see progress in run_trim_qc.out
 echo ""
 
 . $img_dir/scripts/run_trim_qc.sh run=$run time=$time &> run_trim_qc.out
-
-# copying this script for records
-$(cp $img_dir/scripts/run_rnaseq_full.sh $log_dir/run_rnaseq_full.sh)
 
 message="Done trimming and QC.\n\
 See run_trim_qc.out.\n\n\

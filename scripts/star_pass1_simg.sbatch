@@ -7,7 +7,7 @@ cd /mnt/outputs/trim
 source activate rna_env
 echo "STAR version " $(STAR --version)
 set -x
-genomeDir=/ref/$ref_ver/STAR_index
+genomeDir=/ref/STAR_index
 mkdir -p ../STAR_2pass/Pass1
 runDir=../STAR_2pass/Pass1
 export OMP_NUM_THREADS=$ncpus
@@ -21,7 +21,7 @@ $run STAR --genomeDir $genomeDir \
 genomeForPass2=../STAR_2pass/GenomeForPass2
 mkdir -p $genomeForPass2
 # filtering non-canonical chromosomes
-awk 'BEGIN {OFS="\t"; strChar[0]="."; strChar[1]="+"; strChar[2]="-";} {if($5>0){print $1,$2,$3,strChar[$4]}}' \
+$run awk 'BEGIN {OFS="\t"; strChar[0]="."; strChar[1]="+"; strChar[2]="-";} {if($5>0){print $1,$2,$3,strChar[$4]}}' \
 ../STAR_2pass/Pass1/${prefix}_SJ.out.tab > $genomeForPass2/${prefix}_SJ.out.tab.Pass1.sjdb
 set +x
 conda deactivate

@@ -8,7 +8,7 @@ source activate rna_env
 featureCounts -v
 set -x
 $run featureCounts -p \
-	-a /ref/$ref_ver/$gtf_file \
+	-a /ref/$gtf_file \
 	-t exon \
 	-g gene_id \
 	-T $ncpus \

@@ -1,7 +1,7 @@
-#!/bin/bash
+q#!/bin/bash
 
 set -e
-#set -v
+set -v
 echo Hello from $SINGULARITY_CONTAINER
 cd /mnt/outputs/STAR_2pass/Pass2
 source activate rna_env

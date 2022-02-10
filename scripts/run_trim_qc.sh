@@ -21,11 +21,6 @@
 
 #set -x
 set -e
-date
-echo ""
-echo Start trimming reads for low quality/adapter sequences then run Quality Control
-# converting samples.txt to unix format to remove any invisible extra characters
-dummy=$(dos2unix -k samples.txt)
 
 # clear python path to prevent mixed up of python packages
 unset PYTHONPATH
@@ -41,7 +36,8 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 
 	if [[ $1 == "help" ]];then
-		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out'
+		echo ''
+		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun trim and qc for RNA-seq samples'
@@ -52,13 +48,19 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e '\tdisplay this help and exit'
 		echo run=echo
 		echo -e "\tdo not run, echo all commands. Default is running all commands"
-                echo -e "if set to "debug", it will run with "set -x""
-		echo -e "time=<default>"
+                echo -e "\tif set to "debug", it will run with "set -x""
+		echo -e "time=1-00:00:00"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
-		echo -e "Default=1-00:00:00"
+		echo -e "\tDefault is 1 day.\n"
 		exit
 	fi
 done
+
+date
+echo Start trimming reads for low quality/adapter sequences then run Quality Control
+# converting samples.txt to unix format to remove any invisible extra characters
+dos2unix -k samples.txt &> /dev/null
+
 # set default parameters
 debug=0
 if [[ -z "$run" ]];then
@@ -124,9 +126,23 @@ echo ""
 # initialize jobid strings
 jid=
 tmp_idx=0
-for file in $(find fastq/ -type f -print);do
+cd $proj_dir
+# added this to prevent error when using symbolic link that is upstream of
+# home directory
+# NOTE: for this to work, complete path should be used when creating symbolic link
+# example:
+# this WORKS:
+# cd <project-dir>
+# ln -s /gpfs0/home1/gdlessnicklab/lab/data/tmp_data_ct/fastq .
+# this does NOT work:
+# # cd <project-dir>
+# ln -s /home1/gdlessnicklab/lab/data/tmp_data_ct/fastq .
+# the path should be the path that is returned by 'readlink -f'
+
+target_link=$(readlink -f fastq)
+
+for file in $(find fastq/ -name "*fastq.gz");do
 	basefile=$(basename $file)
-			
 	idx=$(echo ${filename_string_array[*]} | tr ' ' '\n' | awk -v basefile=$basefile 'basefile ~ $1 {print NR-1}')
 	groupname=${groupname_array[$idx]}
 	repname=${repname_array[$idx]}
@@ -156,7 +172,9 @@ for file in $(find fastq/ -type f -print);do
 			--mail-user=$email \
 			--wrap "singularity exec \
 				--bind $img_dir/scripts:/scripts \
-				--bind $proj_dir:/mnt $img_dir/$img_name \
+				--bind $proj_dir:/mnt \
+				--bind $target_link:$target_link \
+				$img_dir/$img_name \
 				/bin/sh /scripts/trim_fastqc_simg.sbatch" | cut -f 4 -d' ')
 		echo "Processing $basefile Job id: $tmp_jid"
 		echo "" 

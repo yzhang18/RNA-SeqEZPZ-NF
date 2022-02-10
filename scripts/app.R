@@ -19,7 +19,13 @@ library(gridBase)
 library(venn)
 library(UpSetR)
 
-load("/mnt/outputs/diff_analysis_rslt/RNA-seq differential analysis.RData")
+# filename was changed. Make sure can read both
+if(file.exists("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RData")){
+	load("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RData")
+} else {
+	load("/mnt/outputs/diff_analysis_rslt/RNA-seq differential analysis.RData")
+
+}
 
 groups= data.frame(
   var = names(out.DESeq2$results),

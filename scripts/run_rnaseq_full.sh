@@ -27,10 +27,6 @@
 
 #set -x
 set -e
-date
-echo ""
-# converting samples.txt to unix format to remove any invisible extra characters
-dummy=$(dos2unix -k samples.txt)
 # set 'run' to echo to simply echoing all commands
 # set to empty to run all commands
 # clear variable used for optional arguments
@@ -55,10 +51,11 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 
 	if [[ $1 == "help" ]];then
+		echo ""
 		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out'
 		echo ''
 		echo DESCRIPTION
-		echo -e '\trun differential RNA-seq analysis'
+		echo -e '\trun full RNA-seq analysis: Quality Control, alignment, and differential analysis'
 		echo ''
 		echo OPTIONS
 		echo ''
@@ -66,19 +63,23 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e '\tdisplay this help and exit'
 		echo run=echo
 		echo -e "\tdo not run, echo all commands. Default is running all commands"
-		echo -e "if set to "debug", it will run with "set -x""
-		echo -e ""
+		echo -e "\tif set to "debug", it will run with "set -x""
 		echo -e "genome=hg19"
 		echo -e "\tset reference genome. Default is hg19. Other option: hg38"
+		echo -e "\tif using genome other than hg19 or hg38, need to put .fa or .fasta and gtf files"
+		echo -e "\tin ref/<genome-name> dir and set genome=<genome-name>."
 		echo padj=0.05
 		echo -e "\tset FDR of differential genes (as calculated by DESeq2) < 0.05. Default=0.05"
-		echo -e ""
-		echo -e "time=<default>"
+		echo -e "time=1-00:00:00"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
-		echo -e "Default=1-00:00:00"
+		echo -e "\tDefault is 1 day.\n"
 		exit
 	fi
 done
+date
+# converting samples.txt to unix format to remove any invisible extra characters
+dos2unix -k samples.txt &> /dev/null
+
 # set default parameters
 debug=0
 if [[ -z "$run" ]];then
@@ -124,7 +125,6 @@ echo ""
 # copying this script for records
 $(cp $img_dir/scripts/run_rnaseq_full.sh $log_dir/run_rnaseq_full.sh)
 
-echo run=$run
 
 ### trimming and QC
 echo ""

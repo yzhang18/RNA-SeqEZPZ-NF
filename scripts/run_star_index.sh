@@ -25,8 +25,6 @@
 
 # set -x
 set -e
-date
-echo ""
 
 # clear python path to avoid mix up
 unset PYTHONPATH
@@ -46,7 +44,8 @@ while [[ "$#" -gt 0 ]]; do
         fi
 
         if [[ $1 == "help" ]];then
-                echo 'usage:  /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh &> run_star_index.out & '
+		echo ""
+                echo 'usage:  /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh [OPTION] &> run_star_index.out & '
                 echo ''
                 echo DESCRIPTION
                 echo -e '\tcreating genome index using STAR'
@@ -57,20 +56,20 @@ while [[ "$#" -gt 0 ]]; do
                 echo -e '\tdisplay this help and exit'
                 echo run=echo
                 echo -e "\tdo not run, echo all commands. Default is running all commands"
-                echo -e "if set to "debug", it will run with "set -x""
-                echo ''
+                echo -e "\tif set to "debug", it will run with "set -x""
                 echo -e "genome=hg19"
                 echo -e "\tset reference genome. Default is hg19. Other options: hg38"
                 echo -e "\tif using genome other than hg19 or hg38, need to put .fa in ref/<genome-name> dir"
-                echo -e "genome=<genome-name> and <genome-name>.fa must be in ref/<genome-name>/<genome.name>.fa"
-                echo -e ""
-                echo -e "time=<default>"
+                echo -e "\tgenome=<genome-name> and <genome-name>.fa must be in ref/<genome-name>/<genome.name>.fa"
+                echo -e "time=1-00:00:00"
                 echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
-                echo -e "Default=1-00:00:00"
+		echo -e "\tDefault is 1 day."
+                echo -e ""
                 exit
         fi
 done
 
+date
 # set default parameters
 # variable to turn on tracing i.e. set -x
 debug=0
@@ -161,7 +160,7 @@ echo ""
 $(cp $img_dir/scripts/run_star_index.sh $log_dir/run_star_index.sh)
 
 # converting samples.txt to unix format
-dummy=$(dos2unix -k samples.txt)
+dos2unix -k samples.txt &> /dev/null
 # getting samples info from samples.txt
 # remove trailing tabs, leading and trailing quotations
 $(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)
@@ -176,6 +175,20 @@ string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
 if [[ $email == "NA" ]];then
         email=
 fi
+
+# added this to prevent error when using symbolic link that is upstream of
+# home directory
+# NOTE: for this to work, complete path should be used when creating symbolic link
+# example:
+# this works:
+# cd <project-dir>/ref
+# ln -s /gpfs0/home1/gdlessnicklab/lab/data/mm10 .
+# this does NOT work:
+# # cd <project-dir>/ref
+# ln -s /home1/gdlessnicklab/lab/data/mm10 .
+# the path should be the path that is returned by 'readlink -f'
+
+target_link=$(readlink -f $genome_dir)
 
 #### generate index ####
 jid0=$(SINGULARITYENV_PYTHONPATH= \
@@ -195,6 +208,7 @@ jid0=$(SINGULARITYENV_PYTHONPATH= \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
 				--bind $genome_dir:/ref \
+				--bind $target_link:$target_link \
 				$img_dir/$img_name \
 				/bin/bash /scripts/star_index_simg.sbatch"| cut -f 4 -d' ')
 echo "Generating STAR index job id: $jid0"

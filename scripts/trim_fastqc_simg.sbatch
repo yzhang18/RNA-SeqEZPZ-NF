@@ -4,6 +4,8 @@
 set -e
 #set -v
 echo Hello from $SINGULARITY_CONTAINER
+echo singularity image version: $version
+
 source activate rna_env
 trim_galore --version
 set -x

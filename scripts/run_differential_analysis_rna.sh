@@ -21,9 +21,6 @@
 
 #set -x
 set -e
-date
-# converting samples.txt to unix format to remove any invisible extra characters
-dummy=$(dos2unix -k samples.txt)
 
 # clear PYTHONPATH so packages are not confused when running the container
 unset PYTHONPATH
@@ -47,6 +44,7 @@ while [[ "$#" -gt 0 ]]; do
 		shift
 	fi
 	if [[ $1 == "help" ]];then
+		echo ""
 		echo 'usage: bash /apps/opt/rnaseq-pipeline//scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
 		echo ''
 		echo DESCRIPTION
@@ -58,19 +56,24 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e '\tdisplay this help and exit'
 		echo run=echo
 		echo -e "\tdo not run, echo all commands. Default is running all commands"
-		echo -e "if set to "debug", it will run with "set -x""
-		echo -e ""
+		echo -e "\tif set to "debug", it will run with "set -x""
 		echo -e "genome=hg19"
 		echo -e "\tset reference genome. Default is hg19. Other option: hg38"
-		echo -e ""
+		echo -e "\tif using genome other than hg19 or hg38, need to put .fa or .fasta and gtf files"
+		echo -e "\tin ref/<genome-name> dir and set genome=<genome-name>"
 		echo padj=0.05
 		echo -e "\tset FDR of differential genes (as calculated by DESeq2) < 0.05. Default=0.05"
-		echo -e "time=<default>"
+		echo -e "time=1-00:00:00"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
-		echo -e "Default=1-00:00:00"
+		echo -e "\tDefault is 1 day.\n"
 		exit
 	fi
 done
+
+date
+# converting samples.txt to unix format to remove any invisible extra characters
+dos2unix -k samples.txt &> /dev/null
+
 # set default parameters
 debug=0
 if [[ -z "$run" ]];then
@@ -93,20 +96,8 @@ fi
 
 echo -e "\nRunning differential analysis with $ref_ver as reference. \n"
 
-### specify reference genome
-# if ref genome is not in $img_dir/ref, set genome_dir to  project dir
-genome_dir=$img_dir/ref/$ref_ver
-if [[ ! -d $genome_dir ]];then
-        genome_dir=$proj_dir/ref/$ref_ver
-fi
-gtf_file=$(find $genome_dir -name *.gtf | xargs basename)
-fasta_file=$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
-chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
-star_index_dir=$genome_dir/STAR_index
-
-# calculate genome_size
-genome_size=$(grep -v ">" $genome_dir/$fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
-chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
+# converting samples.txt to unix format to remove any invisible extra characters
+dos2unix -k samples.txt > /dev/null
 
 # project directory
 proj_dir=$(pwd)
@@ -145,6 +136,21 @@ img_name=rnaseq-pipe-container.sif
 
 # copying this script for records
 $(cp $img_dir/scripts/run_differential_analysis_rna.sh $log_dir/run_differential_analysis_rna.sh)
+
+### specify reference genome
+# if ref genome is not in $img_dir/ref, set genome_dir to  project dir
+genome_dir=$img_dir/ref/$ref_ver
+if [[ ! -d $genome_dir ]];then
+        genome_dir=$proj_dir/ref/$ref_ver
+fi
+gtf_file=$(find $genome_dir -name *.gtf | xargs basename)
+fasta_file=$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
+chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
+star_index_dir=$genome_dir/STAR_index
+
+# calculate genome_size
+genome_size=$(grep -v ">" $genome_dir/$fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
+chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
 
 # getting samples info from samples.txt
 $(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)

@@ -7,15 +7,67 @@
 # Examples:
 # bash /apps/opt/rnaseq-pipeline/scripts/run_overlap.sh
 # <project_dir> is where the fastq and outputs directory are
-#set -x
 # project directory where the fastq and outputs directory are
+#
+# to run with all commands printed
+# bash /apps/opt/rnaseq-pipeline/scripts/run_overlap.sh run=debug
+#
+# Default time limit is 1 day to change to 1 day, 2 hours, 20 minutes and 30 sec
+# bash /apps/opt/rnaseq-pipeline/scripts/run_overlap.sh time=1-2:20:30
+
+# clear python path to prevent mixed up of python packages
+unset PYTHONPATH
+# get command line arguments
+while [[ "$#" -gt 0 ]]; do
+        if [[ $1 == "run"* ]];then
+                run=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
+        if [[ $1 == "time"* ]];then
+                time=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
+
+        if [[ $1 == "help" ]];then
+		echo ""
+                echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_overlap.sh [OPTION]'
+                echo ''
+                echo DESCRIPTION
+                echo -e '\trun shiny app to show overlaps'
+                echo ''
+                echo OPTIONS
+                echo ''
+                echo help
+                echo -e '\tdisplay this help and exit'
+                echo run=echo
+                echo -e "\tdo not run, echo all commands. Default is running all commands"
+                echo -e "\tif set to "debug", it will run with "set -x""
+		echo -e ""
+                echo -e "time=1-00:00:00"
+                echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
+                echo -e ""
+                exit
+        fi
+done
+
+# set default parameters
+debug=0
+if [[ -z "$run" ]];then
+        run=
+fi
+if [[ -z "$time" ]];then
+        time=1-00:00:00
+fi
+if [[ $run == "debug"* ]];then
+        set -x
+        run=
+        debug=1
+fi
+
 proj_dir=$(pwd)
 cd $proj_dir
 
 work_dir=$proj_dir/outputs
-
-# clear python path to avoid reading in user's package sites
-unset PYTHONPATH
 
 # singularity image directory
 # find based on location of this script
@@ -37,7 +89,7 @@ port_num=$(singularity exec $img_dir/$img_name comm -23 \
 
 # Activate environment where shiny is installed and go to "app.R" directory
 jid=$(SINGULARITYENV_port_num=$port_num \
-	sbatch --time=5:00:00 \
+	sbatch --time=$time \
 	--output=run_overlap.out \
 	--wrap "singularity exec \
 	--bind $proj_dir:/mnt \
@@ -68,3 +120,9 @@ ssh -tX "$node" 'export port_num='"'$port_num'"'; \
         export img_name='"'$img_name'"'; \
         bash $img_dir/scripts/run_firefox.sh'
 scancel $jid
+
+# reset run variable
+if [ $debug == 1 ];then
+        run=debug
+fi
+

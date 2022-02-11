@@ -14,6 +14,7 @@ Notes:
 * Before running any of these two options, you need to prepare the directory and samples information file called samples.txt is required. More detailed steps are listed below.
 * You can take a look at /apps/opt/rnaseq-pipeline/scripts/project_ex for examples of input files (i.e. samples.txt and fastq directory). project_ex folder also contains examples of output files upon completion of running RNAseq full analysis. 
 * You can copy the entire project_ex folder to your own folder, delete outputs folder and all the *.out files then run this as test files.
+* Reference files and fastq folder can be symbolic link. See below for how to correctly set the symbolic link.
 * In this document, there are also descriptions of output files.
 
 
@@ -86,9 +87,9 @@ o A9_20-0655_iEF197R2_S65_L001_R1.fastq.gz
 o A9_20-0655_iEF197R2_S65_L001_R2.fastq.gz
 Therefore the “string_pair1” would be “_R1” and “string_pair2” would be “_R2”
 
-How to
+How to:
 
-Trim adapter sequences and low quality reads then run quality control (QC) without running full analysis.
+* Trim adapter sequences and low quality reads then run quality control (QC) without running full analysis.
 After preparing the directory and samples information as detailed above, to trim adapter sequences and low quality reads then run QC without running the full analysis:
 1. Go into the project directory.
 1. For example: if your project directory is called “my_project” then type in:
@@ -102,7 +103,7 @@ Type in help to get more information:
 bash /apps/opt/rnaseq-pipeline/scripts/project_ex/scripts/run_trim_qc.sh help
 
 
-Align reads to reference genome hg19 (or hg38 or other reference genome) and create normalized tracks for visualization without running the full analysis.
+* Align reads to reference genome hg19 (or hg38 or other reference genome) and create normalized tracks for visualization without running the full analysis.
 After preparing the directory and samples information as detailed above, to align and create tracks without running the full analysis: 
 Note: everything needs to be in the same directories as if run_trim_qc.sh had been run.
 1. Go into the project directory.
@@ -131,7 +132,8 @@ Check “run_align_create_tracks_rna.out” file for progress and messages. Do Not c
 5. Type in help to get more information:
 bash /apps/opt/rnaseq-pipeline/scripts/project_ex/scripts/ run_align_create_tracks_rna.sh help
    
-Run feature count and differential analysis without running the full analysis.
+   
+* Run feature count and differential analysis without running the full analysis.
 After preparing the directory and samples information as detailed above, to count features and run differential analysis without running the full analysis: 
 Note: everything needs to be in the same directories as if run_align_create_tracks_rna.sh had been run.
 1. Go into the project directory.
@@ -173,6 +175,23 @@ Use this command only if you really need the time limit. Any commands described 
 bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh help
 
 Check “run_rnaseq_full.out” file for progress and messages. Do Not change this output filename.
+
+* How to use symbolic link for fastq folder and reference files:
+
+Reference files and fastq folder can be symbolic link. However, they need to be full path returned by readlink. Do the following to set the symbolic link correctly:
+o Go into the location where fastq directory is. In this case, it is ~/Steve/virtual_server/rnaseq-singularity/project_ex
+cd ~/Steve/virtual_server/rnaseq-singularity/project_ex
+o Get the full path:
+[cxt050@r1pl-hpcf-log01 project_ex]$ readlink -f fastq
+/gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/fastq
+o Note the full path returned above, then go into your project directory from where you want to run the pipeline. In this case, it is “my_project5”
+cd my_project5
+o Set symbolic link, using the full path returned by “readlink -f” above:
+ln -s /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/fastq fastq
+o Check that the symbolic link  is set correctly. There should be an arrow from fastq pointing to the real location of fastq as shown below:
+[cxt050@r1pl-hpcf-log01 project_ex5]$ ls -lh
+total 27K
+lrwxrwxrwx 1 cxt050 gdlessnicklab   90 Feb 11 09:10 fastq -> /gpfs0/home1/gdlessnicklab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/fastq
 
 Output folders:
 In case of errors, you should first read *.out in your project folder. For example, if you are running run_rnaseq_full.sh, run_rnaseq_full.out will contain message about the error and where to look for more information.

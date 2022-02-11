@@ -52,7 +52,7 @@ while [[ "$#" -gt 0 ]]; do
 
 	if [[ $1 == "help" ]];then
 		echo ""
-		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out'
+		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun full RNA-seq analysis: Quality Control, alignment, and differential analysis'

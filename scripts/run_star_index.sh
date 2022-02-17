@@ -3,25 +3,25 @@
 # script to create genome STAR index
 # How to run:
 # cd <my_project_dir>
-# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh &> run_star_index.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_star_index.sh &> run_star_index.out &
 # Examples:
 # cd ~/project1
-# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh &> run_star_index.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_star_index.sh &> run_star_index.out &
 #
 # or to run with specific time limit:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh time=DD-HH:MM:SS  &> run_star_index.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_star_index.sh time=DD-HH:MM:SS  &> run_star_index.out &
 #
 # by default, alignment is done to human reference genome hg19 unless specified genome=hg38:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh genome=hg38 &> run_align.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_star_index.sh genome=hg38 &> run_align.out &
 # available genome hg19 or hg38
 # if using other genome, genome file (.fasta or fa) and gtf file need to be in <my_project_dir>/ref/<genome.name> dir
 # and set as follows: genome=<genome_name> 
 #
 # or to do nothing but echo all commands:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh run=echo &> run_star_index.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_star_index.sh run=echo &> run_star_index.out &
 #
 # or to run and printing all trace commands (i.e. set -x):
-# bash /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh run=debug &> run_star_index.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_star_index.sh run=debug &> run_star_index.out &
 
 # set -x
 set -e
@@ -45,7 +45,7 @@ while [[ "$#" -gt 0 ]]; do
 
         if [[ $1 == "help" ]];then
 		echo ""
-                echo 'usage:  /apps/opt/rnaseq-pipeline/scripts/run_star_index.sh [OPTION] &> run_star_index.out & '
+                echo 'usage:  /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_star_index.sh [OPTION] &> run_star_index.out & '
                 echo ''
                 echo DESCRIPTION
                 echo -e '\tcreating genome index using STAR'
@@ -114,7 +114,10 @@ img_name=rnaseq-pipe-container.sif
 # scripts to run analysis are in $img_dir/scripts
 # reference to run analysis are in $img_dir/ref
 
+echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
+
 echo -e "Generating STAR genome index and get chromosome sizes file.\n"
+
 skip_run_star_index=0
 ### specify reference genome
 # if ref genome is not in $img_dir/ref, set genome_dir to  project dir
@@ -188,7 +191,8 @@ fi
 # ln -s /home1/gdlessnicklab/lab/data/mm10 .
 # the path should be the path that is returned by 'readlink -f'
 
-target_link=$(readlink -f $genome_dir)
+target_link_gtf=$(readlink -f $genome_dir/*.gtf)
+target_link_fa=$(readlink -f $genome_dir/*.fa*)
 
 #### generate index ####
 jid0=$(SINGULARITYENV_PYTHONPATH= \
@@ -208,7 +212,8 @@ jid0=$(SINGULARITYENV_PYTHONPATH= \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
 				--bind $genome_dir:/ref \
-				--bind $target_link:$target_link \
+				--bind $target_link_fa:$target_link \
+				--bind $target_link_gtf:$target_link_gtf \
 				$img_dir/$img_name \
 				/bin/bash /scripts/star_index_simg.sbatch"| cut -f 4 -d' ')
 echo "Generating STAR index job id: $jid0"
@@ -231,8 +236,3 @@ check_run_star_index_jid=$($run sbatch \
 	--wrap "bash $img_dir/scripts/check_job.sh")
 fi # skip run_star_index
 cp $proj_dir/samples.txt $log_dir/
-# reset run variable accordingly
-if [ $debug == 1 ];then
-	run=debug
-fi
-set +x

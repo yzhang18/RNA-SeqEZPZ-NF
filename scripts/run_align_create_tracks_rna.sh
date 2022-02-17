@@ -2,22 +2,22 @@
 
 # How to run:
 # cd <project_dir>
-# bash /apps/opt/rnaseq-pipeline/scripts/run_align_create_tracks_rna.sh &> run_align_create_tracks_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh &> run_align_create_tracks_rna.out &
 # Examples:
 # cd project1
-# bash /apps/opt/rnaseq-pipeline/scripts/run_align_create_tracks_rna.sh &> run_align_create_tracks_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh &> run_align_create_tracks_rna.out &
 #
 # by default, alignment is done to human reference genome hg19 unless specified genome=hg38:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_align_create_tracks_rna.sh genome=hg38 &> run_align_create_tracks_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh genome=hg38 &> run_align_create_tracks_rna.out &
 #
 # or to run with specific time limit:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_align_create_tracks_rna.sh time=DD-HH:MM:SS &> run_align_create_tracks_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh time=DD-HH:MM:SS &> run_align_create_tracks_rna.out &
 #
 # or to do nothing but echo all commands:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_align_create_tracks_rna.sh run=echo &> run_align_create_tracks_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh run=echo &> run_align_create_tracks_rna.out &
 #
 # or to run and printing all trace commands (i.e. set -x):
-# bash /apps/opt/rnaseq-pipeline/scripts/run_align_create_tracks_rna.sh run=debug &> run_align_create_tracks_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh run=debug &> run_align_create_tracks_rna.out &
 
 #set -x
 set -e
@@ -42,7 +42,7 @@ while [[ "$#" -gt 0 ]]; do
 
 	if [[ $1 == "help" ]] ;then
 		echo ""
-		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_align_create_tracks_rna.sh [OPTION] &> run_align_create_tracks_rna.out &'
+		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh [OPTION] &> run_align_create_tracks_rna.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun alignment and tracks creation'
@@ -128,6 +128,8 @@ img_name=rnaseq-pipe-container.sif
 # IMPORTANT: It is assumed that:
 # scripts to run analysis are in $img_dir/scripts
 # reference to run analysis are in $img_dir/ref
+
+echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
 # copying this script for records
 $(cp $img_dir/scripts/run_align_create_tracks_rna.sh $log_dir/run_align_create_tracks_rna.sh)
@@ -464,7 +466,3 @@ tmp=$($run sbatch --dependency=afterok:$jid4c \
 		--export message="$message",proj_dir=$proj_dir \
 		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_align_create_tracks_rna.out"| cut -f 4 -d' ')
 
-# reset run variable
-if [ $debug == 1 ];then
-	run=debug
-fi

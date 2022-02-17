@@ -3,19 +3,19 @@
 # script to trim fastq files and run quality control
 # How to run:
 # cd <project_dir>
-# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh &> run_trim_qc.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh &> run_trim_qc.out &
 # Examples:
 # cd project1
-# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh &> run_trim_qc.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh &> run_trim_qc.out &
 #
 # or to run with specific time limit:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh time=DD-HH:MM:SS  &> run_trim_qc.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh time=DD-HH:MM:SS  &> run_trim_qc.out &
 #
 # or to do nothing but echo all commands:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh run=echo &> run_trim_qc.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh run=echo &> run_trim_qc.out &
 #
 # or to run and printing all trace commands (i.e. set -x):
-# bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh run=debug &> run_trim_qc.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh run=debug &> run_trim_qc.out &
 #
 
 
@@ -37,7 +37,7 @@ while [[ "$#" -gt 0 ]]; do
 
 	if [[ $1 == "help" ]];then
 		echo ''
-		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out &'
+		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun trim and qc for RNA-seq samples'
@@ -102,6 +102,8 @@ img_name=rnaseq-pipe-container.sif
 # IMPORTANT: It is assumed that:
 # scripts to run analysis are in $img_dir/scripts
 # reference to run analysis are in $img_dir/ref
+
+echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
 # copying this script for records
 $(cp $img_dir/scripts/run_trim_qc.sh $log_dir/run_trim_qc.sh)
@@ -256,9 +258,4 @@ state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 	scancel $tmp
 	echo -e "multiqc failed. Please check multiqc.out in $log_dir\n"
-fi
-
-# reset run variable
-if [ $debug == 1 ];then
-	run=debug
 fi

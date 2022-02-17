@@ -3,26 +3,26 @@
 # script connecting all the individual scripts to do full rnaseq analysis
 # How to run
 # cd <project_dir>
-# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
 # Examples:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
 # to run with specific time limit:
-# 	/apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh \
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh \
 #        	time=DD-HH:MM:SS &> run_rnaseq_full.out &
 # 
 # by default, alignment is done to human reference genome hg19 unless specified using 'genome=hg38':
-# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh genome=hg38 &> run_rnaseq_full.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh genome=hg38 &> run_rnaseq_full.out &
 # 
 # or to do nothing but echo all commands:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh run=echo &> run_rnaseq_full.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh run=echo &> run_rnaseq_full.out &
 # 
 # or to change a bunch of parameters at once:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh run=echo \
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh run=echo \
 #     padj=1 time=DD-HH:MM:SS \
 # &> run_rnaseq_full.out &
 # 
 # or to run and printing all trace commands (i.e. set -x):
-# bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh run=debug &> run_rnaseq_full.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh run=debug &> run_rnaseq_full.out &
 
 
 #set -x
@@ -52,7 +52,7 @@ while [[ "$#" -gt 0 ]]; do
 
 	if [[ $1 == "help" ]];then
 		echo ""
-		echo 'usage: bash /apps/opt/rnaseq-pipeline/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
+		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun full RNA-seq analysis: Quality Control, alignment, and differential analysis'
@@ -81,7 +81,7 @@ date
 dos2unix -k samples.txt &> /dev/null
 
 # set default parameters
-debug=0
+# note run parameter is set differently here.
 if [[ -z "$run" ]];then
 	run=
 fi
@@ -94,8 +94,12 @@ fi
 if [[ -z "$ref_ver" ]];then
 	ref_ver=hg19
 fi
+# run parameter needs to be set differently here
 if [[ $run == "debug"* ]];then
         set -x
+	run=
+	# this is for passing to individual script
+	run_debug=debug
 fi
 
 # project directory
@@ -106,32 +110,71 @@ cd $proj_dir
 # found based on location of this script
 img_dir=$(dirname $(dirname $(readlink -f $0)))
 
+echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 # IMPORTANT: It is assumed that:
 # scripts to run analysis are in $img_dir/scripts
 # reference to run analysis are in $img_dir/ref
 
 work_dir=$proj_dir/outputs
 echo -e "All outputs will be stored in $work_dir\n"
+if [ ! -d $work_dir ]; then
+        mkdir $work_dir
+fi
 log_dir=$work_dir/logs
+if [ ! -d $log_dir ]; then
+        mkdir $log_dir
+fi
 echo -e "Logs and scripts ran will be stored in $log_dir\n"
 
-### check and run star index if it doesn't exist
-echo ""
-echo Check and generate STAR index if genome has not been indexed yet.
-echo ""
-
-. $img_dir/scripts/run_star_index.sh run=$run time=$time genome=$ref_ver &> run_star_index.out
 
 # copying this script for records
 $(cp $img_dir/scripts/run_rnaseq_full.sh $log_dir/run_rnaseq_full.sh)
 
+### check and run star index if it doesn't exist
+echo ""
+echo Check and generate STAR index if genome has not been indexed yet....
+echo ""
+
+. $img_dir/scripts/run_star_index.sh run=$run_debug time=$time genome=$ref_ver &> run_star_index.out
+
+# skip checking job if not generating star index.
+if [[ $skip_run_star_index == 0 ]];then
+
+	tmp0=$($run sbatch --dependency=$jid0 \
+                --time=5:00 \
+                --output=$log_dir/dummy_run_star_index.txt \
+                --job-name=run_star_index \
+                --export message="$message",proj_dir=$proj_dir \
+                --wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out"| cut -f 4 -d' ')
+	# message if jobs never satisfied
+	check_jid0=$(echo $jid0 | sed 's/:/,/g')
+	state=($(squeue -j $check_jid0 -h))
+
+	while [ ${#state[@]} -ne 0 ];
+	do
+        	sleep 10
+        	state=($(squeue -j $check_jid0 -h))
+	done
+
+	reason=$(squeue -j $tmp0 -o "%R" -h)
+	state=$(sacct -j $tmp0 --format=state | tail -n +3 | head -n 1)
+	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
+        	scancel $tmp0
+        	echo -e "Checking and/or generating STAR index failed. Please check run_star_index.out\n"
+        	exit
+	fi
+fi
+echo ""
+echo Done checking and generating STAR index as needed.
+echo See run_star_index.out for more details.
+echo ""
 
 ### trimming and QC
 echo ""
 echo Trimming and QC.....see progress in run_trim_qc.out
 echo ""
-
-. $img_dir/scripts/run_trim_qc.sh run=$run time=$time &> run_trim_qc.out
+cd $proj_dir
+. $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time &> run_trim_qc.out
 
 message="Done trimming and QC.\n\
 See run_trim_qc.out.\n\n\
@@ -165,11 +208,11 @@ fi
 
 ### aligning reads and creating tracks
 cd $proj_dir
-. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run time=$time genome=$ref_ver &> run_align_create_tracks_rna.out
+. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver &> run_align_create_tracks_rna.out
 
 message="Done alignment and create tracks for visualization.\n\
 See log run_align_create_tracks_rna.out.\n\n\
-Performing differential genes analysis .....\n\
+Performing differential genes analysis.....\n\
 See progress in run_differential_analysis_rna.out.\n\n"
 
 tmp=$($run sbatch --dependency=afterok:$jid4c \
@@ -187,7 +230,7 @@ do
         sleep 10
         state=($(squeue -j $check_jid4c -h))
 done
-				
+
 reason=$(squeue -j $tmp -o "%R" -h)
 state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
@@ -199,7 +242,7 @@ fi
 
 ### Running differential genes analysis
 cd $proj_dir
-. $img_dir/scripts/run_differential_analysis_rna.sh run=$run padj=$padj time=$time genome=$ref_ver &> run_differential_analysis_rna.out
+. $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time genome=$ref_ver &> run_differential_analysis_rna.out
 
 message="Done differential RNA-seq analysis.\n\
 See log run_differential_analysis_rna.out\n\n\
@@ -231,7 +274,7 @@ do
         sleep 10
         state=($(squeue -j $check_jid8 -h))
 done
-				
+
 reason=$(squeue -j $tmp -o "%R" -h)
 state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then

@@ -2,18 +2,18 @@
 
 # How to run
 # cd <project_dir>
-# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
 # Examples:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
 #
 # by default, alignment is done to human reference genome hg19 (genome=hg19) unless specified genome=hg38:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh genome=hg38 &> run_differential_analysis_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh genome=hg38 &> run_differential_analysis_rna.out &
 #
 # or to do nothing but echo all commands:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh run=echo &> run_differential_analysis_rna.out &
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh run=echo &> run_differential_analysis_rna.out &
 #
 # or to change FDR of differential analysis:
-# bash /apps/opt/rnaseq-pipeline/scripts/run_differential_analysis_rna.sh padj=1 \
+# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh padj=1 \
 # &> run_differential_analysis_rna.out &
 #
 # or to run and printing all trace commands (i.e. set -x):
@@ -45,7 +45,7 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 	if [[ $1 == "help" ]];then
 		echo ""
-		echo 'usage: bash /apps/opt/rnaseq-pipeline//scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
+		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0//scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun differential RNA-seq analysis'
@@ -96,9 +96,6 @@ fi
 
 echo -e "\nRunning differential analysis with $ref_ver as reference. \n"
 
-# converting samples.txt to unix format to remove any invisible extra characters
-dos2unix -k samples.txt > /dev/null
-
 # project directory
 proj_dir=$(pwd)
 cd $proj_dir
@@ -133,6 +130,8 @@ img_name=rnaseq-pipe-container.sif
 # IMPORTANT: It is assumed that:
 # scripts to run analysis are in $img_dir/scripts
 # reference to run analysis are in $img_dir/ref
+
+echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
 # copying this script for records
 $(cp $img_dir/scripts/run_differential_analysis_rna.sh $log_dir/run_differential_analysis_rna.sh)
@@ -305,6 +304,3 @@ jid8=$($run sbatch --dependency=afterok:$jid7 \
 		--export message="$message",proj_dir=$proj_dir \
 		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_differential_analysis_rna.out"| cut -f 4 -d' ')
 
-if [ $debug == 1 ];then
-	run=debug
-fi

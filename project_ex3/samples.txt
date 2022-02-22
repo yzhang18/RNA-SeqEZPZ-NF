@@ -1,0 +1,45 @@
+#Groupname	Controlname	Replicatename	spikename	email	string_to_identify_group	string_pair1	string_pair2
+empty	NA	rep1	NA	NA	empty_rep1	_R1	_R2
+empty	NA	rep2	NA	NA	empty_rep2	_R1	_R2
+empty	NA	rep3	NA	NA	empty_rep3	_R1	_R2
+EWSERG	empty	rep1	NA	NA	EWSERG_rep1	_R1	_R2
+EWSERG	empty	rep2	NA	NA	EWSERG_rep2	_R1	_R2
+EWSERG	empty	rep3	NA	NA	EWSERG_rep3	_R1	_R2
+EWSETV1	empty	rep1	NA	NA	EWSETV1_rep1	_R1	_R2
+EWSETV1	empty	rep2	NA	NA	EWSETV1_rep2	_R1	_R2
+EWSETV1	empty	rep3	NA	NA	EWSETV1_rep3	_R1	_R2
+EWSETV4	empty	rep1	NA	NA	EWSETV4_rep1	_R1	_R2
+EWSETV4	empty	rep2	NA	NA	EWSETV4_rep2	_R1	_R2
+EWSETV4	empty	rep3	NA	NA	EWSETV4_rep3	_R1	_R2
+EWSFEV	empty	rep1	NA	NA	EWSFEV_rep1	_R1	_R2
+EWSFEV	empty	rep2	NA	NA	EWSFEV_rep2	_R1	_R2
+EWSFEV	empty	rep3	NA	NA	EWSFEV_rep3	_R1	_R2
+FUSERG	empty	rep1	NA	NA	FUSERG_rep1	_R1	_R2
+FUSERG	empty	rep2	NA	NA	FUSERG_rep2	_R1	_R2
+FUSERG	empty	rep3	NA	NA	FUSERG_rep3	_R1	_R2
+FUSETV4	empty	rep1	NA	NA	FUSETV4_rep1	_R1	_R2
+FUSETV4	empty	rep2	NA	NA	FUSETV4_rep2	_R1	_R2
+FUSETV4	empty	rep3	NA	NA	FUSETV4_rep3	_R1	_R2
+FUSFEV	empty	rep1	NA	NA	FUSFEV_rep1	_R1	_R2
+FUSFEV	empty	rep2	NA	NA	FUSFEV_rep2	_R1	_R2
+FUSFEV	empty	rep3	NA	NA	FUSFEV_rep3	_R1	_R2
+wtEF	empty	rep1	NA	NA	wtEF_rep1	_R1	_R2
+wtEF	empty	rep2	NA	NA	wtEF_rep2	_R1	_R2
+wtEF	empty	rep3	NA	NA	wtEF_rep3	_R1	_R2
+# Do NOT put empty line between this comments and your samples information
+# All data must be stored in one ""project"" directory with a sub-directory called ""fastq"".
+# You can have sub-directories within your fastq directory
+# Controlname column contains the control/background file for that particular sample.
+# In this example, control for 714 is 197. Controlname must be one of Groupname
+# Please put NA as Controlname for the control file
+# Groupname and Controlname must be part of filename
+# Replicatename must be part of filename. Replicatename cannot be empty. Even if you only have 1 replicate, please put rep1 as Replicatename
+# spikename must be all NA
+# string_to_identify_group is a string that distinguish the file names of one group versus another
+# In project_ex, the directory and file names for 714 replicate 1 all contains the string ""714R1
+# Therefore, string_to_identify_group is 714R1
+# For paired reads, each fastq file will have pair of file with exactly the same name except for _R1_
+# and _R2_ which means pair1 and pair2. Therefore, string_pair1 is _R1_ and
+# string_pair2 is _R2_. Usually this doens't need to be changed!
+# This file needs to be inside the project directory
+# change NA to your email address to get emails when run failed or completed.

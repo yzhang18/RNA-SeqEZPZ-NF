@@ -75,7 +75,6 @@ debug=0
 if [[ -z "$run" ]];then
         run=
 fi
-
 if [[ -z "$padj" ]];then
 	padj=0.05
 fi
@@ -91,8 +90,12 @@ if [[ $run == "debug"* ]];then
         debug=1
 fi
 
-
-echo -e "\nAligning reads to $ref_ver and create tracks for visualization"
+echo -e "\nAligning reads to $ref_ver and create tracks for visualization\n"
+echo -e "Options used to run:"
+echo padj="$padj"
+echo time="$time"
+echo genome="$ref_ver"
+echo ""
 
 # project directory
 proj_dir=$(pwd)

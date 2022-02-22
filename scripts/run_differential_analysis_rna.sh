@@ -96,6 +96,12 @@ fi
 
 echo -e "\nRunning differential analysis with $ref_ver as reference. \n"
 
+echo -e "Options used to run:"
+echo padj="$padj"
+echo time="$time"
+echo genome="$ref_ver"
+echo ""
+
 # project directory
 proj_dir=$(pwd)
 cd $proj_dir

@@ -117,6 +117,10 @@ img_name=rnaseq-pipe-container.sif
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
 echo -e "Generating STAR genome index and get chromosome sizes file.\n"
+echo -e "Options used to run:"
+echo time="$time"
+echo genome="$ref_ver"
+echo ""
 
 skip_run_star_index=0
 ### specify reference genome
@@ -212,7 +216,7 @@ jid0=$(SINGULARITYENV_PYTHONPATH= \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
 				--bind $genome_dir:/ref \
-				--bind $target_link_fa:$target_link \
+				--bind $target_link_fa:$target_link_fa \
 				--bind $target_link_gtf:$target_link_gtf \
 				$img_dir/$img_name \
 				/bin/bash /scripts/star_index_simg.sbatch"| cut -f 4 -d' ')

@@ -52,6 +52,8 @@ exportResults.DESeq2 <- function (out.DESeq2, group, alpha = 0.05, export = TRUE
     # browser()
     gene.id = complete.name$Id
     gene.id = as.character(gene.id)
+    # removed "." in gene.id (CT 2022/02/21)
+    gene.id = sapply(strsplit(gene.id,"[.]"), function(x) x[1])
     ## query by the ensembl gene id
     ## filters letting you know what type of input
     ## attributes what should be displayed (listAttributes(ensembl.hs) to get other attributes)
@@ -67,7 +69,8 @@ exportResults.DESeq2 <- function (out.DESeq2, group, alpha = 0.05, export = TRUE
                     keys = gene.id, 
                     columns = c("ENTREZID", "GENENAME", "GENEID"), 
                     keytype = "GENEID")
-    geneSymbol=tmp.gene$GENENAME[match(complete.name$Id,tmp.gene$GENEID)]
+    complete.name.id.nodot=sapply(strsplit(complete.name$Id,"[.]"),function(x) x[1])
+    geneSymbol=tmp.gene$GENENAME[match(complete.name.id.nodot,tmp.gene$GENEID)]
     
     complete.name=add_column(complete.name,geneSymbol,.after=1)
     #--

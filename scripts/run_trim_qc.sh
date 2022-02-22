@@ -57,7 +57,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 date
-echo Start trimming reads for low quality/adapter sequences then run Quality Control
+echo -e "\nTimming reads for low quality/adapter sequences then run Quality Control\n"
 # converting samples.txt to unix format to remove any invisible extra characters
 dos2unix -k samples.txt &> /dev/null
 
@@ -74,6 +74,10 @@ if [[ $run == "debug"* ]];then
         run=
         debug=1
 fi
+
+echo -e "Options used to run:"
+echo time="$time"
+echo ""
 
 # project directory
 proj_dir=$(pwd)
@@ -122,8 +126,6 @@ string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
 # but this works
 # printf "%s\n" "${filename_string_array[@]}"
 # trim adapter and low quality bases
-echo "Trim adapter and low quality bases using trim_galore"
-echo ""
 
 # initialize jobid strings
 jid=

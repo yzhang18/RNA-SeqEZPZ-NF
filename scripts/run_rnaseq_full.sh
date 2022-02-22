@@ -110,6 +110,13 @@ cd $proj_dir
 # found based on location of this script
 img_dir=$(dirname $(dirname $(readlink -f $0)))
 
+echo -e "\nRunning full RNA-seq analysis\n"
+echo -e "Options used to run:"
+echo padj="$padj"
+echo time="$time"
+echo genome="$ref_ver"
+echo ""
+
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 # IMPORTANT: It is assumed that:
 # scripts to run analysis are in $img_dir/scripts
@@ -125,7 +132,6 @@ if [ ! -d $log_dir ]; then
         mkdir $log_dir
 fi
 echo -e "Logs and scripts ran will be stored in $log_dir\n"
-
 
 # copying this script for records
 $(cp $img_dir/scripts/run_rnaseq_full.sh $log_dir/run_rnaseq_full.sh)
@@ -164,7 +170,6 @@ if [[ $skip_run_star_index == 0 ]];then
         	exit
 	fi
 fi
-echo ""
 echo Done checking and generating STAR index as needed.
 echo See run_star_index.out for more details.
 echo ""
@@ -176,10 +181,10 @@ echo ""
 cd $proj_dir
 . $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time &> run_trim_qc.out
 
-message="Done trimming and QC.\n\
-See run_trim_qc.out.\n\n\
-Aligning reads to $ref_ver and creating tracks for visualization.....\n\
-See progress in run_align_create_tracks_rna.out\n\n"
+message="Done trimming and QC.\n"
+message=${message}"See run_trim_qc.out.\n\n\n"
+message=${message}"Aligning reads to $ref_ver and creating tracks for visualization.....\n"
+message=${message}"See progress in run_align_create_tracks_rna.out\n"
 
 tmp1=$($run sbatch --dependency=afterok:$jid2 \
 		--time=5:00 \
@@ -210,10 +215,10 @@ fi
 cd $proj_dir
 . $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver &> run_align_create_tracks_rna.out
 
-message="Done alignment and create tracks for visualization.\n\
-See log run_align_create_tracks_rna.out.\n\n\
-Performing differential genes analysis.....\n\
-See progress in run_differential_analysis_rna.out.\n\n"
+message="Done alignment and create tracks for visualization.\n"
+message=${message}"See log run_align_create_tracks_rna.out.\n\n\n"
+message=${message}"Performing differential genes analysis.....\n"
+message=${message}"See progress in run_differential_analysis_rna.out.\n"
 
 tmp=$($run sbatch --dependency=afterok:$jid4c \
 		--time=5:00 \
@@ -244,18 +249,19 @@ fi
 cd $proj_dir
 . $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time genome=$ref_ver &> run_differential_analysis_rna.out
 
-message="Done differential RNA-seq analysis.\n\
-See log run_differential_analysis_rna.out\n\n\
-Done running RNA-seq full analysis\n\n\
-Output files are in $work_dir\n\
-Output files for differential analysis are in\n\
-$work_dir/diff_analysis_rslt\n\
-see $work_dir/diff_analysis_rslt/RNA-seq \n\
-differential analysis_report.html for full documentation of differential analysis\n\
-bw_files folder contains the track files for visualization in IGV.\n\
-STAR_2pass/Pass2/ contains the aligned bam files, and feature counts for each sample\n\
-fastqc_rslt contains the Quality Control files. See multiqc_report.html for summary of all QC metrics\n\
-trim folder contains the trimmed fastq files\n\n"
+message="Done differential RNA-seq analysis.\n"
+message=$message"See log run_differential_analysis_rna.out\n\n"
+message=$message"Done running RNA-seq full analysis\n\n"
+message=$message"Output files are in $work_dir\n"
+message=$message"Output files for differential analysis are in\n"
+message=$message"$work_dir/diff_analysis_rslt\n"
+message=$message"RNA-seq_differential_analysis_report.html in \n"
+message=$message"$work_dir/diff_analysis_rslt/\n"
+message=$message"for full documentation of differential analysis\n"
+message=$message"bw_files folder contains the track files for visualization in IGV.\n"
+message=$message"STAR_2pass/Pass2/ contains the aligned bam files, and feature counts for each sample\n"
+message=$message"fastqc_rslt contains the Quality Control files. See multiqc_report.html for summary of all QC metrics\n"
+message=$message"trim folder contains the trimmed fastq files\n\n"
 
 tmp=$($run sbatch --dependency=afterok:$jid8 \
 		--time=5:00 \

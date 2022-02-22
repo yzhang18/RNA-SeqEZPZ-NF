@@ -81,6 +81,10 @@ img_name=rnaseq-pipe-container.sif
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
+echo -e "Options used to run:"
+echo time="$time"
+echo ""
+
 # find available port
 FROM=1035
 TO=65535
@@ -115,6 +119,7 @@ echo If you received \"connection to $node closed by remote host\",
 echo please re-run run_overlap.sh.
 echo ""
 echo -e "After typing in your password, please wait until firefox appears ....\n"
+echo -e "It may take some time for firefox to be responsive as it tries to load all the data\n"
 echo -e "If a pop-up window appears, click on \"Create New Profile\"\n"
 sleep 5
 ssh -tX "$node" 'export port_num='"'$port_num'"'; \

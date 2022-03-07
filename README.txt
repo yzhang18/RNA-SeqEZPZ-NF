@@ -62,17 +62,26 @@ Example of how to pick a “Replicatename”:
 
 d. Fourth column: “spikename” – type in NA for all rows.
 e. Fifth column: “email” – type in the email address of the person running the analysis. Slurm job emails will be sent this email address.
-f. Sixth column: “string_to_identify_sample” – this string will be used to identify files that below to a particular sample.
-This could have punctuation characters. 
+f. Sixth column: “string_to_identify_sample” – this string will be used to identify files that belong to a particular sample. 
+
+Naming rules:
+* This can have punctuation characters. 
+* Different sample cannot have “string_to_identify_sample” that is a complete part of another “string_to_identify_sample”. (i.e., two “string_to_identify_sample”: “iEF714Rep1” and “iEF714Rep11” are not allowed as “iEF714Rep1” is a substring of “iEF714Rep11”). One workaround is to change your replicatename for Rep11 as Repl11. Remember to change your fastq.gz filename accordingly. In this case, “string_to_identify_sample” is now “iEF714Repl11”. See example 1 below.
+
 
 Examples of how to pick a “string_to_identify_sample”:
 
 * Example 1: if your file names are:
 o A8_20-0647_iEF714R1_S57_L001_R1_001.sub.fastq.gz
-o C8_20-0649_iEF563R1_S59_L001_R2_001.sub.fastq.gz
-o H7_20-0646_iEF197R1_S56_L002_R2_001.sub.fastq.gz
-o A9_20-0655_iEF197R2_S65_L001_R2_001.sub.fastq.gz
-The “string_to_identify_sample” would be iEF714R1, iEF563R1, iEF197R1 and iEF197R2 respectively.
+o C8_20-0649_iEF563R1_S59_L001_R1_001.sub.fastq.gz
+o H7_20-0646_iEF197R2_S56_L002_R1_001.sub.fastq.gz
+o A9_20-0655_iEF197R21_S65_L001_R1_001.sub.fastq.gz
+
+You would change the last filename to:
+ A9_20-0655_iEF197Repl21_S65_L001_R1_001.sub.fastq.gz
+All the other filenames will be the same. 
+The “string_to_identify_sample” would be iEF714R1, iEF563R1, iEF197R2 and iEF197Repl21, respectively. Note that iEF197R2 is no longer completely part of iEF197Repl21.
+The “Replicatename” would be R1, R1, R2 and Repl21, respectively.
 g. Seventh column: “string_pair1” – each fastq file will be a pair of files that only differs in one string. Usually this string is _R1_ for pair1 reads and _R2_ for pair2 reads. 
 h. Eight column: “string_pair2” – similar to “string_pair1” but for pair 2 reads.
 

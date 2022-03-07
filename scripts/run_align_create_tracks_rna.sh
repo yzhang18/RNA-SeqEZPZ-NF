@@ -143,7 +143,7 @@ genome_dir=$img_dir/ref/$ref_ver
 if [[ ! -d $genome_dir ]];then
         genome_dir=$proj_dir/ref/$ref_ver
 fi
-echo $genome_dir
+#echo $genome_dir
 gtf_file=$(find $genome_dir -name *.gtf | xargs basename)
 fasta_file=$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)

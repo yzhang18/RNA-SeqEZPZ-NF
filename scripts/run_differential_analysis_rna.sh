@@ -167,6 +167,21 @@ filename_string_array=($(awk '!/#/ {print $6}' samples.txt))
 string_pair1_array=($(awk '!/#/ {print $7}' samples.txt))
 string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
 
+# added this to prevent error when using symbolic link that is upstream of
+# home directory
+# NOTE: for this to work, complete path should be used when creating symbolic link
+# example:
+# this works:
+# cd <project-dir>/ref
+# ln -s /gpfs0/home1/gdlessnicklab/lab/data/mm10 .
+# this does NOT work:
+# # cd <project-dir>/ref
+# ln -s /home1/gdlessnicklab/lab/data/mm10 .
+# the path should be the path that is returned by 'readlink -f'
+
+target_link_gtf=$(readlink -f $genome_dir/*.gtf)
+#target_link_fa=$(readlink -f $genome_dir/*.fa*)
+
 #### feature counts ####
 # counting number of reads in each feature using subread package featureCounts
 # initialize job ids
@@ -178,7 +193,6 @@ for i in "${!groupname_array[@]}"; do
 	string_pair2=${string_pair2_array[$i]}
 	filename_string=${filename_string_array[$i]}
 	prefix=${groupname}_${repname}
-	# 
 	cd $proj_dir
 	# set -x
 	tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
@@ -199,6 +213,7 @@ for i in "${!groupname_array[@]}"; do
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
 				--bind $genome_dir:/ref \
+				--bind $target_link_gtf:$target_link_gtf \
 				$img_dir/$img_name \
 				/bin/bash /scripts/feature_counts_simg.sbatch"| cut -f 4 -d' ')
 	echo "Counting number of reads in each feature for $prefix job id: $tmp_jid"

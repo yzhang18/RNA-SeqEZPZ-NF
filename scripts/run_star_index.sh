@@ -212,6 +212,7 @@ jid0=$(SINGULARITYENV_PYTHONPATH= \
 			--mail-type=FAIL \
 			--mail-user=$email \
 			--job-name=star_index \
+			--time=$time \
 			--wrap "singularity exec \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \

@@ -9,7 +9,7 @@ source activate rna_env
 featureCounts -v
 set -x
 $run featureCounts -p \
-	-a /ref/$gtf_file \
+	-a /ref_gtf/$target_gtf_name \
 	-t exon \
 	-g gene_id \
 	-T $ncpus \

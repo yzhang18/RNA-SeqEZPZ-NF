@@ -195,8 +195,13 @@ fi
 # ln -s /home1/gdlessnicklab/lab/data/mm10 .
 # the path should be the path that is returned by 'readlink -f'
 
+# get the "true" path in case it is a symlink
 target_link_gtf=$(readlink -f $genome_dir/*.gtf)
 target_link_fa=$(readlink -f $genome_dir/*.fa*)
+target_fa_name=$(basename $target_link_fa)
+target_gtf_name=$(basename $target_link_gtf)
+target_fa_dir=$(dirname $target_link_gtf)
+target_gtf_dir=$(dirname $target_link_gtf)
 
 #### generate index ####
 jid0=$(SINGULARITYENV_PYTHONPATH= \
@@ -204,8 +209,8 @@ jid0=$(SINGULARITYENV_PYTHONPATH= \
 		SINGULARITYENV_ncpus=$ncpus \
 		SINGULARITYENV_prefix=$prefix \
 		SINGULARITYENV_ref_ver=$ref_ver \
-		SINGULARITYENV_fasta_file=$fasta_file \
-		SINGULARITYENV_gtf_file=$gtf_file \
+		SINGULARITYENV_target_fa_name=$target_fa_name \
+		SINGULARITYENV_target_gtf_name=$target_gtf_name \
 		$run sbatch --output=$log_dir/star_index.out \
 			--cpus-per-task $ncpus \
 			--partition=himem \
@@ -217,8 +222,8 @@ jid0=$(SINGULARITYENV_PYTHONPATH= \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
 				--bind $genome_dir:/ref \
-				--bind $target_link_fa:$target_link_fa \
-				--bind $target_link_gtf:$target_link_gtf \
+				--bind $target_fa_dir:/ref_fa \
+				--bind $target_gtf_dir:/ref_gtf \
 				$img_dir/$img_name \
 				/bin/bash /scripts/star_index_simg.sbatch"| cut -f 4 -d' ')
 echo "Generating STAR index job id: $jid0"

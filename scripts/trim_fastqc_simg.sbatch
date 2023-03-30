@@ -19,7 +19,7 @@ cd /mnt/outputs/trim
 $run trim_galore -q 20 --length 20 \
 	--illumina \
 	--paired \
-	/mnt/$file /mnt/${file/$string_pair1/$string_pair2} \
+	/$file /${file/$string_pair1/$string_pair2} \
 	--fastqc --fastqc_args "--outdir /mnt/outputs/fastqc_rslt"
 set +x
 conda deactivate

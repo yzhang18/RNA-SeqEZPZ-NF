@@ -179,8 +179,10 @@ string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
 # ln -s /home1/gdlessnicklab/lab/data/mm10 .
 # the path should be the path that is returned by 'readlink -f'
 
+# get the "true" path in case it is a symlink
 target_link_gtf=$(readlink -f $genome_dir/*.gtf)
-#target_link_fa=$(readlink -f $genome_dir/*.fa*)
+target_gtf_name=$(basename $target_link_gtf)
+target_gtf_dir=$(dirname $target_link_gtf)
 
 #### feature counts ####
 # counting number of reads in each feature using subread package featureCounts
@@ -199,8 +201,8 @@ for i in "${!groupname_array[@]}"; do
 		SINGULARITYENV_run=$run \
 		SINGULARITYENV_ncpus=$ncpus \
 		SINGULARITYENV_prefix=$prefix \
-		SINGULARITYENV_gtf_file=$gtf_file \
 		SINGULARITYENV_ref_ver=$ref_ver \
+		SINGULARITYENV_target_gtf_name=$target_gtf_name \
 		$run sbatch --output=$log_dir/featureCounts_${prefix}.out \
 			--cpus-per-task $ncpus \
 			--partition=himem \
@@ -213,7 +215,7 @@ for i in "${!groupname_array[@]}"; do
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
 				--bind $genome_dir:/ref \
-				--bind $target_link_gtf:$target_link_gtf \
+				--bind $target_gtf_dir:/ref_gtf \
 				$img_dir/$img_name \
 				/bin/bash /scripts/feature_counts_simg.sbatch"| cut -f 4 -d' ')
 	echo "Counting number of reads in each feature for $prefix job id: $tmp_jid"

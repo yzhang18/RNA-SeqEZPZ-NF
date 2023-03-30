@@ -177,7 +177,7 @@ for file in $(find fastq/ -name "*fastq.gz");do
 			--wrap "singularity exec \
 				--bind $img_dir/scripts:/scripts \
 				--bind $proj_dir:/mnt \
-				--bind $target_link:$target_link \
+				--bind $target_link:/fastq \
 				$img_dir/$img_name \
 				/bin/sh /scripts/trim_fastqc_simg.sbatch" | cut -f 4 -d' ')
 		echo "Processing $basefile Job id: $tmp_jid"

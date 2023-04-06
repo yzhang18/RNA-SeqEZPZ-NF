@@ -249,6 +249,7 @@ if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; the
 	echo -e "STAR 1st pass run failed. Please check star_pass1_* files in $log_dir\n"
 	exit
 fi
+
 # STAR second pass
 genomeForPass2=$work_dir/STAR_2pass/GenomeForPass2
 
@@ -301,7 +302,7 @@ for i in "${!groupname_array[@]}"; do
 				--cpus-per-task $ncpus \
 				--partition=himem \
 				--mail-type=FAIL \
-				--dependency=afterok:$jid3 \
+				--dependency=afterok:$tmp \
 				--mail-user=$email \
 				--job-name=star_pass2 \
 				--mem=128G \
@@ -378,7 +379,7 @@ if [[ n_rep -gt 1 ]]; then
 				SINGULARITYENV_fasta_file=$fasta_file \
 				SINGULARITYENV_chr_info=$chr_info \
 				$run sbatch --output=$log_dir/combinebw_${groupname}.out \
-					--dependency=afterok:$jid4 \
+					--dependency=afterok:$tmp \
 					--cpus-per-task $ncpus \
 					--partition=himem \
 					--mail-type=FAIL \

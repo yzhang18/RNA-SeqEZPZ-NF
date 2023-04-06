@@ -18,8 +18,10 @@ fi
 cd /mnt/outputs/trim
 $run trim_galore -q 20 --length 20 \
 	--illumina \
+	--cores 4 \
 	--paired \
 	/$file /${file/$string_pair1/$string_pair2} \
 	--fastqc --fastqc_args "--outdir /mnt/outputs/fastqc_rslt"
+# 4 is thought to be optimal number of cores in trim_galore
 set +x
 conda deactivate

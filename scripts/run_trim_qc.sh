@@ -144,7 +144,8 @@ cd $proj_dir
 # the path should be the path that is returned by 'readlink -f'
 
 target_link=$(readlink -f fastq)
-
+# note: trim_galore is set to --cores 4 which actually translate to 15 cores
+# see trim_galore help for more info
 for file in $(find fastq/ -name "*fastq.gz");do
 	basefile=$(basename $file)
 	idx=$(echo ${filename_string_array[*]} | tr ' ' '\n' | awk -v basefile=$basefile 'basefile ~ $1 {print NR-1}')
@@ -174,6 +175,7 @@ for file in $(find fastq/ -name "*fastq.gz");do
 			--time=$time \
 			--mail-type=FAIL \
 			--mail-user=$email \
+			--cpus-per-task=15 \
 			--wrap "singularity exec \
 				--bind $img_dir/scripts:/scripts \
 				--bind $proj_dir:/mnt \

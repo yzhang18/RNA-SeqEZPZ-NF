@@ -121,7 +121,7 @@ echo "All other logs and scripts ran will be stored in $log_dir"
 echo ""
 
 # specify number of cpus for featureCounts
-ncpus=15
+ncpus=5
 max_cpu=$(lscpu | grep 'CPU(s):' | head -n 1 | awk '{print $2}')
 if [[ $max_cpu -lt $ncpus ]]; then
         ncpus=$max_cpu

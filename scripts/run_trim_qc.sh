@@ -175,7 +175,7 @@ for file in $(find fastq/ -name "*fastq.gz");do
 			--time=$time \
 			--mail-type=FAIL \
 			--mail-user=$email \
-			--cpus-per-task=15 \
+			--cpus-per-task=5 \
 			--wrap "singularity exec \
 				--bind $img_dir/scripts:/scripts \
 				--bind $proj_dir:/mnt \

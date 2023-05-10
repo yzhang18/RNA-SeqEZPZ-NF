@@ -200,7 +200,7 @@ target_link_gtf=$(readlink -f $genome_dir/*.gtf)
 target_link_fa=$(readlink -f $genome_dir/*.fa*)
 target_fa_name=$(basename $target_link_fa)
 target_gtf_name=$(basename $target_link_gtf)
-target_fa_dir=$(dirname $target_link_gtf)
+target_fa_dir=$(dirname $target_link_fa)
 target_gtf_dir=$(dirname $target_link_gtf)
 
 #### generate index ####

@@ -4,3 +4,4 @@ ref
 **/outputs*
 fastq
 **/*.out
+*\.Rhistory

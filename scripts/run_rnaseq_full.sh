@@ -49,7 +49,10 @@ while [[ "$#" -gt 0 ]]; do
 		ref_ver=$(echo $1 | cut -d '=' -f 2)
 		shift
 	fi
-
+	if [[ $1 == "batch_adjust"* ]];then
+                batch_adjust=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 	if [[ $1 == "help" ]];then
 		echo ""
 		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
@@ -73,6 +76,9 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e "time=1-00:00:00"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
 		echo -e "\tDefault is 1 day.\n"
+		echo batch_adjust=yes
+                echo -e "\tby default differential analysis was done with replicate batch adjustment."
+                echo -e "\tto turn off batch adjustment, set to no.\n"
 		exit
 	fi
 done
@@ -94,6 +100,10 @@ fi
 if [[ -z "$ref_ver" ]];then
 	ref_ver=hg19
 fi
+if [[ -z "$batch_adjust" ]];then
+        batch_adjust=yes
+fi
+
 # run parameter needs to be set differently here
 if [[ $run == "debug"* ]];then
         set -x
@@ -115,6 +125,7 @@ echo -e "Options used to run:"
 echo padj="$padj"
 echo time="$time"
 echo genome="$ref_ver"
+echo batch_adjust="$batch_adjust"
 echo ""
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"

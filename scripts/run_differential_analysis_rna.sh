@@ -43,9 +43,13 @@ while [[ "$#" -gt 0 ]]; do
 		ref_ver=$(echo $1 | cut -d '=' -f 2)
 		shift
 	fi
+	if [[ $1 == "batch_adjust"* ]];then
+		batch_adjust=$(echo $1 | cut -d '=' -f 2)
+		shift
+	fi
 	if [[ $1 == "help" ]];then
 		echo ""
-		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0//scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
+		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun differential RNA-seq analysis'
@@ -65,7 +69,10 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e "\tset FDR of differential genes (as calculated by DESeq2) < 0.05. Default=0.05"
 		echo -e "time=1-00:00:00"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
-		echo -e "\tDefault is 1 day.\n"
+		echo -e "\tDefault is 1 day."
+		echo batch_adjust=yes
+		echo -e "\tby default differential analysis was done with replicate batch adjustment."
+		echo -e "\tto turn off batch adjustment, set to no.\n"
 		exit
 	fi
 done
@@ -88,6 +95,9 @@ fi
 if [[ -z "$ref_ver" ]];then
 	ref_ver=hg19
 fi
+if [[ -z "$batch_adjust" ]];then
+        batch_adjust=yes 
+fi
 if [[ $run == "debug"* ]];then
         set -x
         run=
@@ -100,6 +110,7 @@ echo -e "Options used to run:"
 echo padj="$padj"
 echo time="$time"
 echo genome="$ref_ver"
+echo batch_adjust="$batch_adjust"
 echo ""
 
 # project directory
@@ -244,6 +255,7 @@ jid6=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_run=$run \
 	SINGULARITYENV_padj=$padj \
 	SINGULARITYENV_email=$email \
+	SINGULATIRYENV_batch_adjust=$batch_adjust \
 	$run sbatch --output=$log_dir/run_sartools.out \
 		--job-name=run_sartools \
 		--partition=himem \

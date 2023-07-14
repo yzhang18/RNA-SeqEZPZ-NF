@@ -29,7 +29,8 @@ for(i in 1:length(args)){
   tmp.args <- unlist(strsplit(args[i],"="))
   switch(tmp.args[1],
   padj={padj.cutoff=as.numeric(tmp.args[2])},
-  email={email=tmp.args[2]}
+  email={email=tmp.args[2]},
+  batch_adjust={batch_adjust=tmp.args[2]}
  )}
 
 workDir <- "/mnt/outputs/diff_analysis_rslt"
@@ -140,7 +141,11 @@ varInt <- "group"                                    # factor of interest
 # condRef is just used to determine reference for calculating fold-change
 condRef <-  controlname[!is.na(controlname)][1]
 # blocking factor: NULL (default) or "batch" for example
-batch <- "rep"                                       
+if (tolower(batch_adjust) == "yes"){
+ batch <- "rep"
+}else{
+ batch <- NULL
+}
 fitType <- "local"                                   # mean-variance relationship: "parametric" (default) or "local"
 cooksCutoff <- TRUE                                  # TRUE/FALSE to perform the outliers detection (default is TRUE)
 independentFiltering <- TRUE                         # TRUE/FALSE to perform independent filtering (default is TRUE)

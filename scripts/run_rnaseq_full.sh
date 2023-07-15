@@ -258,7 +258,7 @@ fi
 
 ### Running differential genes analysis
 cd $proj_dir
-. $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time genome=$ref_ver &> run_differential_analysis_rna.out
+. $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time genome=$ref_ver batch_adjust=$batch_adjust &> run_differential_analysis_rna.out
 
 message="Done differential RNA-seq analysis.\n"
 message=$message"See log run_differential_analysis_rna.out\n\n"

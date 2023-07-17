@@ -255,7 +255,7 @@ jid6=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_run=$run \
 	SINGULARITYENV_padj=$padj \
 	SINGULARITYENV_email=$email \
-	SINGULATIRYENV_batch_adjust=$batch_adjust \
+	SINGULARITYENV_batch_adjust=$batch_adjust \
 	$run sbatch --output=$log_dir/run_sartools.out \
 		--job-name=run_sartools \
 		--partition=himem \

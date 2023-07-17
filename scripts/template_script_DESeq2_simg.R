@@ -145,6 +145,7 @@ if (tolower(batch_adjust) == "yes"){
  batch <- "rep"
 }else{
  batch <- NULL
+ batchRem=FALSE
 }
 fitType <- "local"                                   # mean-variance relationship: "parametric" (default) or "local"
 cooksCutoff <- TRUE                                  # TRUE/FALSE to perform the outliers detection (default is TRUE)
@@ -198,8 +199,10 @@ out.DESeq2 <- run.DESeq2(counts=counts, target=target, varInt=varInt, batch=batc
                          cooksCutoff=cooksCutoff, independentFiltering=independentFiltering, alpha=alpha)
 
 # PCA + clustering
+if(!is.null(batch)){
 exploreCounts(object=out.DESeq2$dds, group=target[,varInt], typeTrans=typeTrans, col=colors,
               batch=batch,varInt=varInt,batchRem=TRUE)
+}
 # plot PCA without removing batch
 exploreCounts(object=out.DESeq2$dds, group=target[,varInt], typeTrans=typeTrans, col=colors,
  batch=batch,varInt=varInt,batchRem=FALSE)

@@ -199,7 +199,7 @@ target_gtf_dir=$(dirname $target_link_gtf)
 # counting number of reads in each feature using subread package featureCounts
 # initialize job ids
 jid5=
-for i in "${!groupname_array[@]}"; do 
+for i in "${!groupname_array[@]}"; do
 	groupname=${groupname_array[$i]}
 	repname=${repname_array[$i]}
 	string_pair1=${string_pair1_array[$i]}
@@ -279,15 +279,15 @@ do
         sleep 10
         state=($(squeue -j $check_jid5 -h))
 done
-			
+
 reason=$(squeue -j $jid6 -o "%R" -h)
 state=$(sacct -j $jid6 --format=state | tail -n +3 | head -n 1)
-if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then	
+if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 	scancel $jid6
 	echo -e "Feature counts failed. Please check featureCounts_* files in $log_dir\n"
 	exit
-fi	
-				
+fi
+
 ##### re-run final multiqc
 jid7=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_run=$run \
@@ -315,15 +315,20 @@ do
         sleep 10
         state=($(squeue -j $check_jid6 -h))
 done
-			
+
 reason=$(squeue -j $jid7 -o "%R" -h)
 state=$(sacct -j $jid7 --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 	scancel $jid7
 	echo -e "SARTools run failed. Please check run_sartools.out in $log_dir\n"
 	exit
-fi	
-	
+fi
+
+# delete intermediate bam files
+rm -r $proj_dir/outputs/STAR_2pass/Pass1
+rm -r $proj_dir/outputs/STAR_2pass/GenomeForPass2
+rm $proj_dir/outputs/STAR_2pass/Pass2/*Aligned.out.bam
+
 message="Differential analysis has been completed\n\
 Output files are in $work_dir/diff_analysis_rslt\n\
 see $work_dir/diff_analysis_rslt/RNA-seq differential analysis_report.html\n\

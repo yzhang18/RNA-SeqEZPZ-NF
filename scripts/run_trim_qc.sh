@@ -149,6 +149,10 @@ target_link=$(readlink -f fastq)
 for file in $(find fastq/ -name "*fastq.gz");do
 	basefile=$(basename $file)
 	idx=$(echo ${filename_string_array[*]} | tr ' ' '\n' | awk -v basefile=$basefile 'basefile ~ $1 {print NR-1}')
+	# skipp fastq files if it's not on the samples.txt
+	if [ -z "$idx" ];then
+                continue
+        fi
 	groupname=${groupname_array[$idx]}
 	repname=${repname_array[$idx]}
 	string_pair1=${string_pair1_array[$idx]}

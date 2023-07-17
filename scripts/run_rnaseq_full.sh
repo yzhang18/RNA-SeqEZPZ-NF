@@ -186,39 +186,58 @@ echo See run_star_index.out for more details.
 echo ""
 
 ### trimming and QC
-echo ""
-echo Trimming and QC.....see progress in run_trim_qc.out
-echo ""
-cd $proj_dir
-. $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time &> run_trim_qc.out
+date
+echo "Checking whether trimming already ran to completion"
+if compgen -G "${proj_dir}/outputs/logs/trim_fastqc_*.out" > /dev/null; then
+        # check whether any fail
+        n_failed=$(grep FAILED $proj_dir/outputs/logs/trim_fastqc*.out | wc -l)
+        if [[ $n_failed -eq 0 ]];then
+        echo "Skip trimming since it's already done."
+        else
+            	echo Trimming and QC.....see progress in ${proj_dir}/run_trim_qc.out
+                echo ""
+                export run time
+                . $img_dir/scripts/run_trim_qc.sh run=$run time=$time &> run_trim_qc.out
+                echo "Done running trim and QC."
+                echo "Read run_trim_qc.out log in ${proj_dir} and see whether all steps ran to completion"
+                echo ""
 
-message="Done trimming and QC.\n"
-message=${message}"See run_trim_qc.out.\n\n\n"
-message=${message}"Aligning reads to $ref_ver and creating tracks for visualization.....\n"
-message=${message}"See progress in run_align_create_tracks_rna.out\n"
+        fi
+else
+	echo ""
+	echo Trimming and QC.....see progress in run_trim_qc.out
+	echo ""
+	cd $proj_dir
+	. $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time &> run_trim_qc.out
 
-tmp1=$($run sbatch --dependency=afterok:$jid2 \
+	message="Done trimming and QC.\n"
+	message=${message}"See run_trim_qc.out.\n\n\n"
+	message=${message}"Aligning reads to $ref_ver and creating tracks for visualization.....\n"
+	message=${message}"See progress in run_align_create_tracks_rna.out\n"
+
+	tmp1=$($run sbatch --dependency=afterok:$jid2 \
 		--time=5:00 \
 		--output=$log_dir/dummy_run_trim_qc.txt \
 		--job-name=run_trim_qc \
 		--export message="$message",proj_dir=$proj_dir \
 		--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out"| cut -f 4 -d' ')
-# message if jobs never satisfied
-check_jid2=$(echo $jid2 | sed 's/:/,/g')
-state=($(squeue -j $check_jid2 -h))
+	# message if jobs never satisfied
+	check_jid2=$(echo $jid2 | sed 's/:/,/g')
+	state=($(squeue -j $check_jid2 -h))
 
-while [ ${#state[@]} -ne 0 ];
-do
-        sleep 10
-        state=($(squeue -j $check_jid2 -h))
-done
+	while [ ${#state[@]} -ne 0 ];
+	do
+        	sleep 10
+        	state=($(squeue -j $check_jid2 -h))
+	done
 				
-reason=$(squeue -j $tmp1 -o "%R" -h)
-state=$(sacct -j $tmp1 --format=state | tail -n +3 | head -n 1)
-if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-	scancel $tmp1
-	echo -e "Trimming and/or QC failed. Please check run_trim_qc.out\n"
+	reason=$(squeue -j $tmp1 -o "%R" -h)
+	state=$(sacct -j $tmp1 --format=state | tail -n +3 | head -n 1)
+	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
+		scancel $tmp1
+		echo -e "Trimming and/or QC failed. Please check run_trim_qc.out\n"
 	exit
+	fi
 fi
 
 

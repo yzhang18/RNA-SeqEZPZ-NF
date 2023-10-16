@@ -3,26 +3,26 @@
 # script connecting all the individual scripts to do full rnaseq analysis
 # How to run
 # cd <project_dir>
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
 # Examples:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
 # to run with specific time limit:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh \
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh \
 #        	time=DD-HH:MM:SS &> run_rnaseq_full.out &
 # 
 # by default, alignment is done to human reference genome hg19 unless specified using 'genome=hg38':
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh genome=hg38 &> run_rnaseq_full.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh genome=hg38 &> run_rnaseq_full.out &
 # 
 # or to do nothing but echo all commands:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh run=echo &> run_rnaseq_full.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh run=echo &> run_rnaseq_full.out &
 # 
 # or to change a bunch of parameters at once:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh run=echo \
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh run=echo \
 #     padj=1 time=DD-HH:MM:SS \
 # &> run_rnaseq_full.out &
 # 
 # or to run and printing all trace commands (i.e. set -x):
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh run=debug &> run_rnaseq_full.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh run=debug &> run_rnaseq_full.out &
 
 
 #set -x
@@ -55,7 +55,7 @@ while [[ "$#" -gt 0 ]]; do
         fi
 	if [[ $1 == "help" ]];then
 		echo ""
-		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
+		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun full RNA-seq analysis: Quality Control, alignment, and differential analysis'

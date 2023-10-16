@@ -2,18 +2,18 @@
 
 # How to run
 # cd <project_dir>
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
 # Examples:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
 #
 # by default, alignment is done to human reference genome hg19 (genome=hg19) unless specified genome=hg38:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh genome=hg38 &> run_differential_analysis_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh genome=hg38 &> run_differential_analysis_rna.out &
 #
 # or to do nothing but echo all commands:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh run=echo &> run_differential_analysis_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh run=echo &> run_differential_analysis_rna.out &
 #
 # or to change FDR of differential analysis:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh padj=1 \
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh padj=1 \
 # &> run_differential_analysis_rna.out &
 #
 # or to run and printing all trace commands (i.e. set -x):
@@ -49,7 +49,7 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 	if [[ $1 == "help" ]];then
 		echo ""
-		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
+		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun differential RNA-seq analysis'

@@ -2,22 +2,22 @@
 
 # How to run:
 # cd <project_dir>
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh &> run_align_create_tracks_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_align_create_tracks_rna.sh &> run_align_create_tracks_rna.out &
 # Examples:
 # cd project1
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh &> run_align_create_tracks_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_align_create_tracks_rna.sh &> run_align_create_tracks_rna.out &
 #
 # by default, alignment is done to human reference genome hg19 unless specified genome=hg38:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh genome=hg38 &> run_align_create_tracks_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_align_create_tracks_rna.sh genome=hg38 &> run_align_create_tracks_rna.out &
 #
 # or to run with specific time limit:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh time=DD-HH:MM:SS &> run_align_create_tracks_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_align_create_tracks_rna.sh time=DD-HH:MM:SS &> run_align_create_tracks_rna.out &
 #
 # or to do nothing but echo all commands:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh run=echo &> run_align_create_tracks_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_align_create_tracks_rna.sh run=echo &> run_align_create_tracks_rna.out &
 #
 # or to run and printing all trace commands (i.e. set -x):
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh run=debug &> run_align_create_tracks_rna.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_align_create_tracks_rna.sh run=debug &> run_align_create_tracks_rna.out &
 
 #set -x
 set -e
@@ -42,7 +42,7 @@ while [[ "$#" -gt 0 ]]; do
 
 	if [[ $1 == "help" ]] ;then
 		echo ""
-		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_align_create_tracks_rna.sh [OPTION] &> run_align_create_tracks_rna.out &'
+		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_align_create_tracks_rna.sh [OPTION] &> run_align_create_tracks_rna.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun alignment and tracks creation'

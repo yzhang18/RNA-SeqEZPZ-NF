@@ -3,19 +3,19 @@
 # script to trim fastq files and run quality control
 # How to run:
 # cd <project_dir>
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh &> run_trim_qc.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh &> run_trim_qc.out &
 # Examples:
 # cd project1
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh &> run_trim_qc.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh &> run_trim_qc.out &
 #
 # or to run with specific time limit:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh time=DD-HH:MM:SS  &> run_trim_qc.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh time=DD-HH:MM:SS  &> run_trim_qc.out &
 #
 # or to do nothing but echo all commands:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh run=echo &> run_trim_qc.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh run=echo &> run_trim_qc.out &
 #
 # or to run and printing all trace commands (i.e. set -x):
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh run=debug &> run_trim_qc.out &
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh run=debug &> run_trim_qc.out &
 #
 
 
@@ -37,7 +37,7 @@ while [[ "$#" -gt 0 ]]; do
 
 	if [[ $1 == "help" ]];then
 		echo ''
-		echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out &'
+		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun trim and qc for RNA-seq samples'

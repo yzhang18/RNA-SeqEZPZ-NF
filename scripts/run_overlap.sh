@@ -3,17 +3,17 @@
 # script to run shiny app
 # How to run
 # cd <project_dir>
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_overlap.sh
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_overlap.sh
 # Examples:
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_overlap.sh
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_overlap.sh
 # <project_dir> is where the fastq and outputs directory are
 # project directory where the fastq and outputs directory are
 #
 # to run with all commands printed
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_overlap.sh run=debug
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_overlap.sh run=debug
 #
 # Default time limit is 1 day to change to 1 day, 2 hours, 20 minutes and 30 sec
-# bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_overlap.sh time=1-2:20:30
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_overlap.sh time=1-2:20:30
 
 # clear python path to prevent mixed up of python packages
 unset PYTHONPATH
@@ -30,7 +30,7 @@ while [[ "$#" -gt 0 ]]; do
 
         if [[ $1 == "help" ]];then
 		echo ""
-                echo 'usage: bash /export/apps/opt/rnaseq-pipeline/2.0/scripts/run_overlap.sh [OPTION]'
+                echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_overlap.sh [OPTION]'
                 echo ''
                 echo DESCRIPTION
                 echo -e '\trun shiny app to show overlaps'

@@ -175,9 +175,8 @@ $(mv samples_tmp.txt samples.txt)
 groupname_array=($(awk '!/#/ {print $1}' samples.txt))
 repname_array=($(awk '!/#/ {print $3}' samples.txt))
 email=$(awk '!/#/ {print $5;exit}' samples.txt | tr -d '[:space:]')
-filename_string_array=($(awk '!/#/ {print $6}' samples.txt))
-string_pair1_array=($(awk '!/#/ {print $7}' samples.txt))
-string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
+path_to_r1_fastq=($(awk '!/#/ {print $6}' samples.txt))
+path_to_r2_fastq=($(awk '!/#/ {print $7}' samples.txt))
 
 if [[ $email == "NA" ]];then
         email=

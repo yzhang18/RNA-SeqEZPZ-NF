@@ -118,9 +118,8 @@ $(mv samples_tmp.txt samples.txt)
 groupname_array=($(awk '!/#/ {print $1}' samples.txt))
 repname_array=($(awk '!/#/ {print $3}' samples.txt))
 email=$(awk '!/#/ {print $5;exit}' samples.txt | tr -d '[:space:]')
-filename_string_array=($(awk '!/#/ {print $6}' samples.txt))
-string_pair1_array=($(awk '!/#/ {print $7}' samples.txt))
-string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
+path_to_r1_fastq=($(awk '!/#/ {print $6}' samples.txt))
+path_to_r2_fastq=($(awk '!/#/ {print $7}' samples.txt))
 # note:
 # not sure why the usual echo ${filename_string_array[@]} doesn't work
 # but this works
@@ -146,55 +145,53 @@ cd $proj_dir
 target_link=$(readlink -f fastq)
 # note: trim_galore is set to --cores 4 which actually translate to 15 cores
 # see trim_galore help for more info
-for file in $(find fastq/ -name "*fastq.gz");do
-	basefile=$(basename $file)
-	idx=$(echo ${filename_string_array[*]} | tr ' ' '\n' | awk -v basefile=$basefile 'basefile ~ $1 {print NR-1}')
-	# skipp fastq files if it's not on the samples.txt
-	if [ -z "$idx" ];then
-                continue
-        fi
-	groupname=${groupname_array[$idx]}
-	repname=${repname_array[$idx]}
-	string_pair1=${string_pair1_array[$idx]}
-	string_pair2=${string_pair2_array[$idx]}
-	prefix=${groupname}_${repname}
+for idx in ${!path_to_r1_fastq[@]};do
+	# split path if there are technical reps
+	split_path_r1=$(echo ${path_to_r1_fastq[$idx]} | cut -f1 -d,)
+	split_path_r2=$(echo ${path_to_r2_fastq[$idx]} | cut -f1 -d,)
+		# loop through tech reps
+		for idx_tech in ${!split_path_r1[@]}; do
+ 			basefile=$(basename ${split_path_r1[$idx_tech]})
+			path_tech_r1=${split_path_r1[$idx_tech]}
+			path_tech_r2=${split_path_r2[$idx_tech]}
+			groupname=${groupname_array[$idx]}
+			repname=${repname_array[$idx]}
+			prefix=${groupname}_${repname}
 
-	# need to skip the second read pair 
-	if [[ "$basefile" =~ $string_pair1 ]];then
-		tmp_idx=$((tmp_idx+1))
-		# echo $prefix $basefile $run \
-		# $log_dir $email $proj_dir \
-		# $groupname $repname $string_pair1 \
-		# $string_pair2
-		# execute inside singularity
-		tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
-		SINGULARITYENV_run=$run \
-		SINGULARITYENV_prefix=$prefix \
-		SINGULARITYENV_file=$file \
-		SINGULARITYENV_string_pair1=$string_pair1 \
-		SINGULARITYENV_string_pair2=$string_pair2 \
-		$run sbatch --output=$log_dir/trim_fastqc_${prefix}_pseudolane${tmp_idx}.out \
-			--job-name=trim_fastqc \
-			--partition=general \
-			--time=$time \
-			--mail-type=FAIL \
-			--mail-user=$email \
-			--cpus-per-task=5 \
-			--wrap "singularity exec \
-				--bind $img_dir/scripts:/scripts \
-				--bind $proj_dir:/mnt \
-				--bind $target_link:/fastq \
-				$img_dir/$img_name \
-				/bin/sh /scripts/trim_fastqc_simg.sbatch" | cut -f 4 -d' ')
-		echo "Processing $basefile Job id: $tmp_jid"
-		echo "" 
-		if [ -z "$jid" ]; then
+			tmp_idx=$((tmp_idx+1))
+			# echo $prefix $basefile $run \
+			# $log_dir $email $proj_dir \
+			# $groupname $repname \
+			# execute inside singularity
+			tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
+			SINGULARITYENV_run=$run \
+			SINGULARITYENV_prefix=$prefix \
+			SINGULARITYENV_file=$file \
+			SINGULARITYENV_path_tech_r1=$path_tech_r1 \
+			SINGULARITYENV_path_tech_r2=$path_tech_r2 \
+				$run sbatch --output=$log_dir/trim_fastqc_${prefix}_pseudolane${tmp_idx}.out \
+					--job-name=trim_fastqc \
+					--partition=general \
+					--time=$time \
+					--mail-type=FAIL \
+					--mail-user=$email \
+					--cpus-per-task=5 \
+					--wrap "singularity exec \
+					--bind $img_dir/scripts:/scripts \
+					--bind $proj_dir:/mnt \
+					--bind $path_tech_r1 \
+					--bind $path_tech_r2 \
+					$img_dir/$img_name \
+					/bin/sh /scripts/trim_fastqc_simg.sbatch" | cut -f 4 -d' ')
+			echo "Processing $basefile Job id: $tmp_jid"
+			echo "" 
+			if [ -z "$jid" ]; then
 				jid=$tmp_jid
 			else
 				jid=${jid}:${tmp_jid}
-		fi
-		#set +x
-	fi
+			fi
+			#set +x
+		done
 done
 
 ##### run multiqc

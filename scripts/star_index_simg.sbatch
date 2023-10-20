@@ -7,6 +7,7 @@ source activate rna_env
 echo "STAR version " $(STAR --version)
 set -x
 export OMP_NUM_THREADS=$ncpus
+cd /mnt
 $run STAR --runMode genomeGenerate \
 	--genomeDir /ref/STAR_index \
 	--runThreadN $ncpus \
@@ -19,8 +20,14 @@ conda deactivate
 source activate samtools_env
 samtools --version
 set -x
-chr_info="${fasta_file%.*}"
-$run samtools faidx /ref_fa/$target_fa_name
-cut -f1,2 /ref_fa/${target_fa_name}.fai > /ref/${chr_info}.chrom.sizes
+chr_info="${target_fa_name%.*}"
+# check if fai file exist
+if [[ ! -f /ref_fa/${target_fa_name}.fai ]]; then
+	$run samtools faidx /ref_fa/$target_fa_name
+fi
+# check if chrom.sizes exist
+if [[ ! -f /ref/${chr_info}.chrom.sizes ]];then
+	cut -f1,2 /ref_fa/${target_fa_name}.fai > /ref/${chr_info}.chrom.sizes
+fi
 set +x
 conda deactivate

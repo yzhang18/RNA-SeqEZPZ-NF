@@ -53,6 +53,10 @@ while [[ "$#" -gt 0 ]]; do
                 batch_adjust=$(echo $1 | cut -d '=' -f 2)
                 shift
         fi
+	if [[ $1 == "ncpus_trim"* ]];then
+                ncpus_trim=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 	if [[ $1 == "help" ]];then
 		echo ""
 		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
@@ -79,7 +83,11 @@ while [[ "$#" -gt 0 ]]; do
 		echo batch_adjust=yes
                 echo -e "\tby default differential analysis was done with replicate batch adjustment."
                 echo -e "\tto turn off batch adjustment, set to no.\n"
-		exit
+		echo ncpus_trim=4
+                echo -e "\tset the number of cpus for trimming"
+                echo -e "\tDefault is 4 cpus."
+                echo -e "\tSet to 1 if pigz error occurs."
+	exit
 	fi
 done
 date
@@ -102,6 +110,9 @@ if [[ -z "$ref_ver" ]];then
 fi
 if [[ -z "$batch_adjust" ]];then
         batch_adjust=yes
+fi
+if [[ -z "$ncpus_trim" ]];then
+        ncpus_trim=4
 fi
 
 # run parameter needs to be set differently here
@@ -126,6 +137,7 @@ echo padj="$padj"
 echo time="$time"
 echo genome="$ref_ver"
 echo batch_adjust="$batch_adjust"
+echo ncpus_trim="$ncpus_trim"
 echo ""
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
@@ -208,7 +220,7 @@ else
 	echo Trimming and QC.....see progress in run_trim_qc.out
 	echo ""
 	cd $proj_dir
-	. $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time &> run_trim_qc.out
+	. $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
 
 	message="Done trimming and QC.\n"
 	message=${message}"See run_trim_qc.out.\n\n\n"
@@ -230,7 +242,7 @@ else
         	sleep 10
         	state=($(squeue -j $check_jid2 -h))
 	done
-				
+
 	reason=$(squeue -j $tmp1 -o "%R" -h)
 	state=$(sacct -j $tmp1 --format=state | tail -n +3 | head -n 1)
 	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then

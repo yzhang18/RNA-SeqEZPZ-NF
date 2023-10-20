@@ -1,0 +1,5 @@
+Notes for the latest changes. These changes may or may not be committed. Check log.
+1. adding option for ncpus_trim in case there is error in pigz running with more than 1.
+2. add checks for fa.fai and chrom.sizes
+3. cd to /mnt to prevent error when STAR index trying to write ./Log.out. This error will only happen
+   when a user runs the pipeline from a directory that is above their home directory.

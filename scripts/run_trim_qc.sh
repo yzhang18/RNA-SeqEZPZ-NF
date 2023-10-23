@@ -34,6 +34,10 @@ while [[ "$#" -gt 0 ]]; do
 		time=$(echo $1 | cut -d '=' -f 2)
 		shift
 	fi
+	if [[ $1 == "ncpus_trim"* ]];then
+                ncpus_trim=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 
 	if [[ $1 == "help" ]];then
 		echo ''
@@ -52,6 +56,10 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e "time=1-00:00:00"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
 		echo -e "\tDefault is 1 day.\n"
+		echo ncpus_trim=4
+		echo -e "\tset the number of cpus for trimming"
+		echo -e "\tDefault is 4 cpus."
+		echo -e "\tSet to 1 if pigz error occurs."
 		exit
 	fi
 done
@@ -74,9 +82,14 @@ if [[ $run == "debug"* ]];then
         run=
         debug=1
 fi
+if [[ -z "$ncpus_trim" ]];then
+        ncpus_trim=4
+fi
+
 
 echo -e "Options used to run:"
 echo time="$time"
+echo ncpus_trim="$ncpus_trim"
 echo ""
 
 # project directory
@@ -169,13 +182,14 @@ for idx in ${!path_to_r1_fastq[@]};do
 			SINGULARITYENV_file=$file \
 			SINGULARITYENV_path_tech_r1=$path_tech_r1 \
 			SINGULARITYENV_path_tech_r2=$path_tech_r2 \
+			SINGULARITYENV_ncpus_trim=$ncpus_trim \
 				$run sbatch --output=$log_dir/trim_fastqc_${prefix}_pseudolane${tmp_idx}.out \
 					--job-name=trim_fastqc \
 					--partition=general \
 					--time=$time \
 					--mail-type=FAIL \
 					--mail-user=$email \
-					--cpus-per-task=5 \
+					--cpus-per-task=$ncpus_trim \
 					--wrap "singularity exec \
 					--bind $img_dir/scripts:/scripts \
 					--bind $proj_dir:/mnt \

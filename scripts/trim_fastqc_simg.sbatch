@@ -18,7 +18,7 @@ fi
 cd /mnt/outputs/trim
 $run trim_galore -q 20 --length 20 \
 	--illumina \
-	--cores 4 \
+	--cores $ncpus_trim \
 	--paired \
 	$path_tech_r1 $path_tech_r2 \
 	--fastqc --fastqc_args "--outdir /mnt/outputs/fastqc_rslt"

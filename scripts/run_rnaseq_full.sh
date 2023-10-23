@@ -49,6 +49,14 @@ while [[ "$#" -gt 0 ]]; do
 		ref_ver=$(echo $1 | cut -d '=' -f 2)
 		shift
 	fi
+	if [[ $1 == "ref_fa"* ]];then
+                ref_fa=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
+	if [[ $1 == "ref_gtf"* ]];then
+                ref_gtf=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 	if [[ $1 == "batch_adjust"* ]];then
                 batch_adjust=$(echo $1 | cut -d '=' -f 2)
                 shift
@@ -57,6 +65,7 @@ while [[ "$#" -gt 0 ]]; do
                 ncpus_trim=$(echo $1 | cut -d '=' -f 2)
                 shift
         fi
+
 	if [[ $1 == "help" ]];then
 		echo ""
 		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
@@ -73,8 +82,13 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e "\tif set to "debug", it will run with "set -x""
 		echo -e "genome=hg19"
 		echo -e "\tset reference genome. Default is hg19. Other option: hg38"
-		echo -e "\tif using genome other than hg19 or hg38, need to put .fa or .fasta and gtf files"
-		echo -e "\tin ref/<genome-name> dir and set genome=<genome-name>."
+		echo -e "\tif using genome other than hg19 or hg38, need to specify both ref_fa and ref_gtf."
+                echo -e "ref_fa=/path/to/ref.fa"
+                echo -e "\tif using genome other than hg19 or hg38, need to specify ref_fa with path to fasta file"
+                echo -e "\tof the reference genome."
+                echo -e "ref_gtf=/path/to/ref.gtf"
+                echo -e "\tif using genome other than hg19 or hg38, need to specify ref_gtf with path to gtf file"
+                echo -e "\tof the reference genome."
 		echo padj=0.05
 		echo -e "\tset FDR of differential genes (as calculated by DESeq2) < 0.05. Default=0.05"
 		echo -e "time=1-00:00:00"
@@ -113,6 +127,20 @@ if [[ -z "$batch_adjust" ]];then
 fi
 if [[ -z "$ncpus_trim" ]];then
         ncpus_trim=4
+fi
+genome_dir=$img_dir/ref/$ref_ver
+# set ref_fa to fasta file in genome_dir if variable ref_fa is not defined
+if [[ -z $ref_fa ]];then
+    	fasta_file=${genome_dir}/$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
+else
+	# else set to ref_fa
+        fasta_file=$ref_fa
+fi
+# set gtf file to ref_gtf in genome_dir if variable ref_gtf is not defined
+if [[ -z $ref_gtf ]];then
+    	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
+else
+        gtf_file=$ref_gtf
 fi
 
 # run parameter needs to be set differently here
@@ -164,7 +192,9 @@ echo ""
 echo Check and generate STAR index if genome has not been indexed yet....
 echo ""
 
-. $img_dir/scripts/run_star_index.sh run=$run_debug time=$time genome=$ref_ver &> run_star_index.out
+. $img_dir/scripts/run_star_index.sh run=$run_debug time=$time genome=$ref_ver ref_fa=$fasta_file \
+	ref_gtf=$gtf_file \
+	&> run_star_index.out
 
 # skip checking job if not generating star index.
 if [[ $skip_run_star_index == 0 ]];then

@@ -159,9 +159,13 @@ target_link=$(readlink -f fastq)
 # note: trim_galore is set to --cores 4 which actually translate to 15 cores
 # see trim_galore help for more info
 for idx in ${!path_to_r1_fastq[@]};do
+	echo $idx
 	# split path if there are technical reps
-	split_path_r1=$(echo ${path_to_r1_fastq[$idx]} | cut -f1 -d,)
-	split_path_r2=$(echo ${path_to_r2_fastq[$idx]} | cut -f1 -d,)
+	IFS=, read -a split_path_r1 <<< "${path_to_r1_fastq[$idx]}"
+	#split_path_r1=$(echo ${path_to_r1_fastq[$idx]} | cut -f -d,)
+	IFS=, read -a split_path_r2 <<< "${path_to_r2_fastq[$idx]}"
+	#split_path_r2=$(echo ${path_to_r2_fastq[$idx]} | cut -f -d,)
+	echo ${split_path_r2[1]}
 		# loop through tech reps
 		for idx_tech in ${!split_path_r1[@]}; do
  			basefile=$(basename ${split_path_r1[$idx_tech]})

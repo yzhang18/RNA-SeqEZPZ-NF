@@ -15,7 +15,7 @@
 # bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh genome=hg38 &> run_align.out &
 # available genome hg19 or hg38
 # if using other genome, genome file (.fasta or fa) and gtf file need to be in <my_project_dir>/ref/<genome.name> dir
-# and set as follows: genome=<genome_name> 
+# and set as follows: genome=<genome_name> ref_fa=<path_to_genome_fasta_file> ref_gtf=<path_to_genome_gtf_file>
 #
 # or to do nothing but echo all commands:
 # bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh run=echo &> run_star_index.out &
@@ -42,7 +42,14 @@ while [[ "$#" -gt 0 ]]; do
                 ref_ver=$(echo $1 | cut -d '=' -f 2)
                 shift
         fi
-
+	if [[ $1 == "ref_fa"* ]];then
+                ref_fa=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
+	if [[ $1 == "ref_gtf"* ]];then
+                ref_gtf=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
         if [[ $1 == "help" ]];then
 		echo ""
                 echo 'usage:  /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh [OPTION] &> run_star_index.out & '
@@ -59,8 +66,13 @@ while [[ "$#" -gt 0 ]]; do
                 echo -e "\tif set to "debug", it will run with "set -x""
                 echo -e "genome=hg19"
                 echo -e "\tset reference genome. Default is hg19. Other options: hg38"
-                echo -e "\tif using genome other than hg19 or hg38, need to put .fa in ref/<genome-name> dir"
-                echo -e "\tgenome=<genome-name> and <genome-name>.fa must be in ref/<genome-name>/<genome.name>.fa"
+                echo -e "\tif using genome other than hg19 or hg38, need to specify both ref_fa and ref_gtf."
+		echo -e "ref_fa=/path/to/ref.fa"
+		echo -e "\tif using genome other than hg19 or hg38, need to specify ref_fa with path to fasta file"
+		echo -e "\tof the reference genome."
+		echo -e "ref_gtf=/path/to/ref.gtf"
+		echo -e "\tif using genome other than hg19 or hg38, need to specify ref_gtf with path to gtf file"
+		echo -e "\tof the reference genome."
                 echo -e "time=1-00:00:00"
                 echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
 		echo -e "\tDefault is 1 day."
@@ -83,12 +95,12 @@ fi
 if [[ -z "$ref_ver" ]];then
         ref_ver=hg19
 fi
-
 if [[ $run == "debug"* ]];then
         set -x
         run=
         debug=1
 fi
+
 
 # project directory
 proj_dir=$(pwd)
@@ -126,16 +138,28 @@ skip_run_star_index=0
 ### specify reference genome
 # if ref genome is not in $img_dir/ref, set genome_dir to  project dir
 genome_dir=$img_dir/ref/$ref_ver
-if [[ ! -d $genome_dir ]];then
-	genome_dir=$proj_dir/ref/$ref_ver
-	if [[ ! -d $genome_dir ]];then
-		echo -e "${genome_dir} not found. Please put genome file and gtf file in ${genome_dir}. \n"
-	fi
+# set fasta file to ref_fa if exist
+if [[ -f $ref_fa ]];then
+	fasta_file=$ref_fa
+else
+	fasta_file=${genome_dir}/$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 fi
-gtf_file=$(find $genome_dir -name *.gtf | xargs basename)
-fasta_file=$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
-# this is where star index will be stored
-star_index_dir=$genome_dir/STAR_index
+# set gtf file to ref_gtf if exist
+if [[ -f $ref_gtf ]];then
+        gtf_file=$ref_gtf
+else
+	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
+fi
+# this is where star index will be stored. Create if not exist yet.
+if [[ ! -d $genome_dir ]];then
+	star_index_dir=$proj_dir/$ref_ver/STAR_index
+	genome_dir=$proj_dir/ref/$ref_ver
+else
+	star_index_dir=$genome_dir/STAR_index
+fi
+if [[ ! -d $star_index_dir ]]; then
+	mkdir -p $star_index_dir
+fi
 work_dir=$star_index_dir
 echo "all outputs will be stored in $work_dir"
 # check whether STAR_index exist and not empty
@@ -195,11 +219,8 @@ fi
 # the path should be the path that is returned by 'readlink -f'
 
 # get the "true" path in case it is a symlink
-target_link_gtf=$(readlink -f $genome_dir/*.gtf)
-target_link_fa=$(readlink -f $genome_dir/*.fa)
-if [[ -z $target_link_fa ]]; then
-	target_link_fa=$(readlink -f $genome_dir/*.fasta)
-fi
+target_link_gtf=$(readlink -f $gtf_file)
+target_link_fa=$(readlink -f $fasta_file)
 target_fa_name=$(basename $target_link_fa)
 target_gtf_name=$(basename $target_link_gtf)
 target_fa_dir=$(dirname $target_link_fa)

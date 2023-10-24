@@ -39,7 +39,14 @@ while [[ "$#" -gt 0 ]]; do
 		ref_ver=$(echo $1 | cut -d '=' -f 2)
 		shift
 	fi
-
+	if [[ $1 == "ref_fa"* ]];then
+                ref_fa=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
+	if [[ $1 == "ref_gtf"* ]];then
+                ref_gtf=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 	if [[ $1 == "help" ]] ;then
 		echo ""
 		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_align_create_tracks_rna.sh [OPTION] &> run_align_create_tracks_rna.out &'
@@ -56,8 +63,13 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e "\tif set to "debug", it will run with "set -x""
 		echo -e "genome=hg19"
 		echo -e "\tset reference genome. Default is hg19. Other option: hg38"
-                echo -e "\tif using genome other than hg19 or hg38, need to put .fa or .fasta and gtf files in"
-		echo -e "\tref/<genome-name> dir and set genome=<genome-name>."
+                echo -e "\tif using genome other than hg19 or hg38, need to specify both ref_fa and ref_gtf."
+                echo -e "ref_fa=/path/to/ref.fa"
+                echo -e "\tif using genome other than hg19 or hg38, need to specify ref_fa with path to fasta file"
+                echo -e "\tof the reference genome."
+                echo -e "ref_gtf=/path/to/ref.gtf"
+                echo -e "\tif using genome other than hg19 or hg38, need to specify ref_gtf with path to gtf file"
+                echo -e "\tof the reference genome."
 		echo -e "time=1-00:00:00"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
 		echo -e "\tDefault is 1 day\n"
@@ -140,14 +152,31 @@ $(cp $img_dir/scripts/run_align_create_tracks_rna.sh $log_dir/run_align_create_t
 ### specify reference genome
 # if ref genome is not in $img_dir/ref, set genome_dir to  project dir
 genome_dir=$img_dir/ref/$ref_ver
-if [[ ! -d $genome_dir ]];then
-        genome_dir=$proj_dir/ref/$ref_ver
+# set fasta file to ref_fa if exist
+if [[ -f $ref_fa ]];then
+        fasta_file=$ref_fa
+else
+    	fasta_file=${genome_dir}/$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 fi
+# set gtf file to ref_gtf if exist
+if [[ -f $ref_gtf ]];then
+        gtf_file=$ref_gtf
+else
+    	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
+fi
+# this is where star index will be stored. Create if directory doesn't exist yet.
+if [[ ! -d $genome_dir ]];then
+        star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
+        genome_dir=$proj_dir/ref/$ref_ver
+else
+    	star_index_dir=$genome_dir/STAR_index
+fi
+if [[ ! -d $star_index_dir ]]; then
+        mkdir -p $star_index_dir
+fi
+
 #echo $genome_dir
-gtf_file=$(find $genome_dir -name *.gtf | xargs basename)
-fasta_file=$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
-star_index_dir=$genome_dir/STAR_index
 
 # calculate genome_size
 genome_size=$(grep -v ">" $genome_dir/$fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
@@ -159,9 +188,12 @@ $(mv samples_tmp.txt samples.txt)
 groupname_array=($(awk '!/#/ {print $1}' samples.txt))
 repname_array=($(awk '!/#/ {print $3}' samples.txt))
 email=$(awk '!/#/ {print $5;exit}' samples.txt | tr -d '[:space:]')
-filename_string_array=($(awk '!/#/ {print $6}' samples.txt))
-string_pair1_array=($(awk '!/#/ {print $7}' samples.txt))
-string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
+path_to_r1_fastq=($(awk '!/#/ {print $6}' samples.txt))
+path_to_r2_fastq=($(awk '!/#/ {print $7}' samples.txt))
+
+if [[ $email == "NA" ]];then
+        email=
+fi
 
 #### alignment ####
 # STAR first pass
@@ -170,22 +202,19 @@ jid3=
 for i in "${!groupname_array[@]}"; do 
 	groupname=${groupname_array[$i]}
 	repname=${repname_array[$i]}
-	string_pair1=${string_pair1_array[$i]}
-	string_pair2=${string_pair2_array[$i]}
-	filename_string=${filename_string_array[$i]}
 	prefix=${groupname}_${repname}
 	# get the files for the same groupname and replicate
 	# (i.e from multiple lanes)
 	cd $work_dir/trim
 	file=($(ls *val_1.fq.gz | \
-		awk -v groupname=$groupname -v repname=$repname -v filename_string=$filename_string \
-		'$1 ~ groupname && $1 ~ repname && $1 ~ filename_string {print $1}'))
+		awk -v groupname=$groupname -v repname=$repname \
+		'$1 ~ groupname && $1 ~ repname {print $1}'))
 	# combining files from different lanes
 	read1=$(printf ",%s" "${file[@]}")
 	read1=${read1:1}
 	file=($(ls *val_2.fq.gz | \
-		awk -v groupname=$groupname -v repname=$repname -v filename_string=$filename_string \
-		'$1 ~ groupname && $1 ~ repname && $1 ~ filename_string {print $1}'))
+		awk -v groupname=$groupname -v repname=$repname \
+		'$1 ~ groupname && $1 ~ repname {print $1}'))
 	read2=$(printf ",%s" "${file[@]}")
 	read2=${read2:1}
 	cd $proj_dir

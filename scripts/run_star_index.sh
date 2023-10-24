@@ -152,7 +152,7 @@ else
 fi
 # this is where star index will be stored. Create if not exist yet.
 if [[ ! -d $genome_dir ]];then
-	star_index_dir=$proj_dir/$ref_ver/STAR_index
+	star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
 	genome_dir=$proj_dir/ref/$ref_ver
 else
 	star_index_dir=$genome_dir/STAR_index
@@ -188,7 +188,8 @@ echo "log files contain all the commands run"
 echo ""
 
 # copying this script for records
-$(cp $img_dir/scripts/run_star_index.sh $log_dir/run_star_index.sh)
+$(cp $img_dir/scripts/run_star_index.sh $log_dir/)
+$(cp $img_dir/scripts/star_index_simg.sbatch $log_dir/)
 
 # converting samples.txt to unix format
 dos2unix -k samples.txt &> /dev/null

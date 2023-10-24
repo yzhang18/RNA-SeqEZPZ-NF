@@ -165,10 +165,9 @@ for idx in ${!path_to_r1_fastq[@]};do
 	#split_path_r1=$(echo ${path_to_r1_fastq[$idx]} | cut -f -d,)
 	IFS=, read -a split_path_r2 <<< "${path_to_r2_fastq[$idx]}"
 	#split_path_r2=$(echo ${path_to_r2_fastq[$idx]} | cut -f -d,)
-	echo ${split_path_r2[1]}
+	#echo ${split_path_r2[1]}
 		# loop through tech reps
 		for idx_tech in ${!split_path_r1[@]}; do
- 			basefile=$(basename ${split_path_r1[$idx_tech]})
 			path_tech_r1=${split_path_r1[$idx_tech]}
 			path_tech_r2=${split_path_r2[$idx_tech]}
 			groupname=${groupname_array[$idx]}
@@ -176,13 +175,13 @@ for idx in ${!path_to_r1_fastq[@]};do
 			prefix=${groupname}_${repname}
 
 			tmp_idx=$((tmp_idx+1))
-			# echo $prefix $basefile $run \
+			# echo $prefix $run \
 			# $log_dir $email $proj_dir \
 			# $groupname $repname \
 			# execute inside singularity
 			tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
 			SINGULARITYENV_run=$run \
-			SINGULARITYENV_prefix=$prefix \
+			SINGULARITYENV_prefix=${prefix}_pseudolane${tmp_idx} \
 			SINGULARITYENV_file=$file \
 			SINGULARITYENV_path_tech_r1=$path_tech_r1 \
 			SINGULARITYENV_path_tech_r2=$path_tech_r2 \
@@ -201,7 +200,7 @@ for idx in ${!path_to_r1_fastq[@]};do
 					--bind $path_tech_r2 \
 					$img_dir/$img_name \
 					/bin/sh /scripts/trim_fastqc_simg.sbatch" | cut -f 4 -d' ')
-			echo "Processing $basefile Job id: $tmp_jid"
+			echo "Processing $path_tech_r1 $path_tech_r2 Job id: $tmp_jid"
 			echo "" 
 			if [ -z "$jid" ]; then
 				jid=$tmp_jid

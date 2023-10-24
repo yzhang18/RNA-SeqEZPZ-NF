@@ -122,8 +122,12 @@ img_name=rnaseq-pipe-container.sif
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
-# copying this script for records
-$(cp $img_dir/scripts/run_trim_qc.sh $log_dir/run_trim_qc.sh)
+# copying scripts ran for records
+if [[ ! -d $log_dir/scripts ]];then
+	mkdir -p $log_dir/scripts
+fi
+$(cp $img_dir/scripts/run_trim_qc.sh $log_dir/scripts)
+$(cp $img_dir/scripts/trim_fastqc_simg.sbatch $log_dir/scripts/)
 
 # getting samples info from samples.txt
 $(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)
@@ -141,7 +145,6 @@ path_to_r2_fastq=($(awk '!/#/ {print $7}' samples.txt))
 
 # initialize jobid strings
 jid=
-tmp_idx=0
 cd $proj_dir
 # added this to prevent error when using symbolic link that is upstream of
 # home directory
@@ -174,19 +177,18 @@ for idx in ${!path_to_r1_fastq[@]};do
 			repname=${repname_array[$idx]}
 			prefix=${groupname}_${repname}
 
-			tmp_idx=$((tmp_idx+1))
 			# echo $prefix $run \
 			# $log_dir $email $proj_dir \
 			# $groupname $repname \
 			# execute inside singularity
 			tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
 			SINGULARITYENV_run=$run \
-			SINGULARITYENV_prefix=${prefix}_pseudolane${tmp_idx} \
+			SINGULARITYENV_prefix=${prefix}_pseudolane${idx_tech} \
 			SINGULARITYENV_file=$file \
 			SINGULARITYENV_path_tech_r1=$path_tech_r1 \
 			SINGULARITYENV_path_tech_r2=$path_tech_r2 \
 			SINGULARITYENV_ncpus_trim=$ncpus_trim \
-				$run sbatch --output=$log_dir/trim_fastqc_${prefix}_pseudolane${tmp_idx}.out \
+				$run sbatch --output=$log_dir/trim_fastqc_${prefix}_pseudolane${idx_tech}.out \
 					--job-name=trim_fastqc \
 					--partition=general \
 					--time=$time \

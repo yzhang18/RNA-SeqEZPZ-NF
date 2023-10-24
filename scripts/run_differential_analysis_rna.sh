@@ -43,6 +43,14 @@ while [[ "$#" -gt 0 ]]; do
 		ref_ver=$(echo $1 | cut -d '=' -f 2)
 		shift
 	fi
+	 if [[ $1 == "ref_fa"* ]];then
+                ref_fa=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
+        if [[ $1 == "ref_gtf"* ]];then
+                ref_gtf=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 	if [[ $1 == "batch_adjust"* ]];then
 		batch_adjust=$(echo $1 | cut -d '=' -f 2)
 		shift
@@ -63,8 +71,13 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e "\tif set to "debug", it will run with "set -x""
 		echo -e "genome=hg19"
 		echo -e "\tset reference genome. Default is hg19. Other option: hg38"
-		echo -e "\tif using genome other than hg19 or hg38, need to put .fa or .fasta and gtf files"
-		echo -e "\tin ref/<genome-name> dir and set genome=<genome-name>"
+		echo -e "\tif using genome other than hg19 or hg38, need to specify both ref_fa and ref_gtf."
+                echo -e "ref_fa=/path/to/ref.fa"
+                echo -e "\tif using genome other than hg19 or hg38, need to specify ref_fa with path to fasta file"
+                echo -e "\tof the reference genome."
+                echo -e "ref_gtf=/path/to/ref.gtf"
+                echo -e "\tif using genome other than hg19 or hg38, need to specify ref_gtf with path to gtf file"
+                echo -e "\tof the reference genome."
 		echo padj=0.05
 		echo -e "\tset FDR of differential genes (as calculated by DESeq2) < 0.05. Default=0.05"
 		echo -e "time=1-00:00:00"
@@ -150,22 +163,42 @@ img_name=rnaseq-pipe-container.sif
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
-# copying this script for records
-$(cp $img_dir/scripts/run_differential_analysis_rna.sh $log_dir/run_differential_analysis_rna.sh)
+# copying scripts ran for records
+if [[ ! -d $log_dir/scripts ]];then
+	mkdir -p $log_dir/scripts
+fi
+$(cp $img_dir/scripts/run_differential_analysis_rna.sh $log_dir/scripts)
+$(cp $img_dir/scripts/feature_counts_simg.sbatch $log_dir/scripts)
+$(cp $img_dir/scripts/run_sartools_simg.sbatch $log_dir/scripts)
 
 ### specify reference genome
 # if ref genome is not in $img_dir/ref, set genome_dir to  project dir
 genome_dir=$img_dir/ref/$ref_ver
-if [[ ! -d $genome_dir ]];then
-        genome_dir=$proj_dir/ref/$ref_ver
+# set fasta file to ref_fa if exist
+if [[ -f $ref_fa ]];then
+        fasta_file=$ref_fa
+else
+    	fasta_file=${genome_dir}/$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 fi
-gtf_file=$(find $genome_dir -name *.gtf | xargs basename)
-fasta_file=$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
-chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
-star_index_dir=$genome_dir/STAR_index
+# set gtf file to ref_gtf if exist
+if [[ -f $ref_gtf ]];then
+        gtf_file=$ref_gtf
+else
+    	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
+fi
+# this is where star index will be stored. Create if directory doesn't exist yet.
+if [[ ! -d $genome_dir ]];then
+        star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
+        genome_dir=$proj_dir/ref/$ref_ver
+else
+    	star_index_dir=$genome_dir/STAR_index
+fi
+if [[ ! -d $star_index_dir ]]; then
+        mkdir -p $star_index_dir
+fi
 
 # calculate genome_size
-genome_size=$(grep -v ">" $genome_dir/$fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
+genome_size=$(grep -v ">" $fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
 chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
 
 # getting samples info from samples.txt
@@ -174,9 +207,9 @@ $(mv samples_tmp.txt samples.txt)
 groupname_array=($(awk '!/#/ {print $1}' samples.txt))
 repname_array=($(awk '!/#/ {print $3}' samples.txt))
 email=$(awk '!/#/ {print $5;exit}' samples.txt | tr -d '[:space:]')
-filename_string_array=($(awk '!/#/ {print $6}' samples.txt))
-string_pair1_array=($(awk '!/#/ {print $7}' samples.txt))
-string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
+if [[ $email == "NA" ]];then
+        email=
+fi
 
 # added this to prevent error when using symbolic link that is upstream of
 # home directory
@@ -190,11 +223,6 @@ string_pair2_array=($(awk '!/#/ {print $8}' samples.txt))
 # ln -s /home1/gdlessnicklab/lab/data/mm10 .
 # the path should be the path that is returned by 'readlink -f'
 
-# get the "true" path in case it is a symlink
-target_link_gtf=$(readlink -f $genome_dir/*.gtf)
-target_gtf_name=$(basename $target_link_gtf)
-target_gtf_dir=$(dirname $target_link_gtf)
-
 #### feature counts ####
 # counting number of reads in each feature using subread package featureCounts
 # initialize job ids
@@ -202,9 +230,6 @@ jid5=
 for i in "${!groupname_array[@]}"; do
 	groupname=${groupname_array[$i]}
 	repname=${repname_array[$i]}
-	string_pair1=${string_pair1_array[$i]}
-	string_pair2=${string_pair2_array[$i]}
-	filename_string=${filename_string_array[$i]}
 	prefix=${groupname}_${repname}
 	cd $proj_dir
 	# set -x
@@ -213,7 +238,7 @@ for i in "${!groupname_array[@]}"; do
 		SINGULARITYENV_ncpus=$ncpus \
 		SINGULARITYENV_prefix=$prefix \
 		SINGULARITYENV_ref_ver=$ref_ver \
-		SINGULARITYENV_target_gtf_name=$target_gtf_name \
+		SINGULARITYENV_gtf_file=$gtf_file \
 		$run sbatch --output=$log_dir/featureCounts_${prefix}.out \
 			--cpus-per-task $ncpus \
 			--partition=himem \
@@ -225,8 +250,7 @@ for i in "${!groupname_array[@]}"; do
 			--wrap "singularity exec \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
-				--bind $genome_dir:/ref \
-				--bind $target_gtf_dir:/ref_gtf \
+				--bind $gtf_file \
 				$img_dir/$img_name \
 				/bin/bash /scripts/feature_counts_simg.sbatch"| cut -f 4 -d' ')
 	echo "Counting number of reads in each feature for $prefix job id: $tmp_jid"

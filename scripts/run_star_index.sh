@@ -187,9 +187,12 @@ echo "all other logs will be stored in $log_dir"
 echo "log files contain all the commands run"
 echo ""
 
-# copying this script for records
-$(cp $img_dir/scripts/run_star_index.sh $log_dir/)
-$(cp $img_dir/scripts/star_index_simg.sbatch $log_dir/)
+# copying scripts ran for records
+if [[ ! -d $log_dir/scripts ]];then
+	mkdir -p $log_dir/scripts
+fi
+$(cp $img_dir/scripts/run_star_index.sh $log_dir/scripts/)
+$(cp $img_dir/scripts/star_index_simg.sbatch $log_dir/scripts/)
 
 # converting samples.txt to unix format
 dos2unix -k samples.txt &> /dev/null

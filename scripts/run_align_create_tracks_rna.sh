@@ -146,8 +146,14 @@ img_name=rnaseq-pipe-container.sif
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
-# copying this script for records
-$(cp $img_dir/scripts/run_align_create_tracks_rna.sh $log_dir/run_align_create_tracks_rna.sh)
+# copying scripts ran for records
+if [[ ! -d $log_dir/scripts ]];then
+	mkdir -p $log_dir/scripts
+fi
+$(cp $img_dir/scripts/run_align_create_tracks_rna.sh ${log_dir}/scripts/)
+$(cp $img_dir/scripts/star_pass1_simg.sbatch ${log_dir}/scripts/)
+$(cp $img_dir/scripts/star_pass2_simg.sbatch ${log_dir}/scripts/)
+$(cp $img_dir/scripts/combinebw_simg.sbatch ${log_dir}/scripts/)
 
 ### specify reference genome
 # if ref genome is not in $img_dir/ref, set genome_dir to  project dir
@@ -179,8 +185,12 @@ fi
 chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
 
 # calculate genome_size
-genome_size=$(grep -v ">" $genome_dir/$fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
+genome_size=$(grep -v ">" $fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
 chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
+### placeholder for calculating effective genome size as suggested in deeptools docs
+readlength=$(awk '{sum += $15; n++} END {if (n>0) print int(sum/(n-1));}' \
+	 $proj_dir/outputs/fastqc_rslt/multiqc_fastqc.txt)
+
 
 # getting samples info from samples.txt
 $(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)
@@ -223,7 +233,7 @@ for i in "${!groupname_array[@]}"; do
 	cd $proj_dir
 	# set -x
 	tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
-	SINGULARITYENV_read1=$read1 \
+		SINGULARITYENV_read1=$read1 \
 		SINGULARITYENV_read2=$read2 \
 		SINGULARITYENV_run=$run \
 		SINGULARITYENV_ncpus=$ncpus \
@@ -295,21 +305,18 @@ jid4=
 for i in "${!groupname_array[@]}"; do
 	groupname=${groupname_array[$i]}
 	repname=${repname_array[$i]}
-	string_pair1=${string_pair1_array[$i]}
-	string_pair2=${string_pair2_array[$i]}
-	filename_string=${filename_string_array[$i]}
 	prefix=${groupname}_${repname}
 	# get the files for the same groupname and replicate
 	# (i.e from multiple lanes)
 	cd $work_dir/trim
 	file=($(ls *val_1.fq.gz | \
-		awk -v groupname=$groupname -v repname=$repname -v filename_string=$filename_string \
-		'$1 ~ groupname && $1 ~ repname && $1 ~ filename_string {print $1}'))
+		awk -v groupname=$groupname -v repname=$repname \
+		'$1 ~ groupname && $1 ~ repname {print $1}'))
 	read1=$(printf ",%s" "${file[@]}")
 	read1=${read1:1}
 	file=($(ls *val_2.fq.gz | \
-		awk -v groupname=$groupname -v repname=$repname -v filename_string=$filename_string \
-		'$1 ~ groupname && $1 ~ repname && $1 ~ filename_string {print $1}'))
+		awk -v groupname=$groupname -v repname=$repname \
+		'$1 ~ groupname && $1 ~ repname {print $1}'))
 	read2=$(printf ",%s" "${file[@]}")
 	read2=${read2:1}
 	cd $proj_dir
@@ -317,16 +324,16 @@ for i in "${!groupname_array[@]}"; do
 	#echo $read2
 	# set -x
 	tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
-	SINGULARITYENV_read1=$read1 \
-			SINGULARITYENV_read2=$read2 \
-			SINGULARITYENV_run=$run \
-			SINGULARITYENV_ncpus=$ncpus \
-			SINGULARITYENV_sjFiles=$sjFiles \
-			SINGULARITYENV_prefix=$prefix \
-			SINGULARITYENV_ref_ver=$ref_ver \
-			SINGULARITYENV_fasta_file=$fasta_file \
-			SINGULARITYENV_gtf_file=$gtf_file \
-			SINGULARITYENV_genome_size=$genome_size \
+		SINGULARITYENV_read1=$read1 \
+		SINGULARITYENV_read2=$read2 \
+		SINGULARITYENV_run=$run \
+		SINGULARITYENV_ncpus=$ncpus \
+		SINGULARITYENV_sjFiles=$sjFiles \
+		SINGULARITYENV_prefix=$prefix \
+		SINGULARITYENV_ref_ver=$ref_ver \
+		SINGULARITYENV_fasta_file=$fasta_file \
+		SINGULARITYENV_gtf_file=$gtf_file \
+		SINGULARITYENV_genome_size=$genome_size \
 			$run sbatch --output=$log_dir/star_pass2_${prefix}.out \
 				--cpus-per-task $ncpus \
 				--partition=himem \

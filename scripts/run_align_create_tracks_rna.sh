@@ -47,6 +47,10 @@ while [[ "$#" -gt 0 ]]; do
                 ref_gtf=$(echo $1 | cut -d '=' -f 2)
                 shift
         fi
+	if [[ $1 == "ncpus_star"* ]];then
+                ncpus_star=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 	if [[ $1 == "help" ]] ;then
 		echo ""
 		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_align_create_tracks_rna.sh [OPTION] &> run_align_create_tracks_rna.out &'
@@ -56,7 +60,7 @@ while [[ "$#" -gt 0 ]]; do
 		echo ''
 		echo OPTIONS
 		echo ''
-		echo help 
+		echo help
 		echo -e '\tdisplay this help and exit'
 		echo run=echo
 		echo -e "\tdo not run, echo all commands. Default is running all commands"
@@ -73,6 +77,11 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e "time=1-00:00:00"
 		echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
 		echo -e "\tDefault is 1 day\n"
+		echo -e "ncpus_star=20"
+		echo -e "\tspecifies the number of cpus used for STAR, bamCompare and feature counts."
+		echo -e "\tDefault is 20 cpus."
+		echo -e "\tthe number of cpus will be automatically adjusted to max number of cpus if ncpus_star"
+		echo -e "\tis less than the max available cpus."
 		exit
 	fi
 done
@@ -101,6 +110,9 @@ if [[ $run == "debug"* ]];then
         run=
         debug=1
 fi
+if [[ -z "$ncpus_star" ]];then
+        ncpus_star=20
+fi
 
 echo -e "\nAligning reads to $ref_ver and create tracks for visualization\n"
 echo -e "Options used to run:"
@@ -127,11 +139,11 @@ echo "See $proj_dir/run_align_create_tracks_rna.out to check the analysis progre
 echo "All other logs including scripts ran will be stored in $log_dir"
 echo ""
 
-# specify number of cpus for star, bamCompare and bigwigCompare
-ncpus=20
+# automatically change number of cpus for star, bamCompare and bigwigCompare
+# if greater than max available cpus
 max_cpu=$(lscpu | grep 'CPU(s):' | head -n 1 | awk '{print $2}')
-if [[ $max_cpu -lt $ncpus ]]; then
-        ncpus=$max_cpu
+if [[ $max_cpu -lt $ncpus_star ]]; then
+        ncpus_star=$max_cpu
 fi
 
 # singularity image directory
@@ -185,11 +197,11 @@ fi
 chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
 
 # calculate genome_size
-genome_size=$(grep -v ">" $fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
+#genome_size=$(grep -v ">" $fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
 chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
 ### placeholder for calculating effective genome size as suggested in deeptools docs
 readlength=$(awk '{sum += $15; n++} END {if (n>0) print int(sum/(n-1));}' \
-	 $proj_dir/outputs/fastqc_rslt/multiqc_fastqc.txt)
+	 $proj_dir/outputs/fastqc_rslt/multiqc_data/multiqc_fastqc.txt)
 
 
 # getting samples info from samples.txt
@@ -236,11 +248,11 @@ for i in "${!groupname_array[@]}"; do
 		SINGULARITYENV_read1=$read1 \
 		SINGULARITYENV_read2=$read2 \
 		SINGULARITYENV_run=$run \
-		SINGULARITYENV_ncpus=$ncpus \
+		SINGULARITYENV_ncpus=$ncpus_star \
 		SINGULARITYENV_prefix=$prefix \
 		SINGULARITYENV_ref_ver=$ref_ver \
 		$run sbatch --output=$log_dir/star_pass1_${prefix}.out \
-			--cpus-per-task $ncpus \
+			--cpus-per-task $ncpus_star \
 			--partition=himem \
 			--mail-type=FAIL \
 			--mail-user=$email \
@@ -327,15 +339,15 @@ for i in "${!groupname_array[@]}"; do
 		SINGULARITYENV_read1=$read1 \
 		SINGULARITYENV_read2=$read2 \
 		SINGULARITYENV_run=$run \
-		SINGULARITYENV_ncpus=$ncpus \
+		SINGULARITYENV_ncpus=$ncpus_star \
 		SINGULARITYENV_sjFiles=$sjFiles \
 		SINGULARITYENV_prefix=$prefix \
 		SINGULARITYENV_ref_ver=$ref_ver \
 		SINGULARITYENV_fasta_file=$fasta_file \
 		SINGULARITYENV_gtf_file=$gtf_file \
-		SINGULARITYENV_genome_size=$genome_size \
+		SINGULARITYENV_readlength=$readlength \
 			$run sbatch --output=$log_dir/star_pass2_${prefix}.out \
-				--cpus-per-task $ncpus \
+				--cpus-per-task $ncpus_star \
 				--partition=himem \
 				--mail-type=FAIL \
 				--dependency=afterok:$tmp \
@@ -409,14 +421,14 @@ if [[ n_rep -gt 1 ]]; then
 		tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
 		SINGULARITYENV_run=$run \
 				SINGULARITYENV_all_files_rep_cmd=$all_files_rep_cmd \
-				SINGULARITYENV_ncpus=$ncpus \
+				SINGULARITYENV_ncpus=$ncpus_star \
 				SINGULARITYENV_groupname=$groupname \
 				SINGULARITYENV_ref_ver=$ref_ver \
 				SINGULARITYENV_fasta_file=$fasta_file \
 				SINGULARITYENV_chr_info=$chr_info \
 				$run sbatch --output=$log_dir/combinebw_${groupname}.out \
 					--dependency=afterok:$tmp \
-					--cpus-per-task $ncpus \
+					--cpus-per-task $ncpus_star \
 					--partition=himem \
 					--mail-type=FAIL \
 					--mail-user=$email \

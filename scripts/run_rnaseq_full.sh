@@ -65,7 +65,10 @@ while [[ "$#" -gt 0 ]]; do
                 ncpus_trim=$(echo $1 | cut -d '=' -f 2)
                 shift
         fi
-
+	if [[ $1 == "ncpus_star"* ]];then
+                ncpus_star=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 	if [[ $1 == "help" ]];then
 		echo ""
 		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
@@ -101,6 +104,11 @@ while [[ "$#" -gt 0 ]]; do
                 echo -e "\tset the number of cpus for trimming"
                 echo -e "\tDefault is 4 cpus."
                 echo -e "\tSet to 1 if pigz error occurs."
+		echo ncpus_star=20
+                echo -e "\tspecifies the number of cpus used for STAR, bamCompare and feature counts."
+                echo -e "\tDefault is 20 cpus."
+                echo -e "\tthe number of cpus will be automatically adjusted to max number of cpus if it is"
+                echo -e "\tless than the max available cpus."
 	exit
 	fi
 done
@@ -127,6 +135,9 @@ if [[ -z "$batch_adjust" ]];then
 fi
 if [[ -z "$ncpus_trim" ]];then
         ncpus_trim=4
+fi
+if [[ -z "$ncpus_star" ]];then
+        ncpus_star=20
 fi
 genome_dir=$img_dir/ref/$ref_ver
 # set ref_fa to fasta file in genome_dir if variable ref_fa is not defined
@@ -185,7 +196,10 @@ fi
 echo -e "Logs and scripts ran will be stored in $log_dir\n"
 
 # copying this script for records
-$(cp $img_dir/scripts/run_rnaseq_full.sh $log_dir/run_rnaseq_full.sh)
+if [[ ! -d $log_dir/scripts ]]; then
+	mkdir -p $log_dir/scripts
+fi
+$(cp $img_dir/scripts/run_rnaseq_full.sh $log_dir/scripts/)
 
 ### check and run star index if it doesn't exist
 echo ""
@@ -193,8 +207,9 @@ echo Check and generate STAR index if genome has not been indexed yet....
 echo ""
 
 . $img_dir/scripts/run_star_index.sh run=$run_debug time=$time genome=$ref_ver ref_fa=$fasta_file \
-	ref_gtf=$gtf_file \
+	ref_gtf=$gtf_file ncpus_star=$ncpus_star \
 	&> run_star_index.out
+# also copy to log_dir
 
 # skip checking job if not generating star index.
 if [[ $skip_run_star_index == 0 ]];then
@@ -239,7 +254,7 @@ if compgen -G "${proj_dir}/outputs/logs/trim_fastqc_*.out" > /dev/null; then
             	echo Trimming and QC.....see progress in ${proj_dir}/run_trim_qc.out
                 echo ""
                 export run time
-                . $img_dir/scripts/run_trim_qc.sh run=$run time=$time &> run_trim_qc.out
+                . $img_dir/scripts/run_trim_qc.sh run=$run time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
                 echo "Done running trim and QC."
                 echo "Read run_trim_qc.out log in ${proj_dir} and see whether all steps ran to completion"
                 echo ""
@@ -285,7 +300,8 @@ fi
 
 ### aligning reads and creating tracks
 cd $proj_dir
-. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver &> run_align_create_tracks_rna.out
+. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
+	ncpus_star=$ncpus_star &> run_align_create_tracks_rna.out
 
 message="Done alignment and create tracks for visualization.\n"
 message=${message}"See log run_align_create_tracks_rna.out.\n\n\n"

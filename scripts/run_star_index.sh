@@ -50,6 +50,10 @@ while [[ "$#" -gt 0 ]]; do
                 ref_gtf=$(echo $1 | cut -d '=' -f 2)
                 shift
         fi
+	if [[ $1 == "ncpus_star"* ]];then
+                ncpus_star=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
         if [[ $1 == "help" ]];then
 		echo ""
                 echo 'usage:  /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh [OPTION] &> run_star_index.out & '
@@ -76,7 +80,12 @@ while [[ "$#" -gt 0 ]]; do
                 echo -e "time=1-00:00:00"
                 echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
 		echo -e "\tDefault is 1 day."
-                echo -e ""
+                echo -e "ncpus_star=20"
+                echo -e "\tspecifies the number of cpus used for STAR, bamCompare and feature counts."
+                echo -e "\tDefault is 20 cpus."
+                echo -e "\tthe number of cpus will be automatically adjusted to max number of cpus if ncpus_star"
+                echo -e "\tis less than the max available cpus."
+	        echo -e ""
                 exit
         fi
 done
@@ -109,11 +118,10 @@ cd $proj_dir
 # this will be used to print messages as jobs are running
 out_file=$proj_dir/run_star_index.out
 
-# specify number of cpus for star, bamCompare and bigwigCompare
-ncpus=20
+# specify number of cpus for star, bamCompare and feature count
 max_cpu=$(lscpu | grep 'CPU(s):' | head -n 1 | awk '{print $2}')
-if [[ $max_cpu -lt $ncpus ]]; then
-	ncpus=$max_cpu
+if [[ $max_cpu -lt $ncpus_star ]]; then
+	ncpus_star=$max_cpu
 fi
 
 # singularity image directory
@@ -150,6 +158,10 @@ if [[ -f $ref_gtf ]];then
 else
 	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
 fi
+# throws an error if gtf_file or fasta_file doesn't exist
+if [[ ! -f $ref_gtf || ! -f $fasta_file ]]
+	echo "Please check your genome. Either fasta file or gtf file is not found\n"
+fi
 # this is where star index will be stored. Create if not exist yet.
 if [[ ! -d $genome_dir ]];then
 	star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
@@ -162,10 +174,14 @@ if [[ ! -d $star_index_dir ]]; then
 fi
 work_dir=$star_index_dir
 echo "all outputs will be stored in $work_dir"
-# check whether STAR_index exist and not empty
+## check whether STAR_index, chrom size and fasta index exist
+chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
+## check STAR_index makes sure it's not empy
 if [ -d "$work_dir" ];then
 	if [ -z "$(ls -A $work_dir)" ];then
 		echo -e "Generating STAR index.\n"
+	elif [[ ! -f $genome_dir/$chr_info || ! -f ${fasta_file}.fai ]];then
+		echo -e "Generating chrom sizes and/or fasta index files.\n"
 	else
 		# genome index exist, exit script
         	echo -e "run_star_index.sh was not run since genome index already exist.\n"
@@ -233,13 +249,13 @@ target_gtf_dir=$(dirname $target_link_gtf)
 #### generate index ####
 jid0=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_run=$run \
-		SINGULARITYENV_ncpus=$ncpus \
+		SINGULARITYENV_ncpus=$ncpus_star \
 		SINGULARITYENV_prefix=$prefix \
 		SINGULARITYENV_ref_ver=$ref_ver \
 		SINGULARITYENV_target_fa_name=$target_fa_name \
 		SINGULARITYENV_target_gtf_name=$target_gtf_name \
 		$run sbatch --output=$log_dir/star_index.out \
-			--cpus-per-task $ncpus \
+			--cpus-per-task $ncpus_star \
 			--partition=himem \
 			--mail-type=FAIL \
 			--mail-user=$email \

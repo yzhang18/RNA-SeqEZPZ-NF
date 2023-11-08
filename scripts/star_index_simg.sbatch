@@ -8,12 +8,15 @@ echo "STAR version " $(STAR --version)
 set -x
 export OMP_NUM_THREADS=$ncpus
 cd /mnt
-$run STAR --runMode genomeGenerate \
-	--genomeDir /ref/STAR_index \
-	--runThreadN $ncpus \
-	--sjdbGTFfile /ref_gtf/$target_gtf_name \
-	--genomeFastaFiles /ref_fa/$target_fa_name \
-	--sjdbOverhang 100
+# only generate STAR index if it doesn't exist yet
+if [[ ! "$(ls -A /ref/STAR_index)" ]]; then
+	$run STAR --runMode genomeGenerate \
+		--genomeDir /ref/STAR_index \
+		--runThreadN $ncpus \
+		--sjdbGTFfile /ref_gtf/$target_gtf_name \
+		--genomeFastaFiles /ref_fa/$target_fa_name \
+		--sjdbOverhang 100
+fi
 set +x
 conda deactivate
 # create chromosome info file

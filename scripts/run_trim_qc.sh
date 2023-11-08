@@ -89,6 +89,13 @@ fi
 
 echo -e "Options used to run:"
 echo time="$time"
+# automatically change number of cpus for star, bamCompare and bigwigCompare
+# if greater than max available cpus
+max_cpu=$(lscpu | grep 'CPU(s):' | head -n 1 | awk '{print $2}')
+if [[ $max_cpu -lt $ncpus_trim ]]; then
+        ncpus_trim=$max_cpu
+fi
+
 echo ncpus_trim="$ncpus_trim"
 echo ""
 

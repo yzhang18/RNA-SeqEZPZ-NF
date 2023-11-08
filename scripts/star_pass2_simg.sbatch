@@ -28,6 +28,7 @@ conda deactivate
 source activate samtools_env
 samtools --version
 cd $runDir
+runDir=$(pwd)
 outdir=/mnt/outputs/bw_files
 mkdir -p $outdir
 set -x
@@ -35,6 +36,14 @@ $run samtools index ${prefix}_Aligned.sortedByCoord.out.bam
 set +x
 conda deactivate
 
+# calculating effective genome size
+source activate khmer_env
+cd /opt/khmer
+unique-kmers.py -k $readlength $fasta_file &> /mnt/outputs/kmers.txt
+genome_size=$(tail -n1 /mnt/outputs/kmers.txt | cut -f2 -d:)
+conda deactivate
+
+cd $runDir
 source activate deeptools_env
 bamCoverage --version
 set -x

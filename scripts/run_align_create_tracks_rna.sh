@@ -359,6 +359,7 @@ for i in "${!groupname_array[@]}"; do
 					--bind $proj_dir:/mnt \
 					--bind $img_dir/scripts:/scripts \
 					--bind $genome_dir:/ref \
+					--bind $fasta_file \
 					$img_dir/$img_name \
 					/bin/bash /scripts/star_pass2_simg.sbatch"| cut -f 4 -d' ')
 	echo "Running STAR second pass for $prefix job id: $tmp_jid"

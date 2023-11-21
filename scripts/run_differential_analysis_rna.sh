@@ -349,9 +349,9 @@ if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; the
 fi
 
 # delete intermediate bam files
-rm -r $proj_dir/outputs/STAR_2pass/Pass1
-rm -r $proj_dir/outputs/STAR_2pass/GenomeForPass2
-rm $proj_dir/outputs/STAR_2pass/Pass2/*Aligned.out.bam
+rm -r $proj_dir/outputs/STAR_2pass/Pass1 2> /dev/null || true
+rm -r $proj_dir/outputs/STAR_2pass/GenomeForPass2 2> /dev/null || true
+rm $proj_dir/outputs/STAR_2pass/Pass2/*Aligned.out.bam 2> /dev/null || true
 
 message="Differential analysis has been completed\n\
 Output files are in $work_dir/diff_analysis_rslt\n\

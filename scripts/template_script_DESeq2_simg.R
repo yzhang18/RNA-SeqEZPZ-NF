@@ -61,11 +61,14 @@ assignInNamespace("exportResults.DESeq2",exportResults.DESeq2,ns="SARTools")
 source(file.path(scriptDir,'pairwiseScatterPlots.R'))
 assignInNamespace("pairwiseScatterPlots",pairwiseScatterPlots,ns="SARTools")
 
+# using modified loadTargetFile to allow for punctuation in groupname
+source(file.path(scriptDir,'loadTargetFile.R'))
+assignInNamespace("loadTargetFile",loadTargetFile,ns="SARTools")
+
 # the following might be my own new function that doesn't exist in SARTools
 source(file.path(scriptDir,'getDiffTop.R'))
 source(file.path(scriptDir,'calcDiffTotal.R'))
 source(file.path(scriptDir,'diffPlot.R'))
-
 source(file.path(scriptDir,'run.DESeq2.R'))
 assignInNamespace("run.DESeq2",run.DESeq2,ns="SARTools")
 source(file.path(scriptDir,'rawpHist.R'))
@@ -124,7 +127,6 @@ if(subset){
   label = label[grep(sub.names,label)]
 }
 
-# NOTE: SARTools does not allow group names to have underscores.
 group <- groupname
 rep <- repname
 write.table(data.frame(label,files,group,rep),file=file.path('target.txt'),
@@ -137,9 +139,9 @@ featuresToRemove <- c("alignment_not_unique",        # names of the features to 
 
 varInt <- "group"                                    # factor of interest
 # reference biological condition
-# it's ok to pick only one since all pairwise will be analyzed
 # condRef is just used to determine reference for calculating fold-change
-condRef <-  controlname[!is.na(controlname)][1]
+# changed to get all controname not only the first one.
+condRef <-  controlname[!is.na(controlname)]
 # blocking factor: NULL (default) or "batch" for example
 if (tolower(batch_adjust) == "yes"){
  batch <- "rep"
@@ -161,6 +163,8 @@ locfunc <- "median"                                  # "median" (default) or "sh
 ################################################################################
 
 # loading target file
+# NOTE: SARTools does not allow group names to have underscores.
+# so I modified loadTargetFile to allow for underscores
 target <- loadTargetFile(targetFile=targetFile, varInt=varInt, condRef=condRef, batch=batch)
 
 # vector of colors for each group or condition

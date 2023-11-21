@@ -159,7 +159,7 @@ else
 	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
 fi
 # throws an error if gtf_file or fasta_file doesn't exist
-if [[ ! -f $ref_gtf || ! -f $fasta_file ]]
+if [[ ! -f $ref_gtf || ! -f $fasta_file ]];then
 	echo "Please check your genome. Either fasta file or gtf file is not found\n"
 fi
 # this is where star index will be stored. Create if not exist yet.
@@ -175,12 +175,15 @@ fi
 work_dir=$star_index_dir
 echo "all outputs will be stored in $work_dir"
 ## check whether STAR_index, chrom size and fasta index exist
-chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
+chr_info_path=$(find $genome_dir -name *.chrom.sizes)
+if [[ ! -z "$chr_info_path" ]]; then
+	chr_info=$(basename $chr_info_path)
+fi
 ## check STAR_index makes sure it's not empy
 if [ -d "$work_dir" ];then
 	if [ -z "$(ls -A $work_dir)" ];then
 		echo -e "Generating STAR index.\n"
-	elif [[ ! -f $genome_dir/$chr_info || ! -f ${fasta_file}.fai ]];then
+	elif [[ -z $chr_info_path || ! -f ${fasta_file}.fai ]];then
 		echo -e "Generating chrom sizes and/or fasta index files.\n"
 	else
 		# genome index exist, exit script

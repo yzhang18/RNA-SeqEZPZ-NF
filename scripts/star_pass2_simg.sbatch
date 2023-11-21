@@ -38,9 +38,11 @@ conda deactivate
 
 # calculating effective genome size
 source activate khmer_env
+set -x
 cd /opt/khmer
 unique-kmers.py -k $readlength $fasta_file &> /mnt/outputs/kmers.txt
 genome_size=$(tail -n1 /mnt/outputs/kmers.txt | cut -f2 -d:)
+set +x
 conda deactivate
 
 cd $runDir

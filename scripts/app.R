@@ -24,7 +24,6 @@ if(file.exists("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RD
 	load("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RData")
 } else {
 	load("/mnt/outputs/diff_analysis_rslt/RNA-seq differential analysis.RData")
-
 }
 
 groups= data.frame(
@@ -58,7 +57,7 @@ pval.names=c("< 2.2e-16","< 0.05","< 0.5","> 0.5")
 # ad-hoc maximum plot. 
 max_plots=5
 
-heatmap_sigf_overlap <- function(data){
+heatmap_sigf_overlap <- function(data,title=""){
 		hm <- ggplot(data,aes(X1,X2,fill=pval.cat)) +
 		# use thin border size 0.1 to separate tiles
 		geom_tile(color="white",size=0.1)+
@@ -83,7 +82,8 @@ heatmap_sigf_overlap <- function(data){
 		# add pvalue as text
 		geom_text(aes(label=round(jaccard,digits=2))) +
 		# color key size
-		theme(legend.key.width=unit(0.7,"cm"))
+		theme(legend.key.width=unit(0.7,"cm")) +
+		ggtitle(title)
 	
 	# plot venn and overlap heatmap together
 	grid.arrange(hm,
@@ -354,6 +354,11 @@ ui <- fluidPage(
 				br(),
 				fluidRow(
 				column(12,plotOutput(outputId = "tab3.plot1"))
+				),
+				br(),
+				br(),
+				fluidRow(
+				 column(12,plotOutput(outputId = "tab3.plot2"))
 				)
 			)
 		)
@@ -1026,13 +1031,14 @@ observeEvent(input$insert_set, {
 		idx=match(grp.name,names(out.DESeq2$results))
 		results=out.DESeq2$results[idx]
 	})
+	
 	tab3.gs.RNASeq <- reactive({
 		grp.name=react.tab3.grp.name()
 		grp.plot.title=react.tab3.grp.plot.title()
 		results=react.tab3.result()
-		
 		gs.RNASeq <- min(sapply(results,function(x) sum(!is.na(x$padj))))
 	})
+	
 	tab3.grp.up <- reactive ({
 		grp.name=react.tab3.grp.name()
 		grp.plot.title=react.tab3.grp.plot.title()
@@ -1082,12 +1088,45 @@ observeEvent(input$insert_set, {
 		names(genes.lists)<-grp.plot.title
 		genes.lists
 	})
+	tab3.genes.lists.up <- reactive ({
+	 grp.name=react.tab3.grp.name()
+	 grp.plot.title=react.tab3.grp.plot.title()
+	 results=react.tab3.result()
+	 grp.up <- tab3.grp.up ()
+	 genes.lists.up=lapply(grp.up,function(x) rownames(x))
+	 names(genes.lists.up) <- grp.plot.title
+	 genes.lists.up
+	})
+	
+	tab3.genes.lists.dwn <- reactive ({
+	 grp.name=react.tab3.grp.name()
+	 grp.plot.title=react.tab3.grp.plot.title()
+	 results=react.tab3.result()
+	 grp.dwn <- tab3.grp.dwn ()
+	 genes.lists.dwn=lapply(grp.dwn,function(x) rownames(x))
+	 names(genes.lists.dwn) <- grp.plot.title
+	 genes.lists.dwn
+	})
+	
 	tab3.gom.obj <- reactive({
 		genes.lists <- tab3.genes.lists()
 		gs.RNASeq <- tab3.gs.RNASeq()
 		
 		newGOM(genes.lists,genes.lists,genome.size=gs.RNASeq)
 	})
+	
+	tab3.gom.obj.up <- reactive({
+	 genes.lists <- tab3.genes.lists.up()
+	 gs.RNASeq <- tab3.gs.RNASeq()
+	 newGOM(genes.lists,genes.lists,genome.size=gs.RNASeq)
+	})
+	
+	tab3.gom.obj.dwn <- reactive({
+	 genes.lists <- tab3.genes.lists.dwn()
+	 gs.RNASeq <- tab3.gs.RNASeq()
+	 newGOM(genes.lists,genes.lists,genome.size=gs.RNASeq)
+	})
+	
 	tab3.data <- reactive({
 		gom.obj <- tab3.gom.obj()
 		grp.plot.title <- react.tab3.grp.plot.title()
@@ -1107,6 +1146,45 @@ observeEvent(input$insert_set, {
 		data$pval.cat=factor(data$pval.cat,levels=pval.names)
 		data
 	})
+	
+	tab3.data.up <- reactive({
+	 gom.obj <- tab3.gom.obj.up()
+	 grp.plot.title <- react.tab3.grp.plot.title()
+	 # calculate overlap
+	 data <- getMatrix(gom.obj,"pval")
+	 data <- melt(data,id=grp.plot.title)
+	 data <- data
+	 names(data)[names(data)=="value"]="pval"
+	 tmp <- getMatrix(gom.obj,"Jaccard")
+	 tmp <- melt(tmp,id=grp.plot.title)
+	 tmp <- tmp
+	 data$jaccard=tmp$value
+	 # categorizing pvalues
+	 data$pval.cat=ifelse(data$pval==0,pval.names[1],ifelse(data$pval<=0.05,pval.names[2],
+   ifelse(data$pval<0.5,pval.names[3],pval.names[4])))
+	 data$pval.cat=factor(data$pval.cat,levels=pval.names)
+	 data
+	})
+	
+	tab3.data.dwn <- reactive({
+	 gom.obj <- tab3.gom.obj.dwn()
+	 grp.plot.title <- react.tab3.grp.plot.title()
+	 # calculate overlap
+	 data <- getMatrix(gom.obj,"pval")
+	 data <- melt(data,id=grp.plot.title)
+	 data <- data
+	 names(data)[names(data)=="value"]="pval"
+	 tmp <- getMatrix(gom.obj,"Jaccard")
+	 tmp <- melt(tmp,id=grp.plot.title)
+	 tmp <- tmp
+	 data$jaccard=tmp$value
+	 # categorizing pvalues
+	 data$pval.cat=ifelse(data$pval==0,pval.names[1],ifelse(data$pval<=0.05,pval.names[2],
+	                                                        ifelse(data$pval<0.5,pval.names[3],pval.names[4])))
+	 data$pval.cat=factor(data$pval.cat,levels=pval.names)
+	 data
+	})
+	
 	tab3.s4 <- reactive({
 		# input for euler venn
 		s4 <-tab3.genes.lists()
@@ -1115,14 +1193,33 @@ observeEvent(input$insert_set, {
 		names(s4) <- grp.plot.title
 		s4
 	})
+	
+	tab3.s4.up <- reactive({
+	 # input for euler venn
+	 s4 <-tab3.genes.lists.up()
+	 grp.plot.title <-react.tab3.grp.plot.title()
+	 
+	 names(s4) <- grp.plot.title
+	 s4
+	})
+	
+	tab3.s4.dwn <- reactive({
+	 # input for euler venn
+	 s4 <-tab3.genes.lists.dwn()
+	 grp.plot.title <-react.tab3.grp.plot.title()
+	 names(s4) <- grp.plot.title
+	 s4
+	})
+	
   # Insert the right number of plot output objects into the web page
   output$tab3.plots <- renderUI({
 	grp.name=react.tab3.grp.name()
 	
 	plot_output_list<-list()
 	if(length(grp.name)<8){
-    plot_output_list[[1]] <- plotOutput("tab3.venn")
-    plot_output_list[[2]] <- plotOutput("tab3.hm")
+    plot_output_list[[1]] <- plotOutput("tab3.venn.up")
+    plot_output_list[[2]] <- plotOutput("tab3.venn.dwn")
+    plot_output_list[[3]] <- plotOutput("tab3.hm")
 	}else{
 	    plot_output_list[[1]] <- plotOutput("tab3.hm")
 	}
@@ -1135,16 +1232,16 @@ observeEvent(input$insert_set, {
   # # Call renderPlot for each one. Plots are only actually generated when they
   # # are visible on the web page.
 
-    output[["tab3.venn"]] <- renderPlot({
+  output[["tab3.venn.up"]] <- renderPlot({
 		venn.opts=react.tab3.venn.opts()
 		grp.name=react.tab3.grp.name()
 		colors=react.tab3.color()
 		cex=react.tab3.venn.cex()
 		pad=react.tab3.venn.pad()
-		s4 <- tab3.s4()
-		
+		set.seed(1)
+		s4 <- tab3.s4.up()
 		venn1<-grid.arrange(plot_euler(s4=s4,colors=colors,cex=cex,
-			venn.opts=venn.opts,title="All regulated genes"),
+			venn.opts=venn.opts,title="Up-regulated genes"),
 			padding=unit(pad,"line"),top="",bottom="",right="",left="")
 		layout(matrix(1:2, 1, byrow = TRUE))
 		venn(s4,zcolor=colors,opacity=.8,box=FALSE,ilcs = 0.8, sncs = 1)
@@ -1154,22 +1251,57 @@ observeEvent(input$insert_set, {
 		grid.draw(venn1)
 		popViewport(2)
       })
+  
+  output[["tab3.venn.dwn"]] <- renderPlot({
+   venn.opts=react.tab3.venn.opts()
+   grp.name=react.tab3.grp.name()
+   colors=react.tab3.color()
+   cex=react.tab3.venn.cex()
+   pad=react.tab3.venn.pad()
+   set.seed(1)
+   s4 <- tab3.s4.dwn()
+   venn1<-grid.arrange(plot_euler(s4=s4,colors=colors,cex=cex,
+                                    venn.opts=venn.opts,title="Down-regulated genes"),
+                         padding=unit(pad,"line"),top="",bottom="",right="",left="")
+   layout(matrix(1:2, 1, byrow = TRUE))
+   venn(s4,zcolor=colors,opacity=.8,box=FALSE,ilcs = 0.8, sncs = 1)
+   frame()
+   vps <- baseViewports()
+   pushViewport(vps$inner, vps$figure, vps$plot)
+   grid.draw(venn1)
+   popViewport(2)
+  })
       
-    output[["tab3.hm"]] <- renderPlot({
-        data=tab3.data()
-		
-		heatmap_sigf_overlap(data)
+ output[["tab3.hm"]] <- renderPlot({
+  pad = react.venn.pad()
+  data=tab3.data.up()
+  hm.up <- heatmap_sigf_overlap(data,"Up-regulated genes")
+  data=data.dwn()
+  hm.dwn <- heatmap_sigf_overlap(data,"Down-regulated genes")
+  grid.arrange(hm.up,hm.dwn,ncol=2,padding=unit(pad,"line"),
+               bottom="",right="",left="",top="")
       })
 	
 	output$tab3.plot1 <- renderPlot({
-		s4 <- tab3.s4()
+		s4 <- tab3.s4.up()
 		grp.name <- react.tab3.grp.name()
 		
 		upset(fromList(s4), order.by = "freq",nsets=length(grp.name), 
-			mainbar.y.label = "Genes Overlaps", sets.x.label = "Significant Genes", 
+			mainbar.y.label = "Up-regulated Genes Overlaps", sets.x.label = "Significant Genes", 
 			 mb.ratio = c(0.5, 0.5),
 			#c(intersection size title, intersection size tick labels, set size title, set size tick labels, set names, numbers above bars)
 			text.scale = c(1.4, 1.4, 1.4, 1.4, 1.8, 1.5))
+	})
+	
+	output$tab3.plot2 <- renderPlot({
+	 s4 <- tab3.s4.dwn()
+	 grp.name <- react.tab3.grp.name()
+	 
+	 upset(fromList(s4), order.by = "freq",nsets=length(grp.name), 
+	       mainbar.y.label = "Down-regulated Genes Overlaps", sets.x.label = "Significant Genes", 
+	       mb.ratio = c(0.5, 0.5),
+	       #c(intersection size title, intersection size tick labels, set size title, set size tick labels, set names, numbers above bars)
+	       text.scale = c(1.4, 1.4, 1.4, 1.4, 1.8, 1.5))
 	})
 	
 	output$tab3.text <- renderPrint({ cat(react.tab3.grp.name(),"n",react.tab3.grp.plot.title(),"\n",

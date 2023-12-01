@@ -350,7 +350,7 @@ ui <- fluidPage(
 					sliderInput("tab3.venn.pad", label = ("Venns' circle size"), min = 0, 
 						max = 8, value = 1,step = 0.5),
 					# upset plot number of intersection
-					numericInput("tab3.nintersects.upset", label = ("# of intersections for upset plot"), 
+					numericInput("tab3.nintersects.upset", label = ("Upset plot max intersections"), 
 					             value = 40,min=1,step=1),
 					# species for msigdb
 					selectInput(
@@ -1485,13 +1485,22 @@ observeEvent(input$insert_set, {
 	 msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "MF") %>%
 	  dplyr::select(gs_name, gene_symbol)
 	 msig.name ="MSigDB GO Molecular Function"
+	 msig.gene.set$gs_name = gsub("GOMF_","",msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = gsub("_"," ",msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = tolower(msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = str_to_title(msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = str_replace_all(msig.gene.set$gs_name, 
+	                                         c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
+	                                           "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
+	                                           "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
+	                                           "Lncrna" = "lncRNA","Snrna" = "snRNA"))
 	 formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
 	                               TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
 	                               pAdjustMethod="BH")
 	 
 	 # re-arrange datasets using factor
 	 # and do pathway analysis using up- and down-regulated genes separately
-	 dotplot(formula_res,font.size=10,title=msig.name) + facet_grid(~group2) +
+	 dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
 	  scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
 	  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	  scale_color_distiller(palette = 'Blues')
@@ -1506,10 +1515,19 @@ observeEvent(input$insert_set, {
 	 msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "BP") %>%
 	  dplyr::select(gs_name, gene_symbol)
 	 msig.name ="MSigDB GO Biological Process"
+	 msig.gene.set$gs_name = gsub("GOBP_","",msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = gsub("_"," ",msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = tolower(msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = str_to_title(msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = str_replace_all(msig.gene.set$gs_name, 
+	                                         c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
+	                                           "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
+	                                           "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
+	                                           "Lncrna" = "lncRNA","Snrna" = "snRNA"))
 	 formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
 	                               TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
 	                               pAdjustMethod="BH")
-	 dotplot(formula_res,font.size=10,title=msig.name) + facet_grid(~group2) +
+	 dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
 	  scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
 	  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	  scale_color_distiller(palette = 'Blues')
@@ -1524,10 +1542,19 @@ observeEvent(input$insert_set, {
 	 msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "CC") %>%
 	  dplyr::select(gs_name, gene_symbol)
 	 msig.name ="MSigDB GO Cellular Component"
+	 msig.gene.set$gs_name = gsub("GOCC_","",msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = gsub("_"," ",msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = tolower(msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = str_to_title(msig.gene.set$gs_name)
+	 msig.gene.set$gs_name = str_replace_all(msig.gene.set$gs_name, 
+	                                         c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
+	                                           "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
+	                                           "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
+	                                           "Lncrna" = "lncRNA","Snrna" = "snRNA"))
 	 formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
 	                               TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
 	                               pAdjustMethod="BH")
-	 dotplot(formula_res,font.size=10,title=msig.name) + facet_grid(~group2) +
+	 dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
 	  scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
 	  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	  scale_color_distiller(palette = 'Blues')
@@ -1542,10 +1569,18 @@ observeEvent(input$insert_set, {
 	  msig.gene.set <- msigdbr(species = msigdb.species, category = "C2") %>%
 	   dplyr::select(gs_name, gene_symbol)
 	  msig.name ="MSigDB Curated Gene Sets"
+	  msig.gene.set$gs_name = gsub("_"," ",msig.gene.set$gs_name)
+	  msig.gene.set$gs_name = tolower(msig.gene.set$gs_name)
+	  msig.gene.set$gs_name = str_to_title(msig.gene.set$gs_name)
+	  msig.gene.set$gs_name = str_replace_all(msig.gene.set$gs_name, 
+	                                          c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
+	                                            "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
+	                                            "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
+	                                            "Lncrna" = "lncRNA","Snrna" = "snRNA"))
 	  formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
 	                                TERM2GENE=msig.gene.set,
 	                                pvalueCutoff=enrich.pval.co,pAdjustMethod="BH")
-	  dotplot(formula_res,font.size=10,title=msig.name) + facet_grid(~group2) +
+	  dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
 	   scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
 	   scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	   scale_color_distiller(palette = 'Blues')

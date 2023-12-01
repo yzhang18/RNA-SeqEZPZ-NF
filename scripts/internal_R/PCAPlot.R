@@ -38,14 +38,18 @@ PCAPlot <- function (object, group=NULL,counts.trans,varInt,typeTrans, ntop = mi
       geom_point(size =5) +
       xlab(paste0("PC1: ", percentVar[1], "% variance")) +
       ylab(paste0("PC2: ", percentVar[2], "% variance")) +
-      coord_fixed() +
+      # coord_fixed() +
+      # Adding plotting space to fit all points
+      scale_y_continuous(expand=expansion(mult=c(0.1,0.1)))
 	  scale_color_manual(values=col)
   } else{
     p<-ggplot(pcaData, aes(x = PC1, y = PC2, color = group,shape=batch)) +
       geom_point(size =5) +
       xlab(paste0("PC1: ", percentVar[1], "% variance")) +
       ylab(paste0("PC2: ", percentVar[2], "% variance")) +
-      coord_fixed() +
+     # coord_fixed() +
+     # Adding plotting space to fit all points
+     scale_y_continuous(expand=expansion(mult=c(0.1,0.1)))
 	  scale_color_manual(values=col)
   }
   print(p)

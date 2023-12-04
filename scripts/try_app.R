@@ -18,6 +18,7 @@ library(DESeq2)
 library(clusterProfiler)
 library(msigdbr)
 library(stringr)
+library(ggVennDiagram)
 
 # filename was changed. Make sure can read both
 if(file.exists("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RData")){
@@ -27,12 +28,14 @@ if(file.exists("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RD
 }
 
 grp.name=names(out.DESeq2$results)
+grp.plot.title=names(out.DESeq2$results)
 idx=match(grp.name,names(out.DESeq2$results))
 results=out.DESeq2$results[idx]
 fdr.co=rep(1,6)
 fc.cutoff=rep(1,6)
 meanDiff.cutoff=rep(0,6)
 normCts <- counts(out.DESeq2$dds,normalized=TRUE)
+colors=brewer.pal(12,"Paired")[1:length(grp.name)]
 
 grp.up=list()
 for(i in 1:length(grp.name)){
@@ -95,3 +98,50 @@ dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid
  scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
  scale_color_distiller(palette = 'Blues')
+
+genes.lists.up=list()
+venn.opts=data.frame(
+ lbl= c("Numbers","Percentages","Labels","Legend")
+)
+venn.opts.lst=as.list(venn.opts$lbl)
+names(venn.opts.lst)=venn.opts$lbl
+genes.lists.up=lapply(grp.up,function(x) rownames(x))
+names(genes.lists.up) <- grp.plot.title
+s4 <-genes.lists.up
+names(s4) <- grp.plot.title
+
+col <- colors
+
+show.legend=FALSE
+if(sum(venn.opts=='Legend')>0) show.legend=TRUE
+
+set.seed(1)
+venn <- Venn(s4)
+d <- process_data(venn)
+d2 <- process_data(venn)
+venn.region = venn_region(d)
+venn.region$percent = round(venn.region$count/sum(venn.region$count),1)
+d2@region <- st_polygonize(d@setEdge)
+
+p <- ggplot() +
+ geom_sf(aes(fill = name), data = venn_region(d2),show.legend=show.legend) +
+ geom_sf(aes(color = name), data = venn_setedge(d),show.legend=show.legend) +
+ scale_color_manual(values = alpha(col, 1)) +
+ scale_fill_manual(values = alpha(col,1)) +
+ theme_void()
+# display both percent and count
+if(sum(venn.opts=='Percentages')>0 && sum(venn.opts=='Numbers')>0) 
+ q <- p + geom_sf_text(aes(label = paste0(count,"\n","(",percent,"%)")), data = venn.region)
+# display count only
+if(sum(venn.opts=='Percentages')==0 && sum(venn.opts=='Numbers')>0) 
+ q <- p + geom_sf_text(aes(label = count), data = venn.region)
+# display percent only
+if(sum(venn.opts=='Percentages')>0 && sum(venn.opts=='Numbers')==0) 
+q <- p + geom_sf_text(aes(label = paste0(percent,"%")), data = venn.region)
+if(sum(venn.opts=='Percentages')==0 && sum(venn.opts=='Numbers')==0)
+ q <- p
+if(sum(venn.opts=='Labels')>0) {
+ q + geom_sf_text(aes(label = name), data = venn_setlabel(d))
+}else{
+ q + geom_sf_text(aes(label = ""), data = venn_setlabel(d))
+}

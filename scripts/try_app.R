@@ -18,7 +18,7 @@ library(DESeq2)
 library(clusterProfiler)
 library(msigdbr)
 library(stringr)
-library(ggVennDiagram)
+#library(ggVennDiagram)
 
 # filename was changed. Make sure can read both
 if(file.exists("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RData")){
@@ -115,33 +115,8 @@ col <- colors
 show.legend=FALSE
 if(sum(venn.opts=='Legend')>0) show.legend=TRUE
 
-set.seed(1)
-venn <- Venn(s4)
-d <- process_data(venn)
-d2 <- process_data(venn)
-venn.region = venn_region(d)
-venn.region$percent = round(venn.region$count/sum(venn.region$count),1)
-d2@region <- st_polygonize(d@setEdge)
-
-p <- ggplot() +
- geom_sf(aes(fill = name), data = venn_region(d2),show.legend=show.legend) +
- geom_sf(aes(color = name), data = venn_setedge(d),show.legend=show.legend) +
- scale_color_manual(values = alpha(col, 1)) +
- scale_fill_manual(values = alpha(col,1)) +
- theme_void()
-# display both percent and count
-if(sum(venn.opts=='Percentages')>0 && sum(venn.opts=='Numbers')>0) 
- q <- p + geom_sf_text(aes(label = paste0(count,"\n","(",percent,"%)")), data = venn.region)
-# display count only
-if(sum(venn.opts=='Percentages')==0 && sum(venn.opts=='Numbers')>0) 
- q <- p + geom_sf_text(aes(label = count), data = venn.region)
-# display percent only
-if(sum(venn.opts=='Percentages')>0 && sum(venn.opts=='Numbers')==0) 
-q <- p + geom_sf_text(aes(label = paste0(percent,"%")), data = venn.region)
-if(sum(venn.opts=='Percentages')==0 && sum(venn.opts=='Numbers')==0)
- q <- p
-if(sum(venn.opts=='Labels')>0) {
- q + geom_sf_text(aes(label = name), data = venn_setlabel(d))
-}else{
- q + geom_sf_text(aes(label = ""), data = venn_setlabel(d))
-}
+# remove label if requested
+if(!'Labels' %in% venn.opts )
+ names(s4)=rep(" ",length(s4))
+venn1<-venn(s4,zcolor=colors,opacity=.8,box=FALSE,
+                      ilcs = 0.8, sncs = 1,ggplot=TRUE)

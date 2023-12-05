@@ -16,16 +16,14 @@ library(shiny)
 library(RColorBrewer)
 library(grid)
 library(gridBase)
-library(venn)
+library(venn) # need to be 1.11
 library(UpSetR)
 library(DESeq2)
-library(clusterProfiler)
+library(clusterProfiler) # need to be 3.8.1
 library(msigdbr)
 library(stringr)
 library(ggplotify) #as.ggplot for upsetr
 library(ggpolypath) #ggplot=true for venn
-library(ggVennDiagram)
-library(sf) # for mapping colors to categories in ggVennDiagram
 
 # data directory
 data.loc="/mnt/outputs"
@@ -115,6 +113,7 @@ heatmap_sigf_overlap <- function(data,title=""){
 		# gp=gpar(fontsize=13, fontface="italic")))
 		# hm + annotation_custom(grob)
 }
+
 plot_euler <- function(s4,colors,cex,venn.opts,title){
 	quantities=list(cex=cex);
 	legend=FALSE
@@ -135,42 +134,6 @@ plot_euler <- function(s4,colors,cex,venn.opts,title){
 		quantities=quantities, labels=labels,
 		fills=colors,edges=FALSE,main=title,
 		adjust_labels = TRUE,legend=legend)
-}
-
-plot_ggVennD <- function(s4,colors,venn.opts){
- show.legend=FALSE
- if(sum(venn.opts=='Legend')>0) show.legend=TRUE
-
- set.seed(1)
- venn <- Venn(s4)
- d <- process_data(venn)
- d2 <- process_data(venn)
- venn.region = venn_region(d)
- venn.region$percent = round(venn.region$count/sum(venn.region$count),1)
- d2@region <- st_polygonize(d@setEdge)
- 
- vals.plot$venn1 <- ggplot() +
-  geom_sf(aes(fill = name), data = venn_region(d2),show.legend=show.legend) +
-  geom_sf(aes(color = name), data = venn_setedge(d),show.legend=show.legend) +
-  scale_color_manual(values = alpha(col, 1)) +
-  scale_fill_manual(values = alpha(col,1)) +
-  theme_void()
- # # display both percent and count
- # if(sum(venn.opts=='Percentages')>0 && sum(venn.opts=='Numbers')>0) 
- #  q <- p + geom_sf_text(aes(label = paste0(count,"\n","(",percent,"%)")), data = venn.region)
- # # display count only
- # if(sum(venn.opts=='Percentages')==0 && sum(venn.opts=='Numbers')>0) 
- #  q <- p + geom_sf_text(aes(label = count), data = venn.region)
- # # display percent only
- # if(sum(venn.opts=='Percentages')>0 && sum(venn.opts=='Numbers')==0) 
- #  q <- p + geom_sf_text(aes(label = paste0(percent,"%")), data = venn.region)
- # if(sum(venn.opts=='Percentages')==0 && sum(venn.opts=='Numbers')==0)
- #  q <- p
- # if(sum(venn.opts=='Labels')>0) {
- #  q <- q + geom_sf_text(aes(label = name), data = venn_setlabel(d))
- # }else{
- #  q <- q + geom_sf_text(aes(label = ""), data = venn_setlabel(d))
- # }
 }
 
 ui <- fluidPage(
@@ -401,13 +364,13 @@ ui <- fluidPage(
 					 choices = msigdb.species.lst),
 					# gene set enrichment pvalue numeric input
 					numericInput("tab3.enrich.pval.co", label = ("FDR for enrichment"), 
-					             value = 0.05,min=0,step=0.01)
+					             value = 0.05,min=0,step=0.01),
+					actionButton(
+					 inputId = "gen.go",
+					 label = "Generate Enrichment plots"
 					),
-				 br(),
-				 actionButton(
-				  inputId = "gen.go",
-				  label = "Generate Enrichment plots"
-				 ),
+					br(),br(),
+					),
 					column(2,
 					textInput("tab3.color.grp1", label = ("Color for group 1"), value = tab3.colors[1]),
 					textInput("tab3.color.grp2", label = ("Color for group 2"), value = tab3.colors[2]),
@@ -448,13 +411,13 @@ ui <- fluidPage(
 				br(),
 				br(),
 				conditionalPanel(
-				 condition= "input['gen.go'] == 1",
+				 condition= "input['gen.go'] >= 1",
 				 fluidRow(
-				  column(12,plotOutput(outputId = "tab3.plot3.1"))
+				  column(12,plotOutput(outputId = "tab3.plot3.1",height="auto"))
 				 ),
 				 br(),
 				fluidRow(
-				 column(12,plotOutput(outputId = "tab3.plot3.2"))
+				 column(12,plotOutput(outputId = "tab3.plot3.2",height="auto"))
 				),
 				br(),
 				fluidRow(
@@ -462,7 +425,7 @@ ui <- fluidPage(
 				),
 				br(),
 				fluidRow(
-				 column(12,plotOutput(outputId = "tab3.plot3.4"))
+				 column(12,plotOutput(outputId = "tab3.plot3.4",height="auto"))
 				)
 				), # conditionalpanel
 				textOutput("tab3.text")
@@ -482,7 +445,8 @@ server <- function(input, output,session) {
 #### processing > 3 groups
 
  # vals will contain all plots and table grobs
- vals.plot <- reactiveValues(venn1=NULL,venn2=NULL,hm.up=NULL,hm.dwn=NULL,
+ vals.plot <- reactiveValues(venn.up1=NULL,venn.up2=NULL,venn.dwn1=NULL,
+                             venn.dwn2=NULL,hm.up=NULL,hm.dwn=NULL,
                              upset.up=NULL,upset.dwn=NULL,msig.mf=NULL,
                              msig.bp=NULL,msig.cc=NULL,msig.curate=NULL)
  
@@ -498,6 +462,8 @@ react.val.gen.go <- reactiveVal(0)
 observeEvent(input$gen.go, {
  gen.go <- reactiveVal(1)
  react.val.gen.go(gen.go)
+ print("gen.go=")
+ print(gen.go)
 })
 
 observeEvent(input$insert_set, {
@@ -670,7 +636,7 @@ observeEvent(input$insert_set, {
 		grp.name=react.grp.name()
 		grp.plot.title=react.grp.plot.title()
 		results=react.result()
-		gs.RNASeq <- min(sapply(results,function(x) sum(!is.na(x$padj))))
+		gs.RNASeq <- max(sapply(results,function(x) sum(!is.na(x$padj))))
 	})
 		
 	grp.up <- reactive ({
@@ -804,6 +770,7 @@ observeEvent(input$insert_set, {
 		data$pval.cat=ifelse(data$pval==0,pval.names[1],ifelse(data$pval<=0.05,pval.names[2],
 			ifelse(data$pval<0.5,pval.names[3],pval.names[4])))
 		data$pval.cat=factor(data$pval.cat,levels=pval.names)
+		print(head(data))
 		data
 	})
 	
@@ -822,6 +789,7 @@ observeEvent(input$insert_set, {
 		data$pval.cat=ifelse(data$pval==0,pval.names[1],ifelse(data$pval<=0.05,pval.names[2],
 			ifelse(data$pval<0.5,pval.names[3],pval.names[4])))
 		data$pval.cat=factor(data$pval.cat,levels=pval.names)
+		print(head(data))
 		data
 	})
 	
@@ -917,7 +885,7 @@ observeEvent(input$insert_set, {
 	
 	tab0.gs.RNASeq <- reactive({
 		tab0.results=react.tab0.result()
-		gs.RNASeq <- min(sapply(tab0.results,function(x) sum(!is.na(x$padj))))
+		gs.RNASeq <- max(sapply(tab0.results,function(x) sum(!is.na(x$padj))))
 	})
 		
 	tab0.grp.up <- reactive ({
@@ -1196,7 +1164,7 @@ observeEvent(input$insert_set, {
 		grp.name=react.tab3.grp.name()
 		grp.plot.title=react.tab3.grp.plot.title()
 		results=react.tab3.result()
-		gs.RNASeq <- min(sapply(results,function(x) sum(!is.na(x$padj))))
+		gs.RNASeq <- max(sapply(results,function(x) sum(!is.na(x$padj))))
 	})
 	
 	tab3.grp.up <- reactive ({
@@ -1449,16 +1417,16 @@ observeEvent(input$insert_set, {
 		pad=react.tab3.venn.pad()
 		set.seed(1)
 		s4 <- tab3.s4.up()
-		vals.plot$venn2<-plot_euler(s4=s4,colors=colors,cex=cex,
+		vals.plot$venn.up2<-plot_euler(s4=s4,colors=colors,cex=cex,
 		                            venn.opts=venn.opts,title="")
 		# remove label if requested
 		if(!'Labels' %in% venn.opts )
-		 names(s4)=rep(" ",length(peaks.set))
-		vals.plot$venn1<-venn(s4,zcolor=colors,opacity=.8,box=FALSE,
+		 names(s4)=rep(" ",length(s4))
+		vals.plot$venn.up1<-venn(s4,zcolor=colors,opacity=.8,box=FALSE,
 		                      ilcs = 0.8, sncs = 1,ggplot=TRUE)
-		vals.plot$venn1
-		# grid.arrange(vals.plot$venn1,vals.plot$venn2,nrow=1,
-		#                padding=unit(pad,"unit"))
+		grid.arrange(vals.plot$venn.up1,vals.plot$venn.up2,ncol=2,
+		                padding=unit(pad,"line"),
+		             top=textGrob("Up-regulated Genes",gp=gpar(fontsize=20)))
       })
   
   output[["tab3.venn.dwn"]] <- renderPlot({
@@ -1469,23 +1437,23 @@ observeEvent(input$insert_set, {
    pad=react.tab3.venn.pad()
    set.seed(1)
    s4 <- tab3.s4.dwn()
-   venn1<-grid.arrange(plot_euler(s4=s4,colors=colors,cex=cex,
-                                    venn.opts=venn.opts,title="Down-regulated genes"),
-                         padding=unit(pad,"line"),top="",bottom="",right="",left="")
-   layout(matrix(1:2, 1, byrow = TRUE))
-   venn(s4,zcolor=colors,opacity=.8,box=FALSE,ilcs = 0.8, sncs = 1)
-   frame()
-   vps <- baseViewports()
-   pushViewport(vps$inner, vps$figure, vps$plot)
-   grid.draw(venn1)
-   popViewport(2)
+   vals.plot$venn.dwn2<-plot_euler(s4=s4,colors=colors,cex=cex,
+                           venn.opts=venn.opts,title="")
+   # remove label if requested
+   if(!'Labels' %in% venn.opts )
+    names(s4)=rep(" ",length(s4))
+   vals.plot$venn.dwn1 <- venn(s4,zcolor=colors,opacity=.8,box=FALSE,ilcs = 0.8,
+                               sncs = 1,ggplot=TRUE)
+   grid.arrange(vals.plot$venn.dwn1,vals.plot$venn.dwn2,ncol=2,
+                padding=unit(pad,"line"),
+                top=textGrob("Down-regulated Genes",gp=gpar(fontsize=20)))
   })
       
  output[["tab3.hm"]] <- renderPlot({
   pad = react.venn.pad()
   data=tab3.data.up()
   vals.plot$hm.up <- heatmap_sigf_overlap(data,"Up-regulated genes")
-  data=data.dwn()
+  data=tab3.data.dwn()
   vals.plot$hm.dwn<- heatmap_sigf_overlap(data,"Down-regulated genes")
   grid.arrange(vals.plot$hm.up,vals.plot$hm.dwn,ncol=2,padding=unit(pad,"line"),
                bottom="",right="",left="",top="")
@@ -1496,11 +1464,12 @@ observeEvent(input$insert_set, {
 		grp.name <- react.tab3.grp.name()
 		nintersects <- react.tab3.nintersects.upset()
 		
-		vals.plot$upset.up <- as.ggplot(upset(fromList(s4), order.by = "freq",nsets=length(grp.name), nintersects=nintersects, 
-			mainbar.y.label = "Up-regulated Genes Overlaps", sets.x.label = "Significant Genes", 
-			 mb.ratio = c(0.5, 0.5),
+		vals.plot$upset.up <- as.ggplot(upset(fromList(s4), order.by = "freq",
+		                          nsets=length(grp.name), nintersects=nintersects, 
+			mainbar.y.label = "# Up-regulated Genes", sets.x.label = "Significant Genes", 
+			 point.size=2.8,line.size=1,
 			#c(intersection size title, intersection size tick labels, set size title, set size tick labels, set names, numbers above bars)
-			text.scale = c(1.4, 1.4, 1.4, 1.4, 1.8, 1.5)))
+			text.scale = c(1.8, 1.8, 1.4, 1.8, 1.8, 1.5)))
 		vals.plot$upset.up
 	})
 	
@@ -1508,11 +1477,12 @@ observeEvent(input$insert_set, {
 	 s4 <- tab3.s4.dwn()
 	 grp.name <- react.tab3.grp.name()
 	 nintersects <- react.tab3.nintersects.upset()
-	 vals.plot$upset.dwn <- as.ggplot(upset(fromList(s4), order.by = "freq",nsets=length(grp.name), nintersects=nintersects,
-	       mainbar.y.label = "Down-regulated Genes Overlaps", sets.x.label = "Significant Genes", 
-	       mb.ratio = c(0.5, 0.5),
+	 vals.plot$upset.dwn <- as.ggplot(upset(fromList(s4), order.by = "freq",nsets=length(grp.name), 
+	                                        nintersects=nintersects,
+	       mainbar.y.label = "# Down-regulated Genes", sets.x.label = "Significant Genes", 
+	       point.size=2.8,line.size=1,
 	       #c(intersection size title, intersection size tick labels, set size title, set size tick labels, set names, numbers above bars)
-	       text.scale = c(1.4, 1.4, 1.4, 1.4, 1.8, 1.5)))
+	       text.scale = c(1.8, 1.8, 1.4, 1.8, 1.8, 1.5)))
 	 vals.plot$upset.dwn
 	})
 	
@@ -1554,12 +1524,13 @@ observeEvent(input$insert_set, {
 	 
 	 # re-arrange datasets using factor
 	 # and do pathway analysis using up- and down-regulated genes separately
-	 vals.plot$msig.mf <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
+	 vals.plot$msig.mf <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
+	  facet_grid(~group2) +
 	  scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
 	  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	  scale_color_distiller(palette = 'Blues')
 	 vals.plot$msig.mf
-	})
+	},height=700)
 	
 	output$tab3.plot3.2 <- renderPlot({
 	 enrich.pval.co <- react.tab3.enrich.pval.co()
@@ -1582,12 +1553,13 @@ observeEvent(input$insert_set, {
 	 formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
 	                               TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
 	                               pAdjustMethod="BH")
-	 vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
+	 vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
+	  facet_grid(~group2) +
 	  scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
 	  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	  scale_color_distiller(palette = 'Blues')
 	 vals.plot$msig.bp
-	})
+	},height=700)
 	 
 	output$tab3.plot3.3 <- renderPlot({
 	 enrich.pval.co <- react.tab3.enrich.pval.co()
@@ -1610,12 +1582,13 @@ observeEvent(input$insert_set, {
 	 formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
 	                               TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
 	                               pAdjustMethod="BH")
-	 vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
+	 vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
+	  facet_grid(~group2) +
 	  scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
 	  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	  scale_color_distiller(palette = 'Blues')
 	 vals.plot$msig.cc
-	},height=500)
+	},height=700)
 	 
 	 output$tab3.plot3.4 <- renderPlot({
 	  # reset reactive value to plot gene enrichment
@@ -1644,7 +1617,7 @@ observeEvent(input$insert_set, {
 	   scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	   scale_color_distiller(palette = 'Blues')
 	  vals.plot$msig.curate
-	 })
+	 },height=700)
 
 	 ## clicking on the export button will generate a pdf file 
 	 ## containing all grobs
@@ -1655,20 +1628,24 @@ observeEvent(input$insert_set, {
 	   file=file.path(out.loc,"plots.pdf")
 	   if(file.exists(file)) file.remove(file)
 	   pdf(file, onefile = TRUE,width=input$pdf.width,height=input$pdf.height)
-	   grid.arrange(vals.plot$venn1,vals.plot$venn2,ncol=2,padding=unit(pad,"unit"))
-	   grid.arrange(vals.plot$hm.up,vals.plot$hm.dwn,ncol=2,padding=unit(pad,"line"),
-	                bottom="",right="",left="",
-	                top=arrangeGrob(zeroGrob(),textGrob("A quick statistics test to calculate significance 
-	                of overlaps using hypergeometric test"),
-	                widths = unit(1, 'npc'), 
-	                heights = unit(c(2, 1), c('cm', 'npc')),as.table=FALSE))
-	   draw(vals.plot$upset.up)
-	   draw(vals.plot$upset.dwn)
+	   gridExtra::grid.arrange(vals.plot$venn.up1,vals.plot$venn.up2,ncol=2,
+	                padding=unit(pad,"line"),
+	                top=textGrob("Up-regulated Genes",gp=gpar(fontsize=20)),
+	                vp=viewport(width=0.8, height=0.8))
+	   gridExtra::grid.arrange(vals.plot$venn.dwn1,vals.plot$venn.dwn2,ncol=2,
+	                padding=unit(pad,"line"),
+	                top=textGrob("Down-regulated Genes",gp=gpar(fontsize=20)),
+	                vp=viewport(width=0.8, height=0.8))
+	   gridExtra::grid.arrange(vals.plot$hm.up,vals.plot$hm.dwn,ncol=2,padding=unit(pad,"line"),
+	                top=textGrob("Significance of overlaps",gp=gpar(fontsize=20)),
+	                vp=viewport(width=0.8, height=0.8))
+	   gridExtra::grid.arrange(vals.plot$upset.up,vp=viewport(width=0.8, height=0.8))
+	   gridExtra::grid.arrange(vals.plot$upset.dwn,vp=viewport(width=0.8, height=0.8))
 	   if(input$gen.go!=0){
-	     draw(vals.plot$msig.mf)
-	     draw(vals.plot$msig.bp)
-	     draw(vals.plot$msig.cc)
-	     draw(vals.plot$msig.curate)
+	    gridExtra::grid.arrange(vals.plot$msig.mf,vp=viewport(width=0.8, height=0.8))
+	    gridExtra::grid.arrange(vals.plot$msig.bp,vp=viewport(width=0.8, height=0.8))
+	    gridExtra::grid.arrange(vals.plot$msig.cc,vp=viewport(width=0.8, height=0.8))
+	    gridExtra::grid.arrange(vals.plot$msig.curate,vp=viewport(width=0.8, height=0.8))
 	   } #if(input$gen.go!=0)
 	   dev.off()
 	  })#withProgress

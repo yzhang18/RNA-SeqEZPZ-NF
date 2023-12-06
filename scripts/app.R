@@ -338,8 +338,11 @@ ui <- fluidPage(
 				              value = 11),
 				 numericInput("pdf.height", label = HTML("PDF <br/> height (in)"), 
 				              value = 8)),
-				actionButton(inputId='export', label="Save plots.pdf")
-			  ),
+				actionButton(inputId='export', label="Save plots.pdf"),
+				br(),
+				br(),
+			actionButton(inputId='exportGene', label="Export filtered gene lists")
+     ),
 			mainPanel(
 				fluidRow(style = "background-color:#F5F5F5",
 				 column(2,
@@ -432,8 +435,8 @@ ui <- fluidPage(
 			)
 		)
 	)		
-  )
-)  
+  ,selected="> 3 Groups")#tabsetpanel
+)#fluidpage  
 
   
   # server
@@ -460,9 +463,11 @@ inserted.meanDiff <- c()
 react.val.gen.go <- reactiveVal(0)
 # adjust reactive value as gen.go button is pressed
 observeEvent(input$gen.go, {
- gen.go <- reactiveVal(1)
- react.val.gen.go(gen.go)
- print("gen.go=")
+ gen.go <- react.val.gen.go()
+ print("gen.go observeEvent")
+ print(gen.go)
+ gen.go <- react.val.gen.go(1)
+ print("gen.go observeEvent after set to 1")
  print(gen.go)
 })
 
@@ -1179,13 +1184,6 @@ observeEvent(input$insert_set, {
 		# up-regulated genes
 		grp.up=list()
 		for(i in 1:length(grp.name)){
-			# grp.up[[i]]=results[[grp.name[i]]][results[[grp.name[i]]]$padj<=fdr.co[i] &
-			# results[[grp.name[i]]]$log2FoldChange>(log2(fc.cutoff[i])) &
-			# !is.na(results[[grp.name[i]]]$padj),]
-			# cat("groupname=",grp.name[i],"\n")
-			# cat("fdr.co=",fdr.co,"\n")
-			# cat("dim(grp.up[[i]])=",dim(grp.up[[i]]),"\n")
-			# cat("!isna.padj=",sum(!is.na(results[[grp.name[i]]]$padj)),"\n")
 			
 		 # filter out by mean difference
 		 grps=strsplit(grp.name[i],"_vs_")
@@ -1194,9 +1192,19 @@ observeEvent(input$insert_set, {
 		 treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
 		 ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
 		 diff.mean=treat.mean-ref.mean
-		 grp.up[[i]]=results[[grp.name[i]]][results[[grp.name[i]]]$padj<=fdr.co[i] &
-		 results[[grp.name[i]]]$log2FoldChange>(log2(fc.cutoff[i])) &
-		 !is.na(results[[grp.name[i]]]$padj)& diff.mean >= meanDiff.cutoff[i],]
+		 # grp.up[[i]]=results[[grp.name[i]]][results[[grp.name[i]]]$padj<=fdr.co[i] &
+		 # results[[grp.name[i]]]$log2FoldChange>(log2(fc.cutoff[i])) &
+		 # !is.na(results[[grp.name[i]]]$padj)& diff.mean >= meanDiff.cutoff[i],]
+		 row.pass=which(results[[grp.name[i]]]$padj<=fdr.co[i] &
+		          results[[grp.name[i]]]$log2FoldChange>(log2(fc.cutoff[i])) &
+		          !is.na(results[[grp.name[i]]]$padj)& diff.mean >= meanDiff.cutoff[i])
+		 grp.up[[i]]=results[[grp.name[i]]][row.pass,]
+		 grp.up[[i]]$row.pass = NULL
+		 grp.up[[i]]$norm.diff.mean = NULL
+		 if(length(row.pass)>0){
+		 grp.up[[i]]$row.pass = row.pass
+		 grp.up[[i]]$norm.diff.mean = diff.mean[row.pass]
+		 }
 		}
 		grp.up
 	})
@@ -1223,7 +1231,17 @@ observeEvent(input$insert_set, {
 		 grp.dwn[[i]]=results[[grp.name[i]]][results[[grp.name[i]]]$padj<=fdr.co[i] &
 			results[[grp.name[i]]]$log2FoldChange<(-log2(fc.cutoff[i])) &
 			!is.na(results[[grp.name[i]]]$padj) & diff.mean >= meanDiff.cutoff[i],]
-		}
+		 row.pass=which(results[[grp.name[i]]]$padj<=fdr.co[i] &
+		                results[[grp.name[i]]]$log2FoldChange<(-log2(fc.cutoff[i])) &
+		                !is.na(results[[grp.name[i]]]$padj) & diff.mean >= meanDiff.cutoff[i])
+		  grp.dwn[[i]]=results[[grp.name[i]]][row.pass,]
+		  grp.dwn[[i]]$row.pass = NULL
+		  grp.dwn[[i]]$norm.diff.mean = NULL
+		  if(length(row.pass)>0){
+		   grp.dwn[[i]]$row.pass = row.pass
+		   grp.dwn[[i]]$norm.diff.mean = diff.mean[row.pass]
+		  }
+		}#for(i in 1:length(grp.name))
 		grp.dwn
 		})
 	
@@ -1500,7 +1518,9 @@ observeEvent(input$insert_set, {
 	 # m_t2g.c2.biocarta <- msigdbr(species = msigdb.species, category = "C2",subcategory = "CP:BIOCARTA") %>%
 	 #  dplyr::select(gs_name, gene_symbol)
 
-	output$tab3.plot3.1 <- renderPlot({
+	observeEvent(input$gen.go,{
+	 output$tab3.plot3.1 <- renderPlot({
+	  withProgress(message="Generating enrichment plots",{
 	 enrich.pval.co <- react.tab3.enrich.pval.co()
 	 compare.df <- tab3.compare.df()
 	 grp.plot.title <- react.tab3.grp.plot.title()
@@ -1530,9 +1550,13 @@ observeEvent(input$insert_set, {
 	  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	  scale_color_distiller(palette = 'Blues')
 	 vals.plot$msig.mf
-	},height=700)
+	 })#withProgress
+	},height=1000)
+	})#observeEvent
 	
-	output$tab3.plot3.2 <- renderPlot({
+	observeEvent(input$gen.go,{
+	 output$tab3.plot3.2 <- renderPlot({
+	  withProgress(message="Generating enrichment plots",{
 	 enrich.pval.co <- react.tab3.enrich.pval.co()
 	 compare.df <- tab3.compare.df()
 	 grp.plot.title <- react.tab3.grp.plot.title()
@@ -1559,9 +1583,13 @@ observeEvent(input$insert_set, {
 	  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	  scale_color_distiller(palette = 'Blues')
 	 vals.plot$msig.bp
-	},height=700)
+	  })#withProgress
+	},height=1000)
+	})#observeEvent
 	 
+	observeEvent(input$gen.go,{
 	output$tab3.plot3.3 <- renderPlot({
+	 withProgress(message="Generating enrichment plots",{
 	 enrich.pval.co <- react.tab3.enrich.pval.co()
 	 compare.df <- tab3.compare.df()
 	 grp.plot.title <- react.tab3.grp.plot.title()
@@ -1588,11 +1616,15 @@ observeEvent(input$insert_set, {
 	  scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	  scale_color_distiller(palette = 'Blues')
 	 vals.plot$msig.cc
-	},height=700)
+	 }) #withProgress
+	},height=1000)
+	}) #observeEvent
 	 
+	
+	observeEvent(input$gen.go,{
+	 print("output$tab3.plot3.4")
 	 output$tab3.plot3.4 <- renderPlot({
-	  # reset reactive value to plot gene enrichment
-	  react.val.gen.go <- reactiveVal(0)
+	  withProgress(message="Generating enrichment plots",{
 	  enrich.pval.co <- react.tab3.enrich.pval.co()
 	  compare.df <- tab3.compare.df()
 	  grp.plot.title <- react.tab3.grp.plot.title()
@@ -1617,12 +1649,15 @@ observeEvent(input$insert_set, {
 	   scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
 	   scale_color_distiller(palette = 'Blues')
 	  vals.plot$msig.curate
-	 },height=700)
+	  }) # withProgress
+	 },height=1000)
+	})#observeEvent
 
 	 ## clicking on the export button will generate a pdf file 
-	 ## containing all grobs
+	 ## containing all plots
 	 observeEvent( input$export,{
 	  if(input$export==0) return()
+	  gen.go <- react.val.gen.go()
 	  withProgress(message="Saving pdf",{
 	   pad = react.tab3.venn.pad()
 	   file=file.path(out.loc,"plots.pdf")
@@ -1641,13 +1676,52 @@ observeEvent(input$insert_set, {
 	                vp=viewport(width=0.8, height=0.8))
 	   gridExtra::grid.arrange(vals.plot$upset.up,vp=viewport(width=0.8, height=0.8))
 	   gridExtra::grid.arrange(vals.plot$upset.dwn,vp=viewport(width=0.8, height=0.8))
-	   if(input$gen.go!=0){
+	   if(gen.go!=0){
 	    gridExtra::grid.arrange(vals.plot$msig.mf,vp=viewport(width=0.8, height=0.8))
 	    gridExtra::grid.arrange(vals.plot$msig.bp,vp=viewport(width=0.8, height=0.8))
 	    gridExtra::grid.arrange(vals.plot$msig.cc,vp=viewport(width=0.8, height=0.8))
 	    gridExtra::grid.arrange(vals.plot$msig.curate,vp=viewport(width=0.8, height=0.8))
-	   } #if(input$gen.go!=0)
+	   } #if(gen.go!=0)
 	   dev.off()
+	  })#withProgress
+	 }) # observeEvent
+	 
+	 ## clicking on the export button will generate a txt file 
+	 ## containing filtered gene lists
+	 observeEvent( input$exportGene,{
+	  if(input$exportGene==0) return()
+	  withProgress(message="Exporting gene lists....",{
+	   grp.name = react.tab3.grp.name()
+	   grp.up = tab3.grp.up()
+	   grp.dwn = tab3.grp.dwn()
+	   fc.co = react.tab3.fc.cutoff()
+	   fdr.co = react.tab3.fdr.cutoff()
+	   meanDiff.co = react.tab3.meanDiff.cutoff()
+	   for (i in (1:length(grp.name))){
+	    # filter the complete table file
+	    in.file=paste0(gsub("_","",grp.name[i]),".complete.txt")
+	    df=read.table(file.path("/mnt/outputs/diff_analysis_rslt/tables/",in.file),
+	                  sep="\t",header=TRUE)
+	    df.filt=df[grp.up[[i]]$row.pass,]
+	    df.filt$norm.diff.mean = df[grp.up[[i]]$row.pass,"norm.diff.mean"]
+	    print("up")
+	    print(grp.name[i])
+	    print(dim(df.filt))
+	    print(grp.up[[i]]$row.pass)
+	    # write filter up txt
+	    out.up.file=paste0(gsub("_","",grp.name[i]),
+	                       paste0("_FC_",fc.co[i],"_FDR_",fdr.co[i],
+	                              "_meanDiff_",meanDiff.co[i]),".up.txt")
+	    write.table(df.filt,file=file.path(out.loc,out.up.file),sep="\t",row.names = FALSE,
+	                quote=FALSE)
+	    df.filt=df[grp.dwn[[i]]$row.pass,]
+	    df.filt$norm.diff.mean = df[grp.dwn[[i]]$row.pass,"norm.diff.mean"]
+	    out.dwn.file=paste0(gsub("_","",grp.name[i]),
+	                       paste0("_FC_",fc.co[i],"_FDR_",fdr.co[i],
+	                              "_meanDiff_",meanDiff.co[i]),".down.txt")
+	    write.table(df.filt,file=file.path(out.loc,out.dwn.file),sep="\t",row.names = FALSE,
+	                quote=FALSE)
+	   }
 	  })#withProgress
 	 }) # observeEvent
 	

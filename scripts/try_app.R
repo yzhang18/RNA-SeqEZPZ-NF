@@ -120,3 +120,24 @@ if(!'Labels' %in% venn.opts )
  names(s4)=rep(" ",length(s4))
 venn1<-venn(s4,zcolor=colors,opacity=.8,box=FALSE,
                       ilcs = 0.8, sncs = 1,ggplot=TRUE)
+
+gs.RNASeq=2e4
+genes.lists=genes.lists.up
+gom.obj=newGOM(genes.lists,genes.lists,genome.size=gs.RNASeq)
+# calculate overlap
+data <- getMatrix(gom.obj,"pval")
+data <- melt(data,id=grp.plot.title)
+data <- data[c(2:3,6),]
+names(data)[names(data)=="value"]="pval"
+tmp <- getMatrix(gom.obj,"Jaccard")
+tmp <- melt(tmp,id=grp.plot.title)
+tmp <- tmp[c(2,3,6),]
+data$jaccard=tmp$value
+pval.names=c("< 2.2e-16","< 0.05","< 0.5","> 0.5")
+data$pval.cat=ifelse(data$pval==0,pval.names[1],ifelse(data$pval<=0.05,pval.names[2],
+                                                       ifelse(data$pval<0.5,pval.names[3],pval.names[4])))
+data$pval.cat=factor(data$pval.cat,levels=pval.names)
+
+in.file=paste0(gsub("_","",grp.name),".complete.txt")
+df=read.table(file.path("/mnt/outputs/diff_analysis_rslt/tables/",in.file),
+              sep="\t",header=TRUE)

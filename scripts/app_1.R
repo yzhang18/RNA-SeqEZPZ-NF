@@ -162,25 +162,18 @@ ui <- fluidPage(
    fluidRow(style = "background-color:#F5F5F5",
    column(1,textInput(inputId="setup.grp2.name", 
                       label = "Group 2 name",value="" )),
-   tags$div(id = "placeholder-setup-grp.name"),
    column(1,textInput(inputId="setup.grp2.ctrl.name", 
                       label = "Control 2 name",value="" )),
-   tags$div(id = "placeholder-setup-ctrl.name"),
    column(1,textInput(inputId="setup.grp2.rep.name", 
                       label = "Replicate 2 name",value="" )),
-   tags$div(id = "placeholder-setup-rep-name"),
    column(4,shinyFilesButton("setup_grp2_r1_files", 
                                label = "Group 2 R1 fastq files",
                                title="Please select Group 2 R1 fastq files",multiple=TRUE ),
-          verbatimTextOutput('setup.grp2.r1.filepaths')),
-   tags$div(id = "placeholder-setup-r1-files"),
+          verbatimTextOutput('setup.grp2.r1.filepaths'))),
    column(4,shinyFilesButton("setup_grp2_r2_files", 
                                label = "Group 2 R2 fastq files",
                                title="Please select Group 2 R2 fastq files",multiple=TRUE ),
-          verbatimTextOutput('setup.grp2.r2.filepaths')),
-   tags$div(id = "placeholder-setup-r2-files")),
-   actionButton("setup_insert_set", "Add row", width = "100%"),
-   ),# tabPanel
+          verbatimTextOutput('setup.grp2.r2.filepaths'))),
    
    tabPanel("Two Groups", fluid = TRUE,
             sidebarLayout(
@@ -490,24 +483,7 @@ server <- function(input, output,session) {
 #	quote=FALSE,row.names=FALSE,col.names=FALSE)
 
 #### run analysis tab ######
- setup.inserted.r1.files <- c()		
- observeEvent(input$setup_insert_set, {
-  btn <- value() +1
-  value(btn)
-  setup.id.r1.files <- paste0("setup.txt1_", btn)
-  insertUI(
-   selector = "#placeholder-setup-r1-files",
-   ui = tags$div(
-    column(4,shinyFilesButton(paste0("setup_grp",btn,"_r1_files"), 
-                              label = paste("Group",btn,"R1 fastq files"),
-                              title=paste("Please select Group",btn,"R1 fastq files"),multiple=TRUE ),
-           verbatimTextOutput(paste0('setup.grp',btn,'.r1.filepaths'))),
-    setup.id.r1.files = setup.id.r1.files
-   )
-  )
-  setup.inserted.r1.files <<- c(setup.inserted.r1.files, setup.id.r1.files)
- })
-  
+ 
  react.setup.grp.name <- reactive({
   grp.name <- sapply(grep("setup\\.grp.+\\.name", x = names(input), value = TRUE),
                      function(x) input[[x]])
@@ -539,34 +515,17 @@ server <- function(input, output,session) {
  # shinyFileChoose doesn't work inside a reactive
  # I had to arbitrily set 100 as the max number of groups a
  # samples.txt can have
- for (i in 1:10){
- setup.grp.r1.name=paste0('setup_grp',i,'_r1_files')
- shinyFileChoose(input, setup.grp.r1.name, root=volumes,
+ for (i in 1:100){
+ shinyFileChoose(input, paste0('setup_grp',i,'_r1_files'), root=volumes,
                    filetypes=c('', 'gz'))
- setup.grp.r1.id=paste0()
  }
- 
- x <- as.list(rep("",2))
- names(x)=lapply(1:2,function(i)paste0('grp',i))
- setup.grp.r1.file.lst <- do.call("reactiveValues",x)
-
- lapply(
-  1:2,
-  function(i){
-   observeEvent(input[[paste0('setup_grp',i,'_r1_files')]],{
-   file = input[[paste0('setup_grp',i,'_r1_files')]]
-   new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
-   print("new.path")
-   print(new.path)
-   print("setup.grp.r1.file.lst")
-   print(setup.grp.r1.file.lst[[paste0('grp',i)]])
-   setup.grp.r1.file.lst[[paste0('grp',i)]] <- c(setup.grp.r1.file.lst[[paste0('grp',i)]],new.path)
-   output[[paste0('setup.grp',i,'.r1.filepaths')]] <- renderText({
-    paste0(setup.grp.r1.file.lst[[paste0('grp',i)]],"\n") 
-   }) # renderText
- })# observeEvent
-  }
- )
+  
+ observeEvent(input$setup_grp1_r1_files,{
+    file = input$setup_grp1_r1_files
+    new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
+    print(new.path)
+   })
+  
  
  
  # # getting chosen files
@@ -589,6 +548,11 @@ server <- function(input, output,session) {
  #  setup.grp.r1.file.lst$datapath <- c(setup.grp.r1.file.lst$datapath,new.path)
  # })
  
+ output$setup.grp1.r1.filepaths <- renderText({
+  paste0(file.lst$datapath,"\n")
+  
+ 
+ })
  
 #### processing > 3 groups
 

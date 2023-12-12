@@ -72,6 +72,8 @@ col.pval = brewer.pal(11,"RdBu")[c(3,4,8,9)]
 pval.names=c("< 2.2e-16","< 0.05","< 0.5","> 0.5")
 # ad-hoc maximum plot. 
 max_plots=5
+# ad-hoc max sample
+max.nsamples=10
 
 heatmap_sigf_overlap <- function(data,title=""){
 		hm <- ggplot(data,aes(X1,X2,fill=pval.cat)) +
@@ -140,40 +142,48 @@ plot_euler <- function(s4,colors,cex,venn.opts,title){
 ui <- fluidPage(
   tabsetPanel(
   tabPanel("Run Analysis", fluid = TRUE,
-   fluidRow(style = "background-color:#F5F5F5",
-            column(1,textInput(inputId="setup.email.name", 
-                               label = "email address",value="" ))),
-   fluidRow(style = "background-color:#F5F5F5",
-            column(1,textInput(inputId="setup.grp1.name", 
-                              label = "Group 1 name",value="" )),
-            column(1,textInput(inputId="setup.grp1.ctrl.name", 
-                                      label = "Control 1 name",value="" )),
-            column(1,textInput(inputId="setup.grp1.rep.name", 
-                               label = "Replicate 1 name",value="" )),
-            column(4,shinyFilesButton("setup_grp1_r1_files", 
-                               label = "Group 1 R1 fastq files",
+   mainPanel(width = 12,
+   fluidRow(
+            column(4,textInput(inputId="setup.email.name", 
+                               label = "Email address",value="" ))),
+   fluidRow(
+    column(2,column(2,tags$label("  "),style="padding-right: 0px;"),
+           column(10,tags$label("Group name"))),
+    column(2,tags$label("Control name")),
+    column(2,tags$label("Replicate name")),
+    column(3,tags$label("Path to R1 fastq files")),
+    column(3,tags$label("Path to R2 fastq files"))
+   ),
+   hr(style="border-color:black;margin-top:0px;margin-bottom:0px"),
+   fluidRow(style = "background-color:#f9f9f9",
+            column(2,
+             column(2, 
+                   tags$label("1.", style = "padding-top: 30px;"),
+                   style = "padding-right: 0px;"),
+             column(10,textInput(inputId="setup.grp1.name", 
+                              label = "",value="" ))
+             ),
+            column(2,textInput(inputId="setup.grp1.ctrl.name", 
+                                      label = "",value="" )),
+            column(2,textInput(inputId="setup.grp1.rep.name", 
+                               label = "",value="" )),
+            br(),
+            column(3,shinyFilesButton("setup_grp1_r1_files", 
+                               label = "Select R1 fastq files",
                                title="Please select Group 1 R1 fastq files",multiple=TRUE ),
             verbatimTextOutput('setup.grp1.r1.filepaths')),
-            column(4,shinyFilesButton("setup_grp1_r2_files", 
-                                      label = "Group 1 R2 fastq files",
+            column(3,shinyFilesButton("setup_grp1_r2_files", 
+                                      label = "Select R2 fastq files",
                                       title="Please select Group 1 R2 fastq files",multiple=TRUE ),
-            verbatimTextOutput('setup.grp1.r2.filepaths'))
-   ),
-   fluidRow(style = "background-color:#F5F5F5",
-   column(1,textInput(inputId="setup.grp2.name", 
-                      label = "Group 2 name",value="" )),
-   column(1,textInput(inputId="setup.grp2.ctrl.name", 
-                      label = "Control 2 name",value="" )),
-   column(1,textInput(inputId="setup.grp2.rep.name", 
-                      label = "Replicate 2 name",value="" )),
-   column(4,shinyFilesButton("setup_grp2_r1_files", 
-                               label = "Group 2 R1 fastq files",
-                               title="Please select Group 2 R1 fastq files",multiple=TRUE ),
-          verbatimTextOutput('setup.grp2.r1.filepaths'))),
-   column(4,shinyFilesButton("setup_grp2_r2_files", 
-                               label = "Group 2 R2 fastq files",
-                               title="Please select Group 2 R2 fastq files",multiple=TRUE ),
-          verbatimTextOutput('setup.grp2.r2.filepaths'))),
+            verbatimTextOutput('setup.grp1.r2.filepaths')),
+   ), #fluidRow
+   # tag$div id doesn't work if there is a dot!
+   tags$div(id = "setup-placeholder"),
+   column(6,actionButton("setup.remove.set", "Remove row", width = "100%"),
+          style="padding-bottom:20px"),
+   column(6,actionButton("setup.insert.set", "Add row", width = "100%"),
+          style="padding-bottom:20px"),
+   )),# tabPanel
    
    tabPanel("Two Groups", fluid = TRUE,
             sidebarLayout(
@@ -483,6 +493,121 @@ server <- function(input, output,session) {
 #	quote=FALSE,row.names=FALSE,col.names=FALSE)
 
 #### run analysis tab ######
+ # reactiveVal to keep track of number of added row
+ setup.value <- reactiveVal(1)
+ # initialize inserted div
+ setup.inserted.div <- c()
+
+ # inserting row
+ observeEvent(input$setup.insert.set, {
+  setup.btn <- setup.value() +1
+  # update the reactiveVal
+  setup.value(setup.btn)
+  # id for new div
+  setup.div.id <- paste0("setup_div_",setup.btn)
+  # ids for entries in each row
+  setup.id.grp.name <- paste0("setup.grp",setup.btn,".name")
+  setup.id.ctrl.name <- paste0("setup.grp",setup.btn,".ctrl.name")
+  setup.id.rep.name <- paste0("setup.grp",setup.btn,".rep.name")
+  setup.id.r1.files <- paste0("setup_grp",setup.btn,"_r1_files")
+  setup.id.r2.files <- paste0("setup_grp",setup.btn,"_r2_files")
+  setup.id.r1.filepath <- paste0("setup.grp",setup.btn,".r1.filepaths")
+  setup.id.r2.filepath <- paste0("setup.grp",setup.btn,".r2.filepaths")
+  if(setup.btn %% 2 == 0) row.color="#FFFFFF"
+  if(setup.btn %% 2 != 0) row.color="#f9f9f9"
+  print(paste0("background-color:",row.color))
+  insertUI(
+   selector = "#setup-placeholder",
+   ui = tags$div(
+    fluidRow(style = paste0("background-color:",row.color),
+             column(2,
+                    column(2,
+                           tags$label(paste0(setup.btn,"."), style = "padding-top: 30px;"),
+                           style = "padding-right: 0px;"),
+                    column(10,textInput(inputId=setup.id.grp.name,
+                                        label = "",value="" ))
+             ),
+             column(2,textInput(inputId=setup.id.ctrl.name,
+                                label = "",value="" )),
+             column(2,textInput(inputId=setup.id.rep.name,
+                                label = "",value="" )),
+             br(),
+             column(3,shinyFilesButton(setup.id.r1.files,
+                                       label = "Select R1 fastq files",
+                                       title=paste("Please select Group",setup.btn,"R1 fastq files"),
+                                       multiple=TRUE ),
+                    verbatimTextOutput(setup.id.r1.filepath)),
+             column(3,shinyFilesButton(setup.id.r2.files,
+                                       label = "Select R2 fastq files",
+                                       title=paste("Please select Group",setup.btn,"R1 fastq files"),
+                                       multiple=TRUE ),
+                    verbatimTextOutput(setup.id.r2.filepath)),
+    ),#fluidrow
+     setup.div.id = setup.div.id
+   )
+  )#insertUI
+  setup.inserted.div <<- c(setup.inserted.div, setup.div.id)
+ }) #observeEvent input$setup.insert.set
+ 
+ observeEvent(input$setup.remove.set,{
+  if(setup.value()>1){
+   setup.btn <- setup.value()-1
+   # update the reactiveVal
+   setup.value(setup.btn)
+   print(paste0("#",setup.inserted.div[length(setup.inserted.div)]))
+   removeUI(
+    selector = "#setup.grp2.name"
+    #selector= paste0("#",setup.inserted.div[length(setup.inserted.div)])
+   )
+   # remove the last values
+   updateTextInput(
+    session,
+    paste0("setup.grp", length(setup.inserted.div)+1,".name"),
+    NULL,
+    ""
+   )
+   updateTextInput(
+    session,
+    paste0("setup.grp", length(setup.inserted.div)+1,"ctrl.name"),
+    NULL,
+    ""
+   )
+   updateTextInput(
+    session,
+    paste0("setup.grp", length(setup.inserted.div)+1,".rep.name"),
+    NULL,
+    ""
+   )
+   updateTextInput(
+    session,
+    paste0("setup_grp", length(setup.inserted.div)+1,"_r1_files"),
+    NULL,
+    ""
+   )
+   updateTextInput(
+    session,
+    paste0("setup_grp", length(setup.inserted.div)+1,"_r2_files"),
+    NULL,
+    ""
+   )
+   updateTextInput(
+    session,
+    paste0("setup.grp", length(setup.inserted.div)+1,".r1.filepath"),
+    NULL,
+    ""
+   )
+   updateTextInput(
+    session,
+    paste0("setup.grp", length(setup.inserted.div)+1,".r2.filepath"),
+    NULL,
+    ""
+   )
+   setup.inserted.div <<- setup.inserted.div[-length(setup.inserted.div)]
+  }else{ # Do not remove row if there's only 1 row
+   setup.btn <- 1
+   setup.value(setup.btn)
+  }
+ })
  
  react.setup.grp.name <- reactive({
   grp.name <- sapply(grep("setup\\.grp.+\\.name", x = names(input), value = TRUE),
@@ -513,19 +638,70 @@ server <- function(input, output,session) {
  }
 
  # shinyFileChoose doesn't work inside a reactive
- # I had to arbitrily set 100 as the max number of groups a
+ # I had to arbitrarily set a max number of samples a
  # samples.txt can have
- for (i in 1:100){
- shinyFileChoose(input, paste0('setup_grp',i,'_r1_files'), root=volumes,
+ for (i in 1:max.nsamples){
+ setup.grp.r1.name=paste0('setup_grp',i,'_r1_files')
+ shinyFileChoose(input, setup.grp.r1.name, root=volumes,
                    filetypes=c('', 'gz'))
+ setup.grp.r2.name=paste0('setup_grp',i,'_r2_files')
+ shinyFileChoose(input, setup.grp.r2.name, root=volumes,
+                 filetypes=c('', 'gz'))
  }
-  
- observeEvent(input$setup_grp1_r1_files,{
-    file = input$setup_grp1_r1_files
+ 
+ # Initialize r1/r2 file list as reactiveValues to save previous choices
+ x <- as.list(rep("",max.nsamples))
+ names(x)=lapply(1:max.nsamples,function(i)paste0('grp',i))
+ setup.grp.r1.file.lst <- do.call("reactiveValues",x)
+ setup.grp.r2.file.lst <- do.call("reactiveValues",x)
+
+ # getting all the r2 fastq files for all groups
+ lapply(
+  1:max.nsamples,
+  function(i){
+   observeEvent(input[[paste0('setup_grp',i,'_r1_files')]],{
+   file = input[[paste0('setup_grp',i,'_r1_files')]]
+   new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
+   print("new.path")
+   print(new.path)
+   print("setup.grp.r1.file.lst")
+   print(setup.grp.r1.file.lst[[paste0('grp',i)]])
+   setup.grp.r1.file.lst[[paste0('grp',i)]] <- c(setup.grp.r1.file.lst[[paste0('grp',i)]],new.path)
+   output[[paste0('setup.grp',i,'.r1.filepaths')]] <- renderText({
+    #paste0(setup.grp.r1.file.lst[[paste0('grp',i)]],"\n") 
+    #paste0(basename(setup.grp.r1.file.lst[[paste0('grp',i)]]),"\n")
+    split.path=unlist(strsplit(setup.grp.r1.file.lst[[paste0('grp',i)]],"/"))
+    path.display=paste0(split.path[-2],collapse="/")
+    path.display <- substr(path.display, 2, nchar(path.display))
+    path.display
+   }) # renderText
+ })# observeEvent
+  }
+ )
+ 
+ # getting all the r2 fastq files for all groups
+ lapply(
+  1:max.nsamples,
+  function(i){
+   observeEvent(input[[paste0('setup_grp',i,'_r2_files')]],{
+    file = input[[paste0('setup_grp',i,'_r2_files')]]
     new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
+    print("new.path")
     print(new.path)
-   })
-  
+    print("setup.grp.r2.file.lst")
+    print(setup.grp.r2.file.lst[[paste0('grp',i)]])
+    setup.grp.r2.file.lst[[paste0('grp',i)]] <- c(setup.grp.r2.file.lst[[paste0('grp',i)]],new.path)
+    output[[paste0('setup.grp',i,'.r2.filepaths')]] <- renderText({
+     #paste0(setup.grp.r1.file.lst[[paste0('grp',i)]],"\n") 
+     #paste0(basename(setup.grp.r1.file.lst[[paste0('grp',i)]]),"\n")
+     split.path=unlist(strsplit(setup.grp.r2.file.lst[[paste0('grp',i)]],"/"))
+     path.display=paste0(split.path[-2],collapse="/")
+     path.display <- substr(path.display, 2, nchar(path.display))
+     path.display
+    }) # renderText
+   })# observeEvent
+  }
+ )
  
  
  # # getting chosen files
@@ -548,11 +724,6 @@ server <- function(input, output,session) {
  #  setup.grp.r1.file.lst$datapath <- c(setup.grp.r1.file.lst$datapath,new.path)
  # })
  
- output$setup.grp1.r1.filepaths <- renderText({
-  paste0(file.lst$datapath,"\n")
-  
- 
- })
  
 #### processing > 3 groups
 

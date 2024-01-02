@@ -25,7 +25,7 @@
 # bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh run=debug &> run_rnaseq_full.out &
 
 
-#set -x
+set -x
 set -e
 # set 'run' to echo to simply echoing all commands
 # set to empty to run all commands
@@ -139,6 +139,11 @@ fi
 if [[ -z "$ncpus_star" ]];then
         ncpus_star=20
 fi
+
+# singularity image directory
+# found based on location of this script
+img_dir=$(dirname $(dirname $(readlink -f $0)))
+
 genome_dir=$img_dir/ref/$ref_ver
 # set ref_fa to fasta file in genome_dir if variable ref_fa is not defined
 if [[ -z $ref_fa ]];then
@@ -166,9 +171,6 @@ fi
 proj_dir=$(pwd)
 cd $proj_dir
 
-# singularity image directory
-# found based on location of this script
-img_dir=$(dirname $(dirname $(readlink -f $0)))
 
 echo -e "\nRunning full RNA-seq analysis\n"
 echo -e "Options used to run:"

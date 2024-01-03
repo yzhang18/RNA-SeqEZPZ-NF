@@ -29,8 +29,8 @@ library(shinyjs)
 
 css <- "
 .nav li a.disabled {
-background-color: #d8d8d8 !important;
-color: #8a8a8a !important;
+background-color: #aaa !important;
+color: #333 !important;
 cursor: not-allowed !important;
 border-color: #aaa !important;
 }"
@@ -60,29 +60,29 @@ if(dir.exists("/mnt/outputs")){
  names(groups.lst) <- groups$var
 }#if(dir.exists("/mnt/outputs"))
 
- # default checkboxes for venn.opts	
- venn.opts=data.frame(
-  lbl= c("Numbers","Percentages","Labels","Legend")
- )
- venn.opts.lst=as.list(venn.opts$lbl)
- names(venn.opts.lst)=venn.opts$lbl
- 
- # list of choices for msigdb species
- msigdb.species.lst <- as.list(msigdbr_species())$species_name
- 
- ngroup=3
- tab0.ngroup=2
- 
- colors=c("#F08080","#ADD8E6","#FFFACD")
- tab0.colors=c("#F08080","#ADD8E6","#FFFACD")
- tab3.colors=brewer.pal(12,"Paired")
- # color for pvalues (<2.2e-16,<=0.05,<0.5,>0.5)
- #col.pval=c("#fc8d59","#ffffbf","#91bfdb")
- col.pval = brewer.pal(11,"RdBu")[c(3,4,8,9)]
- # names for factorized pvalues
- pval.names=c("< 2.2e-16","< 0.05","< 0.5","> 0.5")
- # ad-hoc maximum plot. 
- max_plots=5
+# default checkboxes for venn.opts	
+venn.opts=data.frame(
+ lbl= c("Numbers","Percentages","Labels","Legend")
+)
+venn.opts.lst=as.list(venn.opts$lbl)
+names(venn.opts.lst)=venn.opts$lbl
+
+# list of choices for msigdb species
+msigdb.species.lst <- as.list(msigdbr_species())$species_name
+
+ngroup=3
+tab0.ngroup=2
+
+colors=c("#F08080","#ADD8E6","#FFFACD")
+tab0.colors=c("#F08080","#ADD8E6","#FFFACD")
+tab3.colors=brewer.pal(12,"Paired")
+# color for pvalues (<2.2e-16,<=0.05,<0.5,>0.5)
+#col.pval=c("#fc8d59","#ffffbf","#91bfdb")
+col.pval = brewer.pal(11,"RdBu")[c(3,4,8,9)]
+# names for factorized pvalues
+pval.names=c("< 2.2e-16","< 0.05","< 0.5","> 0.5")
+# ad-hoc maximum plot. 
+max_plots=5
 
 
 # arbitrary variables to prevent errors
@@ -161,13 +161,13 @@ plot_euler <- function(s4,colors,cex,venn.opts,title){
 ui <- fluidPage(
  shinyjs::useShinyjs(),
  shinyjs::inlineCSS(css),
- # horizontal vertical bar for r1 and r2 filepaths input text
- # tags to have horizontal scrolling bar
- # white-space: pre will make newline character works
- tags$style(HTML("#setup_grp1_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
- tags$style(HTML("#setup_grp1_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
- tags$style(HTML("#setup_grp2_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
- tags$style(HTML("#setup_grp2_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
+ # # horizontal vertical bar for r1 and r2 filepaths input text
+ # # tags to have horizontal scrolling bar
+ # # white-space: pre will make newline character works
+ # tags$style(HTML("#setup_grp1_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
+ # tags$style(HTML("#setup_grp1_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
+ # tags$style(HTML("#setup_grp2_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
+ # tags$style(HTML("#setup_grp2_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tabsetPanel(
   tabPanel("Run Analysis", id="run_analysis", fluid = TRUE,
            sidebarPanel(width=3,
@@ -204,7 +204,7 @@ ui <- fluidPage(
            ),#sidebarPanel
            mainPanel(width = 9,
                      fluidRow(
-                         column(4,textInput(inputId="setup.email", 
+                      column(4,textInput(inputId="setup.email", 
                                          label = "Email address",value="" ))),
                      fluidRow(
                       column(2,column(2,tags$label("  "),style="padding-right: 0px;"),
@@ -253,10 +253,10 @@ ui <- fluidPage(
                                                 label = "Select R1 fastq files",
                                                 title="Please select Group 2 R1 fastq files",multiple=TRUE ),
                              textAreaInput('setup_grp2_r1_filepaths',label="",value="",width='150px',height='100px')),
-                                 column(3,shinyFilesButton("setup_grp2_r2_files", 
+                      column(3,shinyFilesButton("setup_grp2_r2_files", 
                                                 label = "Select R2 fastq files",
                                                 title="Please select Group 2 R2 fastq files",multiple=TRUE ),
-                                        textAreaInput('setup_grp2_r2_filepaths',label="",value="",width='150px',height='100px')),
+                             textAreaInput('setup_grp2_r2_filepaths',label="",value="",width='150px',height='100px')),
                      ), #fluidRow
                      # tag$div id doesn't work if there is a dot!
                      tags$div(id = "setup-placeholder"),
@@ -269,7 +269,12 @@ ui <- fluidPage(
            ),
            
   ),# tabPanel run analysis
-  
+  tabPanel("Third tab", id = "third_tab",
+           sidebarLayout(
+            sidebarPanel(),
+            mainPanel()
+           )
+  ),
   tabPanel("Two Groups", id="two_groups",fluid = TRUE, disabled=TRUE,
            sidebarLayout(
             sidebarPanel(
@@ -568,15 +573,15 @@ ui <- fluidPage(
            )
   )		
   ,selected="Run Analysis")#tabsetpanel
-)#fluidpage
-
+)#fluidpage  
 
 
 # server
 server <- function(input, output,session) {
- shinyjs::disable(selector = 'a[data-value="Two Groups"')
- shinyjs::disable(selector = 'a[data-value="Three Groups"')
- shinyjs::disable(selector = 'a[data-value="> 3 Groups"')
+ shinyjs::disable(selector = '.navbar-nav a[data-value="Two Groups"')
+ shinyjs::disable(selector = '.navbar-nav a[data-value="Three Groups"')
+ shinyjs::disable(selector = '.navbar-nav a[data-value="> 3 Groups"')
+ shinyjs::disable(selector = '.navbar-nav a[data-value="Third tab"')
  #write.table(isolate(session$clientData$url_port),file="/mnt/outputs/port.txt",
  #	quote=FALSE,row.names=FALSE,col.names=FALSE)
  
@@ -632,8 +637,8 @@ server <- function(input, output,session) {
                                        label = "Select R2 fastq files",
                                        title=paste("Please select Group",setup.btn,"R1 fastq files"),
                                        multiple=TRUE ),
-             textAreaInput(setup.id.r2.filepath,label="",value="",width='150px',height='100px')),
-    
+                    textAreaInput(setup.id.r2.filepath,label="",value="",width='150px',height='100px')),
+             
     ),#fluidrow
     id = setup.div.id
    )
@@ -748,7 +753,7 @@ server <- function(input, output,session) {
  # shinyFileChoose doesn't work inside a reactive
  # I had to arbitrarily set a max number of samples a
  # samples.txt can have
- for (i in 1:max.nsamples) {
+ for (i in 1:max.nsamples){
   setup.grp.r1.name=paste0('setup_grp',i,'_r1_files')
   shinyFileChoose(input, setup.grp.r1.name, root=volumes,
                   filetypes=c('', 'gz'))
@@ -797,7 +802,7 @@ server <- function(input, output,session) {
     print(path.display)
     updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display)
    })# observeEvent
-    } #function
+  } #function
  )#lapply
  
  # select other genome files
@@ -828,59 +833,59 @@ server <- function(input, output,session) {
  
  observeEvent(input$setup.run.analysis,{
   # create samples.txt
-   grpname=react.setup.grp.name()
-   ctrlname=react.setup.grp.ctrl.name()
-   repname=react.setup.grp.rep.name()
-   spikename=rep("NA",length(grpname))
-   email=react.setup.email()
-   if(email==""){
-    email=rep("NA",length(grpname))
-   }else{
-    email=rep(email,length(grpname))
-   }
-   print("repname")
-   print(repname)
-   print("ctrlname")
-   print(ctrlname)
-   # # remove empty string and combine entries with commas
-   # filter_r1_list <- lapply(1:length(grpname),
-   #     function(x) setup.grp.r1.file.lst[[paste0('grp',x)]][setup.grp.r1.file.lst[[paste0('grp',x)]] != ""])
-   # r1_fastq=lapply(1:length(grpname),
-   #                 function(i) paste0(unlist(filter_r1_list[[i]]),collapse=","))
-   # # # remove empty string and combine entries with commas
-   # filter_r2_list <- lapply(1:length(grpname),
-   #                          function(x) setup.grp.r2.file.lst[[paste0('grp',x)]][setup.grp.r2.file.lst[[paste0('grp',x)]] != ""])
-   # r2_fastq=lapply(1:length(grpname),
-   #                     function(i) paste0(unlist(filter_r2_list[[i]]),collapse=","))
-   # getting the r1 fastq for all groups
-   r1_fastq_lst=lapply(1:length(grpname),
-          function(x) input[[paste0("setup_grp",x,"_r1_filepaths")]])
-   # adding the volumes path
-   r1_fastq=lapply(1:length(grpname),
-                   function(x) gsub("\n",paste0(",",volumes,"/"),
-                                    file.path(volumes,r1_fastq_lst[[x]])))
-   r2_fastq_lst=lapply(1:length(grpname),
-                       function(x) input[[paste0("setup_grp",x,"_r2_filepaths")]])
-   # adding the volumes path
-   r2_fastq=lapply(1:length(grpname),
-                   function(x) gsub("\n",paste0(",",volumes,"/"),
-                                    file.path(volumes,r2_fastq_lst[[x]])))
-   print("r1_fastq")
-   print("r1_fastq")
-   print(r1_fastq)
-   df <- data.frame(
-    grpname=grpname,
-    ctrlname=ctrlname,
-    repname=repname,
-    spikename=spikename,
-    email=email,
-    path_to_r1_fastq=unlist(r1_fastq),
-    path_to_r2_fastq=unlist(r2_fastq))
-   write.table(paste0("#Groupname\tControlname\tReplicatename\tspikename\temail",
-                      "\tpath_to_r1_fastq\tpath_to_r2_fastq"),
-               file="/mnt/samples.txt",quote=FALSE,row.names=FALSE,col.names=FALSE)
-   write.table(df,file="/mnt/samples.txt",quote=FALSE,row.names=FALSE,col.names=FALSE,
-               append = TRUE)
+  grpname=react.setup.grp.name()
+  ctrlname=react.setup.grp.ctrl.name()
+  repname=react.setup.grp.rep.name()
+  spikename=rep("NA",length(grpname))
+  email=react.setup.email()
+  if(email==""){
+   email=rep("NA",length(grpname))
+  }else{
+   email=rep(email,length(grpname))
+  }
+  print("repname")
+  print(repname)
+  print("ctrlname")
+  print(ctrlname)
+  # # remove empty string and combine entries with commas
+  # filter_r1_list <- lapply(1:length(grpname),
+  #     function(x) setup.grp.r1.file.lst[[paste0('grp',x)]][setup.grp.r1.file.lst[[paste0('grp',x)]] != ""])
+  # r1_fastq=lapply(1:length(grpname),
+  #                 function(i) paste0(unlist(filter_r1_list[[i]]),collapse=","))
+  # # # remove empty string and combine entries with commas
+  # filter_r2_list <- lapply(1:length(grpname),
+  #                          function(x) setup.grp.r2.file.lst[[paste0('grp',x)]][setup.grp.r2.file.lst[[paste0('grp',x)]] != ""])
+  # r2_fastq=lapply(1:length(grpname),
+  #                     function(i) paste0(unlist(filter_r2_list[[i]]),collapse=","))
+  # getting the r1 fastq for all groups
+  r1_fastq_lst=lapply(1:length(grpname),
+                      function(x) input[[paste0("setup_grp",x,"_r1_filepaths")]])
+  # adding the volumes path
+  r1_fastq=lapply(1:length(grpname),
+                  function(x) gsub("\n",paste0(",",volumes,"/"),
+                                   file.path(volumes,r1_fastq_lst[[x]])))
+  r2_fastq_lst=lapply(1:length(grpname),
+                      function(x) input[[paste0("setup_grp",x,"_r2_filepaths")]])
+  # adding the volumes path
+  r2_fastq=lapply(1:length(grpname),
+                  function(x) gsub("\n",paste0(",",volumes,"/"),
+                                   file.path(volumes,r2_fastq_lst[[x]])))
+  print("r1_fastq")
+  print("r1_fastq")
+  print(r1_fastq)
+  df <- data.frame(
+   grpname=grpname,
+   ctrlname=ctrlname,
+   repname=repname,
+   spikename=spikename,
+   email=email,
+   path_to_r1_fastq=unlist(r1_fastq),
+   path_to_r2_fastq=unlist(r2_fastq))
+  write.table(paste0("#Groupname\tControlname\tReplicatename\tspikename\temail",
+                     "\tpath_to_r1_fastq\tpath_to_r2_fastq"),
+              file="/mnt/samples.txt",quote=FALSE,row.names=FALSE,col.names=FALSE)
+  write.table(df,file="/mnt/samples.txt",quote=FALSE,row.names=FALSE,col.names=FALSE,
+              append = TRUE)
   print("system call")
   #system("echo 'sbatch --help' > /hostpipe")
   # getting genome options
@@ -891,7 +896,7 @@ server <- function(input, output,session) {
    gtf.file=react.setup.genome.gtf ()
    options=paste0("genome=",input$setup.genome.name," ref_fa=",fa.file," ref_gtf=",gtf.file)
   }
-   system(paste0("echo 'bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+  system(paste0("echo 'bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
   print("end system call")
  })

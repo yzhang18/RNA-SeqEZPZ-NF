@@ -27,6 +27,14 @@ library(ggpolypath) #ggplot=true for venn
 library(shinyFiles)
 library(shinyjs)
 
+css <- "
+.nav li a.disabled {
+background-color: #aaa !important;
+color: #333 !important;
+cursor: not-allowed !important;
+border-color: #aaa !important;
+}"
+
 # default image directory used to run analysis out of container
 if(!exists("img.dir")) img.dir="~/Steve/virtual_server/rnaseq-singularity"
 
@@ -50,7 +58,8 @@ if(dir.exists("/mnt/outputs")){
  groups.lst <- as.list(groups$names)
  # Name it
  names(groups.lst) <- groups$var
- 
+}#if(dir.exists("/mnt/outputs"))
+
  # default checkboxes for venn.opts	
  venn.opts=data.frame(
   lbl= c("Numbers","Percentages","Labels","Legend")
@@ -74,8 +83,12 @@ if(dir.exists("/mnt/outputs")){
  pval.names=c("< 2.2e-16","< 0.05","< 0.5","> 0.5")
  # ad-hoc maximum plot. 
  max_plots=5
-}
 
+
+# arbitrary variables to prevent errors
+if(!dir.exists("/mnt/outputs")) {
+ groups.lst=c("a","b","c")
+}
 # List of choices for genome
 setup.genome.lst <- as.list(c("hg19","hg38","other"))
 # ad-hoc max sample
@@ -146,10 +159,17 @@ plot_euler <- function(s4,colors,cex,venn.opts,title){
 }
 
 ui <- fluidPage(
- # horizontal vertical bar for r1 filepaths
- tags$style(HTML("#setup_grp1_r1_filepaths { width: 300px; overflow-x: auto; white-space: nowrap; }")),
+ shinyjs::useShinyjs(),
+ shinyjs::inlineCSS(css),
+ # horizontal vertical bar for r1 and r2 filepaths input text
+ # tags to have horizontal scrolling bar
+ # white-space: pre will make newline character works
+ tags$style(HTML("#setup_grp1_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
+ tags$style(HTML("#setup_grp1_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
+ tags$style(HTML("#setup_grp2_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
+ tags$style(HTML("#setup_grp2_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tabsetPanel(
-  tabPanel("Run Analysis", fluid = TRUE,
+  tabPanel("Run Analysis", id="run_analysis", fluid = TRUE,
            sidebarPanel(width=3,
                         selectInput(inputId = "setup.genome",label="Select genome",
                                     choices=setup.genome.lst,selected=1),
@@ -211,11 +231,11 @@ ui <- fluidPage(
                               column(3,shinyFilesButton("setup_grp1_r1_files", 
                                                         label = "Select R1 fastq files",
                                                         title="Please select Group 1 R1 fastq files",multiple=TRUE ),
-                                     textAreaInput('setup_grp1_r1_filepaths',label="",value="",width='150px')),
+                                     textAreaInput('setup_grp1_r1_filepaths',label="",value="",width='150px',height='100px')),
                               column(3,shinyFilesButton("setup_grp1_r2_files", 
                                                         label = "Select R2 fastq files",
                                                         title="Please select Group 1 R2 fastq files",multiple=TRUE ),
-                                     verbatimTextOutput('setup.grp1.r2.filepaths')),
+                                     textAreaInput('setup_grp1_r2_filepaths',label="",width='150px',height='100px')),
                      ), #fluidRow
                      fluidRow(
                       column(2,column(2, 
@@ -232,11 +252,11 @@ ui <- fluidPage(
                       column(3,shinyFilesButton("setup_grp2_r1_files", 
                                                 label = "Select R1 fastq files",
                                                 title="Please select Group 2 R1 fastq files",multiple=TRUE ),
-                             verbatimTextOutput('setup.grp2.r1.filepaths')),
-                      column(3,shinyFilesButton("setup_grp2_r2_files", 
+                             textAreaInput('setup_grp2_r1_filepaths',label="",value="",width='150px',height='100px')),
+                                 column(3,shinyFilesButton("setup_grp2_r2_files", 
                                                 label = "Select R2 fastq files",
                                                 title="Please select Group 2 R2 fastq files",multiple=TRUE ),
-                             verbatimTextOutput('setup.grp2.r2.filepaths')),
+                                        textAreaInput('setup_grp2_r2_filepaths',label="",value="",width='150px',height='100px')),
                      ), #fluidRow
                      # tag$div id doesn't work if there is a dot!
                      tags$div(id = "setup-placeholder"),
@@ -249,8 +269,13 @@ ui <- fluidPage(
            ),
            
   ),# tabPanel run analysis
-  
-  tabPanel("Two Groups", fluid = TRUE, disabled=TRUE,
+  tabPanel("Third tab", id = "third_tab",
+           sidebarLayout(
+            sidebarPanel(),
+            mainPanel()
+           )
+  ),
+  tabPanel("Two Groups", id="two_groups",fluid = TRUE, disabled=TRUE,
            sidebarLayout(
             sidebarPanel(
              tags$style(type='text/css', 
@@ -264,20 +289,20 @@ ui <- fluidPage(
              selectInput(
               inputId="tab0.grp1.name",
               label = ("Group 1"),
-              selected=names(out.DESeq2$results)[1],
+              selected=groups.lst[1],
               choices = groups.lst),
              textInput(inputId="tab0.grp1.plot.title", 
                        label = ("Group 1 label"), 
-                       value = names(out.DESeq2$results)[1]),
+                       value = groups.lst[1]),
              selectInput(
               inputId="tab0.grp2.name",
               label = ("Group 2"),
-              selected=names(out.DESeq2$results)[2],
+              selected=groups.lst[2],
               choices = groups.lst),
              textInput(
               inputId="tab0.grp2.plot.title", 
               label = ("Group 2 label"), 
-              value = names(out.DESeq2$results)[2])
+              value = groups.lst[2])
             ),
             mainPanel(
              fluidRow(style = "background-color:#F5F5F5",
@@ -321,7 +346,7 @@ ui <- fluidPage(
             )
            )
   ),
-  tabPanel("Three Groups", fluid = TRUE, disabled=TRUE,
+  tabPanel("Three Groups", id="three_groups", fluid = TRUE, disabled=TRUE,
            sidebarLayout(
             sidebarPanel(
              tags$style(type='text/css', 
@@ -335,29 +360,29 @@ ui <- fluidPage(
              selectInput(
               inputId="grp1.name",
               label = ("Group 1"),
-              selected=names(out.DESeq2$results)[1],
+              selected=groups.lst[1],
               choices = groups.lst),
              textInput(inputId="grp1.plot.title", 
                        label = ("Group 1 label"), 
-                       value = names(out.DESeq2$results)[1]),
+                       value = groups.lst[1]),
              selectInput(
               inputId="grp2.name",
               label = ("Group 2"),
-              selected=names(out.DESeq2$results)[2],
+              selected=groups.lst[2],
               choices = groups.lst),
              textInput(
               inputId="grp2.plot.title", 
               label = ("Group 2 label"), 
-              value = names(out.DESeq2$results)[2]),
+              value = groups.lst[2]),
              selectInput(
               inputId="grp3.name",
               label = ("Group 3"),
-              selected=names(out.DESeq2$results)[3],
+              selected=groups.lst[3],
               choices = groups.lst),
              textInput(
               inputId="grp3.plot.title", 
               label = ("Group 3 label"), 
-              value = names(out.DESeq2$results)[3])
+              value = groups.lst[3])
             ),
             mainPanel(
              fluidRow(style = "background-color:#F5F5F5",column(3,
@@ -409,7 +434,7 @@ ui <- fluidPage(
             )
            )
   ),
-  tabPanel("> 3 Groups", fluid = TRUE, disabled=TRUE,
+  tabPanel("> 3 Groups", id="more_groups",fluid = TRUE, disabled=TRUE,
            sidebarLayout(
             sidebarPanel(
              tags$style(type='text/css', 
@@ -423,19 +448,19 @@ ui <- fluidPage(
              selectInput(
               inputId="tab3.grp1.name",
               label = ("Group 1"),
-              selected=names(out.DESeq2$results)[1],
+              selected=groups.lst[1],
               choices = groups.lst),
              textInput(inputId="tab3.grp1.plot.title", 
                        label = ("Group 1 label"), 
-                       value = names(out.DESeq2$results)[1]),
+                       value = groups.lst[1]),
              selectInput(
               inputId="tab3.grp2.name",
               label = ("Group 2"),
-              selected=names(out.DESeq2$results)[2],
+              selected=groups.lst[2],
               choices = groups.lst),
              textInput(inputId="tab3.grp2.plot.title", 
                        label = ("Group 2 label"), 
-                       value = names(out.DESeq2$results)[2]),
+                       value = groups.lst[2]),
              
              tags$div(id = "placeholder"),
              
@@ -553,7 +578,10 @@ ui <- fluidPage(
 
 # server
 server <- function(input, output,session) {
- 
+ shinyjs::disable(selector = '.navbar-nav a[data-value="Two Groups"')
+ shinyjs::disable(selector = '.navbar-nav a[data-value="Three Groups"')
+ shinyjs::disable(selector = '.navbar-nav a[data-value="> 3 Groups"')
+ shinyjs::disable(selector = '.navbar-nav a[data-value="Third tab"')
  #write.table(isolate(session$clientData$url_port),file="/mnt/outputs/port.txt",
  #	quote=FALSE,row.names=FALSE,col.names=FALSE)
  
@@ -577,14 +605,16 @@ server <- function(input, output,session) {
   setup.id.rep.name <- paste0("setup.grp",setup.btn,".rep.name")
   setup.id.r1.files <- paste0("setup_grp",setup.btn,"_r1_files")
   setup.id.r2.files <- paste0("setup_grp",setup.btn,"_r2_files")
-  setup.id.r1.filepath <- paste0("setup.grp",setup.btn,".r1.filepaths")
-  setup.id.r2.filepath <- paste0("setup.grp",setup.btn,".r2.filepaths")
+  setup.id.r1.filepath <- paste0("setup_grp",setup.btn,"_r1_filepaths")
+  setup.id.r2.filepath <- paste0("setup_grp",setup.btn,"_r2_filepaths")
   if(setup.btn %% 2 == 0) row.color="#FFFFFF"
   if(setup.btn %% 2 != 0) row.color="#f9f9f9"
   print(paste0("background-color:",row.color))
   insertUI(
    selector = "#setup-placeholder",
    ui = tags$div(
+    tags$style(HTML(paste0("#setup_grp",setup.btn,"_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}"))),
+    tags$style(HTML(paste0("#setup_grp",setup.btn,"_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}"))),
     fluidRow(style = paste0("background-color:",row.color),
              column(2,
                     column(2,
@@ -602,12 +632,13 @@ server <- function(input, output,session) {
                                        label = "Select R1 fastq files",
                                        title=paste("Please select Group",setup.btn,"R1 fastq files"),
                                        multiple=TRUE ),
-                    verbatimTextOutput(setup.id.r1.filepath)),
+                    textAreaInput(setup.id.r1.filepath,label="",value="",width='150px',height='100px')),
              column(3,shinyFilesButton(setup.id.r2.files,
                                        label = "Select R2 fastq files",
                                        title=paste("Please select Group",setup.btn,"R1 fastq files"),
                                        multiple=TRUE ),
-                    verbatimTextOutput(setup.id.r2.filepath)),
+             textAreaInput(setup.id.r2.filepath,label="",value="",width='150px',height='100px')),
+    
     ),#fluidrow
     id = setup.div.id
    )
@@ -684,19 +715,32 @@ server <- function(input, output,session) {
  react.setup.grp.ctrl.name <- reactive({
   grp.ctrl.name <- sapply(grep("setup\\.grp\\d+\\.ctrl\\.name", x = names(input), value = TRUE),
                           function(x) input[[x]])
-  grp.ctrl.name=as.vector(grp.ctrl.name[names(grp.ctrl.name)])
+  grp.ctrl.name=as.vector(grp.ctrl.name[order(names(grp.ctrl.name))])
   grp.ctrl.name[grp.ctrl.name!=""]
  })
  
  react.setup.grp.rep.name <- reactive({
   grp.rep.name <- sapply(grep("setup\\.grp\\d+\\.rep\\.name", x = names(input), value = TRUE),
                          function(x) input[[x]])
-  grp.rep.name=as.vector(grp.rep.name[names(grp.rep.name)])
+  # need to do order otherwise the new one will be the first in the vector
+  grp.rep.name=as.vector(grp.rep.name[order(names(grp.rep.name))])
   grp.rep.name[grp.rep.name!=""]
  })
  
  react.setup.email <- reactive({
   input$setup.email
+ })
+ 
+ react.setup.genome.fa <- reactive({
+  fa.file = input$setup_genome_fa
+  fa.path=as.character(parseFilePaths(root = volumes,fa.file)$datapath)
+  fa.path
+ })
+ 
+ react.setup.genome.gtf <- reactive({
+  gtf.file = input$setup_genome_gtf
+  gtf.path=as.character(parseFilePaths(root = volumes,gtf.file)$datapath)
+  gtf.path
  })
  
  # browse from /filepath if it's specified otherwise /root
@@ -725,7 +769,7 @@ server <- function(input, output,session) {
  setup.grp.r1.file.lst <- do.call("reactiveValues",x)
  setup.grp.r2.file.lst <- do.call("reactiveValues",x)
  
- # getting all the r1 fastq files for all groups
+ # getting all the r1 and r2 fastq files for all groups
  lapply(
   1:max.nsamples,
   function(i){
@@ -738,38 +782,28 @@ server <- function(input, output,session) {
     path.display <- paste0(path.display[-1], collapse="\n")
     print("path.display")
     print(path.display)
-    updateTextAreaInput(session, paste0('setup_grp',i,'_r1_filepaths'),value='abcd\ncde')
+    updateTextAreaInput(session, paste0('setup_grp',i,'_r1_filepaths'),value=path.display)
     # output[[paste0('setup.grp',i,'.r1.filepaths')]]<- renderText({
     #  path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
     #  path.display=gsub('^/root/','',path.display)
     #  path.display <- paste0(path.display[-1], "\n")
     #  path.display
     # }) # renderText
-   })# observeEvent
-    } #function
- )
- 
- # getting all the r2 fastq files for all groups
- lapply(
-  1:max.nsamples,
-  function(i){
+   })# observeEvent r1_files
+   
    observeEvent(input[[paste0('setup_grp',i,'_r2_files')]],{
     file = input[[paste0('setup_grp',i,'_r2_files')]]
     new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
-    print("new.path")
-    print(new.path)
-    print("setup.grp.r2.file.lst")
-    print(setup.grp.r2.file.lst[[paste0('grp',i)]])
     setup.grp.r2.file.lst[[paste0('grp',i)]] <- c(setup.grp.r2.file.lst[[paste0('grp',i)]],new.path)
-    output[[paste0('setup.grp',i,'.r2.filepaths')]] <- renderText({
-     path.display=gsub('^/filepath/','',setup.grp.r2.file.lst[[paste0('grp',i)]])
-     path.display=gsub('^/root/','',path.display)
-     path.display <- paste0(path.display[-1], "\n")
-     path.display
-    }) # renderText
+    path.display=gsub('^/filepath/','',setup.grp.r2.file.lst[[paste0('grp',i)]])
+    path.display=gsub('^/root/','',path.display)
+    path.display <- paste0(path.display[-1], collapse="\n")
+    print("path.display")
+    print(path.display)
+    updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display)
    })# observeEvent
-  }
- )
+    } #function
+ )#lapply
  
  # select other genome files
  shinyFileChoose(input, "setup_genome_fa", root=volumes,
@@ -798,39 +832,71 @@ server <- function(input, output,session) {
  })
  
  observeEvent(input$setup.run.analysis,{
-  # # create samples.txt
-  #  grpname=react.setup.grp.name()
-  #  ctrlname=react.setup.grp.ctrl.name()
-  #  repname=react.setup.grp.rep.name()
-  #  spikename=rep("NA",length(grpname))
-  #  email=rep(react.setup.email(),length(grpname))
-  #  # remove empty string
-  #  filter_r1_list <- lapply(1:length(grpname),
-  #      function(x) setup.grp.r1.file.lst[[paste0('grp',x)]][setup.grp.r1.file.lst[[paste0('grp',x)]] != ""])
-  #  r1_fastq=lapply(1:length(grpname),
-  #                  function(i) paste0(unlist(filter_r1_list[[i]]),collapse=","))
-  #  # remove empty string
-  #  filter_r2_list <- lapply(1:length(grpname),
-  #                           function(x) setup.grp.r2.file.lst[[paste0('grp',x)]][setup.grp.r2.file.lst[[paste0('grp',x)]] != ""])
-  #  r2_fastq=lapply(1:length(grpname),
-  #                      function(i) paste0(unlist(filter_r2_list[[i]]),collapse=","))
-  #  df <- data.frame(
-  #   grpname=grpname,
-  #   ctrlname=ctrlname,
-  #   repname=repname,
-  #   spikename=spikename,
-  #   email=email,
-  #   path_to_r1_fastq=unlist(r1_fastq),
-  #   path_to_r2_fastq=unlist(r2_fastq))
-  #  write.table(paste0("#Groupname\tControlname\tReplicatename\tspikename\temail",
-  #                     "\tpath_to_r1_fastq\tpath_to_r2_fastq"),
-  #              file="/mnt/samples.txt",quote=FALSE,row.names=FALSE,col.names=FALSE)
-  #  write.table(df,file="/mnt/samples.txt",quote=FALSE,row.names=FALSE,col.names=FALSE,
-  #              append = TRUE)
+  # create samples.txt
+   grpname=react.setup.grp.name()
+   ctrlname=react.setup.grp.ctrl.name()
+   repname=react.setup.grp.rep.name()
+   spikename=rep("NA",length(grpname))
+   email=react.setup.email()
+   if(email==""){
+    email=rep("NA",length(grpname))
+   }else{
+    email=rep(email,length(grpname))
+   }
+   print("repname")
+   print(repname)
+   print("ctrlname")
+   print(ctrlname)
+   # # remove empty string and combine entries with commas
+   # filter_r1_list <- lapply(1:length(grpname),
+   #     function(x) setup.grp.r1.file.lst[[paste0('grp',x)]][setup.grp.r1.file.lst[[paste0('grp',x)]] != ""])
+   # r1_fastq=lapply(1:length(grpname),
+   #                 function(i) paste0(unlist(filter_r1_list[[i]]),collapse=","))
+   # # # remove empty string and combine entries with commas
+   # filter_r2_list <- lapply(1:length(grpname),
+   #                          function(x) setup.grp.r2.file.lst[[paste0('grp',x)]][setup.grp.r2.file.lst[[paste0('grp',x)]] != ""])
+   # r2_fastq=lapply(1:length(grpname),
+   #                     function(i) paste0(unlist(filter_r2_list[[i]]),collapse=","))
+   # getting the r1 fastq for all groups
+   r1_fastq_lst=lapply(1:length(grpname),
+          function(x) input[[paste0("setup_grp",x,"_r1_filepaths")]])
+   # adding the volumes path
+   r1_fastq=lapply(1:length(grpname),
+                   function(x) gsub("\n",paste0(",",volumes,"/"),
+                                    file.path(volumes,r1_fastq_lst[[x]])))
+   r2_fastq_lst=lapply(1:length(grpname),
+                       function(x) input[[paste0("setup_grp",x,"_r2_filepaths")]])
+   # adding the volumes path
+   r2_fastq=lapply(1:length(grpname),
+                   function(x) gsub("\n",paste0(",",volumes,"/"),
+                                    file.path(volumes,r2_fastq_lst[[x]])))
+   print("r1_fastq")
+   print("r1_fastq")
+   print(r1_fastq)
+   df <- data.frame(
+    grpname=grpname,
+    ctrlname=ctrlname,
+    repname=repname,
+    spikename=spikename,
+    email=email,
+    path_to_r1_fastq=unlist(r1_fastq),
+    path_to_r2_fastq=unlist(r2_fastq))
+   write.table(paste0("#Groupname\tControlname\tReplicatename\tspikename\temail",
+                      "\tpath_to_r1_fastq\tpath_to_r2_fastq"),
+               file="/mnt/samples.txt",quote=FALSE,row.names=FALSE,col.names=FALSE)
+   write.table(df,file="/mnt/samples.txt",quote=FALSE,row.names=FALSE,col.names=FALSE,
+               append = TRUE)
   print("system call")
   #system("echo 'sbatch --help' > /hostpipe")
-  options="genome=hg38"
-  system(paste0("echo 'bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+  # getting genome options
+  if(input$setup.genome=="hg38") options="genome=hg38"
+  if(input$setup.genome=="hg19") options="genome=hg19"
+  if(input$setup.genome=="other"){
+   fa.file=react.setup.genome.fa() 
+   gtf.file=react.setup.genome.gtf ()
+   options=paste0("genome=",input$setup.genome.name," ref_fa=",fa.file," ref_gtf=",gtf.file)
+  }
+   system(paste0("echo 'bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
   print("end system call")
  })
@@ -871,11 +937,11 @@ server <- function(input, output,session) {
    ui = tags$div(
     selectInput(inputId=paste0("tab3.grp",btn,".name"),
                 label=(paste0("Group ",btn)), 
-                selected=names(out.DESeq2$results)[btn],
+                selected=groups.lst[btn],
                 choices=groups.lst),
     textInput(inputId=paste0("tab3.grp",btn,".plot.title"),
               label=(paste0("Group ",btn," label")), 
-              value = names(out.DESeq2$results)[btn]),
+              value = groups.lst[btn]),
     id = id
    )
   )

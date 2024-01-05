@@ -3,5 +3,7 @@
 source activate sartools_env;
 set -x
 cd /scripts
-R -e "shiny::runApp(port=$port_num)"
+#hostfilepath="\"$hostfilepath\""
+hostfilepath="$hostfilepath"
+R -e "hostfilepath='$hostfilepath'; shiny::runApp(port=$port_num)"
 conda deactivate

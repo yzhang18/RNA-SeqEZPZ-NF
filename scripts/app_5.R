@@ -1,51 +1,43 @@
 library(shiny)
-library(shinyjs)
 
-css <- "
-.nav li a.disabled {
-background-color: #aaa !important;
-color: #333 !important;
-cursor: not-allowed !important;
-border-color: #aaa !important;
-}"
+ui <- fluidPage(
+ 
+ 
+ textInput(inputId = "id",
+           label = 'Please enter your id'
+ ),
+ 
+ 
+ checkboxInput("agree", label = "I agree", value = FALSE),
+ conditionalPanel(condition = "(input.submit_info >= 1) & ((input.id == '') || (!input.agree))",
+                  
+                  textOutput('error_msg')
+ ),
+ 
+ actionButton("submit_info", "Submit"),
+ textOutput('success_msg')
+ 
+ 
+)
 
-test=as.list(c("a","b"))
-ui <- shinyUI(fluidPage(
- shinyjs::useShinyjs(),
- shinyjs::inlineCSS(css),
- navbarPage("Test",id="navbarPage",
-            tabPanel("FirstTab", id = "first_tab",
-                     sidebarLayout(
-                      sidebarPanel(),
-                      mainPanel()
-                     )
-            ),
-            tabPanel("Secondtab", id = "second_tab",
-                     sidebarLayout(
-                      sidebarPanel(),
-                      mainPanel(
-                       selectInput(
-                        inputId="tab0.grp1.name",
-                        label = ("Group 1"),
-                        selected=test[1],
-                        choices = test),
-                      )
-                     )
-            ),
-            tabPanel("Third tab", id = "third_tab",
-                     sidebarLayout(
-                      sidebarPanel(),
-                      mainPanel()
-                     )
-            )
- )
-))
+server <- function(input, output) {
+ 
+ output$error_msg <- renderText({
+  shiny::validate(
+   shiny::need(input$id != '', 'You must enter your id above to continue.'
+   ),
+   shiny::need(input$agree, "You must agree to continue")
+  )
+  
+ })
+ 
+ observeEvent(input$submit_info, {
+  
+  shiny::req(input$id)
+  shiny::req(input$agree)
+  output$success_msg <- renderText({"Success"})
+  
+ })
+}
 
-server <- shinyServer(function(input, output, session) {
- # disable tabs Exposure, Covariate, and Construct on page load
- #shinyjs::disable(selector = '.navbar-nav a[data-value="Secondtab"')
- shinyjs::disable(selector = '.navbar-nav a[data-value="Third tab"')
-})
-
-# Run the application
 shinyApp(ui = ui, server = server)

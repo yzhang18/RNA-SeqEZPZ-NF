@@ -5,15 +5,15 @@ set -x
 # cd <project_dir>
 # bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh
 # Examples:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_overlap.sh
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh
 # <project_dir> is where the fastq and outputs directory are
 # project directory where the fastq and outputs directory are
 #
 # to run with all commands printed
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_overlap.sh run=debug
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh run=debug
 #
 # Default time limit is 1 day to change to 1 day, 2 hours, 20 minutes and 30 sec
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_overlap.sh time=1-2:20:30
+# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh time=1-2:20:30
 
 # clear python path to prevent mixed up of python packages
 unset PYTHONPATH
@@ -27,16 +27,24 @@ while [[ "$#" -gt 0 ]]; do
                 time=$(echo $1 | cut -d '=' -f 2)
                 shift
         fi
+	if [[ $1 == "filepath"* ]];then
+                filepath=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 
         if [[ $1 == "help" ]];then
 		echo ""
-                echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_overlap.sh [OPTION]'
+                echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh [OPTION]'
                 echo ''
                 echo DESCRIPTION
-                echo -e '\trun shiny app to show overlaps'
+                echo -e '\trun shiny app to run full RNA-seq analysis'
                 echo ''
                 echo OPTIONS
                 echo ''
+		echo filepath=path/to/fastq/fa/gtf/files
+		echo -e '\tpath to navigate to fastq,reference fasta, GTF files and project folder'
+		echo -e '\tthis path will be bound and used inside singularity and shiny app to navigate to these files.'
+		echo -e '\tif not provided, host root will be used'
                 echo help
                 echo -e '\tdisplay this help and exit'
                 echo run=echo
@@ -96,15 +104,28 @@ port_num=$(singularity exec $img_dir/$img_name comm -23 \
 <(ss -Htan | awk '{print $4}' | cut -d':' -f2 | sort -u) \
 | shuf | head -n 1)
 
+# if filepath not specified then bind host root
+if [[ -z "$filepath" ]];then
+	bind_filepath="--bind /:/root"
+else
+	bind_filepath="--bind $filepath:/filepath"
+fi
+
+# find available node with at least 2 cpus
+# to avoid being stuck when the app is hosted on a full node
+node_avail=$(sinfo -o "%20n %20C %T" --partition=general,himem --states=IDLE,MIXED | awk '/mixed/ || /idle/ {split($2,a,"/"); if(a[1] > 1) {print $1;exit}}')
+
+
 # Activate environment where shiny is installed and go to "app.R" directory
 jid=$(SINGULARITYENV_port_num=$port_num \
+	SINGULARITYENV_hostfilepath=$filepath \
 	sbatch --time=$time \
-	--partition=himem \
+	--nodelist=$node_avail \
 	--output=run_shiny_analysis.out \
 	--wrap "singularity exec \
 	--bind $proj_dir:/mnt \
 	--bind $img_dir/scripts:/scripts -B ~/.Xauthority \
-	--bind /home/gdkendalllab/lab:/filepath \
+	$bind_filepath \
 	--bind $proj_dir/mypipe:/hostpipe \
 	$img_dir/$img_name /bin/sh /scripts/app_simg.sbatch"| cut -f 4 -d' ')
 
@@ -125,7 +146,6 @@ cd $proj_dir
 jid2=$(sbatch --nodelist=$node \
 	--time=$time \
 	--output=listen_to_shiny.out \
-	--partition=himem \
 	--export=proj_dir=$proj_dir \
 	--wrap 'set -x;cd $proj_dir; eval "$(cat mypipe)"'| cut -f4 -d' ')
 

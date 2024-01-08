@@ -166,7 +166,7 @@ ui <- fluidPage(
  shinyjs::inlineCSS(css),
  # horizontal vertical bar for r1 and r2 filepaths input text
  # tags to have horizontal scrolling bar
- # white-space: pre will make newline character works
+ # white-space: pre will make newline character works. without this, newline chr in text will be ignored
  tags$style(HTML("#setup_grp1_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tags$style(HTML("#setup_grp1_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tags$style(HTML("#setup_grp2_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
@@ -875,7 +875,12 @@ server <- function(input, output,session) {
     setup.grp.r1.file.lst[[paste0('grp',i)]] <- c(setup.grp.r1.file.lst[[paste0('grp',i)]],new.path)
     print("setup.grp.r1.file.lst[[paste0('grp',i)]]")
     print(setup.grp.r1.file.lst[[paste0('grp',i)]])
-    path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
+    
+    path.display=setup.grp.r1.file.lst[[paste0('grp',i)]]
+    # remove the first entry if empty
+    if(path.display[1]=="") path.display=path.display[-1]
+     
+    path.display=gsub('^/filepath/','',path.display)
     path.display=gsub('^/root/','',path.display)
     path.display <- paste0(path.display, collapse="\n")
     print("path.display")
@@ -893,12 +898,15 @@ server <- function(input, output,session) {
     file = input[[paste0('setup_grp',i,'_r2_files')]]
     new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
     setup.grp.r2.file.lst[[paste0('grp',i)]] <- c(setup.grp.r2.file.lst[[paste0('grp',i)]],new.path)
-    path.display=gsub('^/filepath/','',setup.grp.r2.file.lst[[paste0('grp',i)]])
-    path.display=gsub('^/root/','',path.display)
-    path.display <- paste0(path.display, collapse="\n")
-    print("path.display")
-    print(path.display)
-    updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display)
+    path.display.r2=setup.grp.r2.file.lst[[paste0('grp',i)]]
+    # remove the first entry if empty
+    if(path.display.r2[1]=="") path.display.r2=path.display.r2[-1]
+    path.display.r2=gsub('^/filepath/','',path.display.r2)
+    path.display.r2=gsub('^/root/','',path.display.r2)
+    path.display.r2 <- paste0(path.display.r2, collapse="\n")
+    print("path.display.r2")
+    print(path.display.r2)
+    updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display.r2)
    })# observeEvent
   } #function
  )#lapply
@@ -906,6 +914,7 @@ server <- function(input, output,session) {
 
  
  observe({
+  # getting nsamples from add/remove button
   nsamples <- setup.value()
   updateFilelst(nsamples)
  })
@@ -1006,16 +1015,7 @@ output$fileExists <- reactive({
    shiny::req(length(grpname)==nsamples)
    shiny::req(length(ctrlname)==nsamples)
    shiny::req(length(repname)==nsamples)
-   # # remove empty string and combine entries with commas
-   # filter_r1_list <- lapply(1:length(grpname),
-   #     function(x) setup.grp.r1.file.lst[[paste0('grp',x)]][setup.grp.r1.file.lst[[paste0('grp',x)]] != ""])
-   # r1_fastq=lapply(1:length(grpname),
-   #                 function(i) paste0(unlist(filter_r1_list[[i]]),collapse=","))
-   # # # remove empty string and combine entries with commas
-   # filter_r2_list <- lapply(1:length(grpname),
-   #                          function(x) setup.grp.r2.file.lst[[paste0('grp',x)]][setup.grp.r2.file.lst[[paste0('grp',x)]] != ""])
-   # r2_fastq=lapply(1:length(grpname),
-   #                     function(i) paste0(unlist(filter_r2_list[[i]]),collapse=","))
+   
    # getting the r1 and r2 fastq for all groups
    r1_fastq_lst=lapply(1:length(grpname),
           function(x) input[[paste0("setup_grp",x,"_r1_filepaths")]])

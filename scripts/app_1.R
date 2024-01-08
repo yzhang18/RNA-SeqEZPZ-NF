@@ -35,6 +35,9 @@ cursor: not-allowed !important;
 border-color: #aaa !important;
 }"
 
+print("hostfilepath")
+print(hostfilepath)
+
 # default image directory used to run analysis out of container
 if(!exists("img.dir")) img.dir="~/Steve/virtual_server/rnaseq-singularity"
 
@@ -163,7 +166,7 @@ ui <- fluidPage(
  shinyjs::inlineCSS(css),
  # horizontal vertical bar for r1 and r2 filepaths input text
  # tags to have horizontal scrolling bar
- # white-space: pre will make newline character works
+ # white-space: pre will make newline character works. without this, newline chr in text will be ignored
  tags$style(HTML("#setup_grp1_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tags$style(HTML("#setup_grp1_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tags$style(HTML("#setup_grp2_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
@@ -872,7 +875,12 @@ server <- function(input, output,session) {
     setup.grp.r1.file.lst[[paste0('grp',i)]] <- c(setup.grp.r1.file.lst[[paste0('grp',i)]],new.path)
     print("setup.grp.r1.file.lst[[paste0('grp',i)]]")
     print(setup.grp.r1.file.lst[[paste0('grp',i)]])
-    path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
+    
+    path.display=setup.grp.r1.file.lst[[paste0('grp',i)]]
+    # remove the first entry if empty
+    if(path.display[1]=="") path.display=path.display[-1]
+     
+    path.display=gsub('^/filepath/','',path.display)
     path.display=gsub('^/root/','',path.display)
     path.display <- paste0(path.display, collapse="\n")
     print("path.display")
@@ -890,12 +898,15 @@ server <- function(input, output,session) {
     file = input[[paste0('setup_grp',i,'_r2_files')]]
     new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
     setup.grp.r2.file.lst[[paste0('grp',i)]] <- c(setup.grp.r2.file.lst[[paste0('grp',i)]],new.path)
-    path.display=gsub('^/filepath/','',setup.grp.r2.file.lst[[paste0('grp',i)]])
-    path.display=gsub('^/root/','',path.display)
-    path.display <- paste0(path.display, collapse="\n")
-    print("path.display")
-    print(path.display)
-    updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display)
+    path.display.r2=setup.grp.r2.file.lst[[paste0('grp',i)]]
+    # remove the first entry if empty
+    if(path.display.r2[1]=="") path.display.r2=path.display.r2[-1]
+    path.display.r2=gsub('^/filepath/','',path.display.r2)
+    path.display.r2=gsub('^/root/','',path.display.r2)
+    path.display.r2 <- paste0(path.display.r2, collapse="\n")
+    print("path.display.r2")
+    print(path.display.r2)
+    updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display.r2)
    })# observeEvent
   } #function
  )#lapply
@@ -903,6 +914,7 @@ server <- function(input, output,session) {
 
  
  observe({
+  # getting nsamples from add/remove button
   nsamples <- setup.value()
   updateFilelst(nsamples)
  })
@@ -1003,29 +1015,29 @@ output$fileExists <- reactive({
    shiny::req(length(grpname)==nsamples)
    shiny::req(length(ctrlname)==nsamples)
    shiny::req(length(repname)==nsamples)
-   # # remove empty string and combine entries with commas
-   # filter_r1_list <- lapply(1:length(grpname),
-   #     function(x) setup.grp.r1.file.lst[[paste0('grp',x)]][setup.grp.r1.file.lst[[paste0('grp',x)]] != ""])
-   # r1_fastq=lapply(1:length(grpname),
-   #                 function(i) paste0(unlist(filter_r1_list[[i]]),collapse=","))
-   # # # remove empty string and combine entries with commas
-   # filter_r2_list <- lapply(1:length(grpname),
-   #                          function(x) setup.grp.r2.file.lst[[paste0('grp',x)]][setup.grp.r2.file.lst[[paste0('grp',x)]] != ""])
-   # r2_fastq=lapply(1:length(grpname),
-   #                     function(i) paste0(unlist(filter_r2_list[[i]]),collapse=","))
-   # getting the r1 fastq for all groups
+   
+   # getting the r1 and r2 fastq for all groups
    r1_fastq_lst=lapply(1:length(grpname),
           function(x) input[[paste0("setup_grp",x,"_r1_filepaths")]])
-   # adding the volumes path
-   r1_fastq=lapply(1:length(grpname),
-                   function(x) gsub("\n",paste0(",",volumes,"/"),
-                                    file.path(volumes,r1_fastq_lst[[x]])))
    r2_fastq_lst=lapply(1:length(grpname),
                        function(x) input[[paste0("setup_grp",x,"_r2_filepaths")]])
-   # adding the volumes path
+   # changing to hostpath
+   if(file.exists("/filepath")){
+   r1_fastq=lapply(1:length(grpname),
+                   function(x) gsub("\n",paste0(",",hostfilepath,"/"),
+                                    file.path(hostfilepath,r1_fastq_lst[[x]])))
    r2_fastq=lapply(1:length(grpname),
-                   function(x) gsub("\n",paste0(",",volumes,"/"),
-                                    file.path(volumes,r2_fastq_lst[[x]])))
+                   function(x) gsub("\n",paste0(",",hostfilepath,"/"),
+                                    file.path(hostfilepath,r2_fastq_lst[[x]])))
+   }else{
+    r1_fastq=lapply(1:length(grpname),
+                    function(x) gsub("\n",paste0(",","/"),
+                                     file.path("/",r1_fastq_lst[[x]])))
+    r2_fastq=lapply(1:length(grpname),
+                    function(x) gsub("\n",paste0(",","/"),
+                                     file.path("/",r2_fastq_lst[[x]])))
+   }
+   
    df <- data.frame(
     grpname=grpname,
     ctrlname=ctrlname,
@@ -1051,16 +1063,29 @@ output$fileExists <- reactive({
   }
    fa.file=react.setup.genome.fa() 
    gtf.file=react.setup.genome.gtf ()
-   options=paste0("genome=",input$setup.genome.name," ref_fa=",fa.file," ref_gtf=",gtf.file)
+   # convert path to hostpath
+   if(file.exists("/filepath")){
+    hostfa=gsub('/filepath',hostfilepath,fa.file)
+    hostgtf=gsub('/filepath',hostfilepath,gtf.file)
+   }else{ 
+    hostfa=gsub('/root','/',fa.file)
+    hostgtf=gsub('/root','/',gtf.file)
+   }
+   options=paste0("genome=",input$setup.genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
   
   if(input$setup.batch.adjust==TRUE){ batch_adjust="yes"
   }else{ batch_adjust="no"}
   options=paste0(options," time=",input$setup.time," batch_adjust=",batch_adjust,
                  " ncpus_trim=",input$setup.ncpus.trim," ncpus_star=",input$setup.ncpus.star)
-   #setwd(projdir)
+  # converting project dir to host path
+  if(file.exists("/filepath")){
+   hostprojdir=gsub('/filepath',hostfilepath,projdir)
+  }else{ 
+   hostprojdir=gsub('/root','/',projdir)
+  }
    print(paste0("echo 'cd ",projdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-   system(paste0("echo 'cd ",projdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+   system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
   print("end system call")
 })

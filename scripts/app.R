@@ -95,7 +95,7 @@ if(!dir.exists("/mnt/outputs")) {
 # List of choices for genome
 setup.genome.lst <- as.list(c("hg19","hg38","other"))
 # ad-hoc max sample
-max.nsamples=10
+max.nsamples=50
 
 heatmap_sigf_overlap <- function(data,title=""){
  hm <- ggplot(data,aes(X1,X2,fill=pval.cat)) +
@@ -183,7 +183,7 @@ ui <- fluidPage(
                         #       actionButton("setup.load.samples","Click to load existing samples.txt"),
                         # br(),
                         # ),
-     
+                        
                         selectInput(inputId = "setup.genome",label="Select genome",
                                     choices=setup.genome.lst,selected=1),
                         conditionalPanel(
@@ -780,108 +780,57 @@ server <- function(input, output,session) {
   volumes=c(root="/root")
  }
  
- # # shinyFileChoose doesn't work inside a reactive
- # # I had to arbitrarily set a max number of samples a
- # # samples.txt can have
- # for (i in 1:max.nsamples) {
- #  setup.grp.r1.name=paste0('setup_grp',i,'_r1_files')
- #  shinyFileChoose(input, setup.grp.r1.name, root=volumes,
- #                  filetypes=c('', 'gz'),session=session)
- #  setup.grp.r2.name=paste0('setup_grp',i,'_r2_files')
- #  shinyFileChoose(input, setup.grp.r2.name, root=volumes,
- #                  filetypes=c('', 'gz'),session=session)
- # }
-
- updateFileChoose <- function(nsamples) {
-  print(nsamples)
- for (i in 1:nsamples) {
+ # shinyFileChoose doesn't work inside a reactive
+ # I had to arbitrarily set a max number of samples a
+ # samples.txt can have
+ for (i in 1:max.nsamples) {
   setup.grp.r1.name=paste0('setup_grp',i,'_r1_files')
-  shinyFiles::shinyFileChoose(input, setup.grp.r1.name, root=volumes,
+  shinyFileChoose(input, setup.grp.r1.name, root=volumes,
                   filetypes=c('', 'gz'),session=session)
   setup.grp.r2.name=paste0('setup_grp',i,'_r2_files')
-  shinyFiles::shinyFileChoose(input, setup.grp.r2.name, root=volumes,
+  shinyFileChoose(input, setup.grp.r2.name, root=volumes,
                   filetypes=c('', 'gz'),session=session)
  }
- }
  
- observe({
-  nsamples <- setup.value()
-  updateFileChoose(nsamples)
- })
  
- # # Initialize r1/r2 file list as reactiveValues to save previous choices
- # # need to use ad-hoc max.nsamples for shinyFile Choose
- # x <- as.list(rep("",max.nsamples))
- # names(x)=lapply(1:max.nsamples,function(i)paste0('grp',i))
- # setup.grp.r1.file.lst <- do.call("reactiveValues",x)
- # setup.grp.r2.file.lst <- do.call("reactiveValues",x)
- # 
- # # getting all the r1 and r2 fastq files for all groups
- # 
- # 
- #  lapply(
- #  1:nsamples,
- #  function(i){
- #   observeEvent(input[[paste0('setup_grp',i,'_r1_files')]],{
- #    file = input[[paste0('setup_grp',i,'_r1_files')]]
- #    new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
- #    setup.grp.r1.file.lst[[paste0('grp',i)]] <- c(setup.grp.r1.file.lst[[paste0('grp',i)]],new.path)
- #    path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
- #    path.display=gsub('^/root/','',path.display)
- #    path.display <- paste0(path.display[-1], collapse="\n")
- #    print("path.display")
- #    print(path.display)
- #    updateTextAreaInput(session, paste0('setup_grp',i,'_r1_filepaths'),value=path.display)
- #    # output[[paste0('setup.grp',i,'.r1.filepaths')]]<- renderText({
- #    #  path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
- #    #  path.display=gsub('^/root/','',path.display)
- #    #  path.display <- paste0(path.display[-1], "\n")
- #    #  path.display
- #    # }) # renderText
- #   })# observeEvent r1_files
- #   
- #   observeEvent(input[[paste0('setup_grp',i,'_r2_files')]],{
- #    file = input[[paste0('setup_grp',i,'_r2_files')]]
- #    new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
- #    setup.grp.r2.file.lst[[paste0('grp',i)]] <- c(setup.grp.r2.file.lst[[paste0('grp',i)]],new.path)
- #    path.display=gsub('^/filepath/','',setup.grp.r2.file.lst[[paste0('grp',i)]])
- #    path.display=gsub('^/root/','',path.display)
- #    path.display <- paste0(path.display[-1], collapse="\n")
- #    print("path.display")
- #    print(path.display)
- #    updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display)
- #   })# observeEvent
- #    } #function
- # )#lapply
-
- updateFilelst <- function(nsamples){ 
-  # Initialize r1/r2 file list as reactiveValues to save previous choices
- x <- as.list(rep("",nsamples))
- names(x)=lapply(1:nsamples,function(i)paste0('grp',i))
+ # Initialize r1/r2 file list as reactiveValues to save previous choices
+ # need to use ad-hoc max.nsamples for shinyFile Choose
+ x <- as.list(rep("",max.nsamples))
+ names(x)=lapply(1:max.nsamples,function(i)paste0('grp',i))
  setup.grp.r1.file.lst <- do.call("reactiveValues",x)
  setup.grp.r2.file.lst <- do.call("reactiveValues",x)
- 
+
  # getting all the r1 and r2 fastq files for all groups
- lapply(
-  1:nsamples,
+  lapply(
+  1:max.nsamples,
   function(i){
    observeEvent(input[[paste0('setup_grp',i,'_r1_files')]],{
+    # getting new selected path and clean-up paths
     file = input[[paste0('setup_grp',i,'_r1_files')]]
     new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
-    # getting the existing files in the textbox
-    setup.grp.r1.file.lst[[paste0('grp',i)]] <- input[[paste0('setup_grp',i,'_r1_filepaths')]]
-    print("setup.grp.r1.file.lst[[paste0('grp',i)]]")
-    print(setup.grp.r1.file.lst[[paste0('grp',i)]])
-    setup.grp.r1.file.lst[[paste0('grp',i)]] <- c(setup.grp.r1.file.lst[[paste0('grp',i)]],new.path)
-    print("setup.grp.r1.file.lst[[paste0('grp',i)]]")
-    print(setup.grp.r1.file.lst[[paste0('grp',i)]])
-    
-    path.display=setup.grp.r1.file.lst[[paste0('grp',i)]]
-    # remove the first entry if empty
-    if(path.display[1]=="") path.display=path.display[-1]
-     
-    path.display=gsub('^/filepath/','',path.display)
+    new.path=gsub('^/filepath/','',new.path)
+    new.path=gsub('^/root/','',new.path)
+    # getting path in textAreaInput
+    text.path=input[[paste0('setup_grp',i,'_r1_filepaths')]]
+    text.path=unlist(strsplit(text.path,"\n"))
+    print("new.path")
+    print(new.path)
+    print("text.path")
+    print(text.path)
+    # combine new.path and paths in textarea
+    setup.grp.r1.file.lst[[paste0('grp',i)]] <- sort(unique(c(new.path,text.path)))
+    path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
     path.display=gsub('^/root/','',path.display)
+    # remove empty path
+    if(sum(path.display=="")>0){
+         print("path.display[1] is empty")
+         print(path.display)
+         rem.id=which(path.display=="")
+         path.display=path.display[-rem.id]
+         print("remove empty")
+         print(path.display)
+    }
+     
     path.display <- paste0(path.display, collapse="\n")
     print("path.display")
     print(path.display)
@@ -893,32 +842,55 @@ server <- function(input, output,session) {
     #  path.display
     # }) # renderText
    })# observeEvent r1_files
-   
+
    observeEvent(input[[paste0('setup_grp',i,'_r2_files')]],{
     file = input[[paste0('setup_grp',i,'_r2_files')]]
     new.path=as.character(parseFilePaths(root = volumes,file)$datapath)
-    setup.grp.r2.file.lst[[paste0('grp',i)]] <- c(setup.grp.r2.file.lst[[paste0('grp',i)]],new.path)
-    path.display.r2=setup.grp.r2.file.lst[[paste0('grp',i)]]
-    # remove the first entry if empty
-    if(path.display.r2[1]=="") path.display.r2=path.display.r2[-1]
-    path.display.r2=gsub('^/filepath/','',path.display.r2)
-    path.display.r2=gsub('^/root/','',path.display.r2)
-    path.display.r2 <- paste0(path.display.r2, collapse="\n")
-    print("path.display.r2")
-    print(path.display.r2)
-    updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display.r2)
-   })# observeEvent
-  } #function
+    new.path=gsub('^/filepath/','',new.path)
+    new.path=gsub('^/root/','',new.path)
+    text.path=input[[paste0('setup_grp',i,'_r2_filepaths')]]
+    text.path=unlist(strsplit(text.path,"\n"))
+    print("new.path")
+    print(new.path)
+    print("text.path")
+    print(text.path)
+    # combine new.path and paths in textarea
+    setup.grp.r2.file.lst[[paste0('grp',i)]] <- sort(unique(c(new.path,text.path)))
+    path.display=gsub('^/filepath/','',setup.grp.r2.file.lst[[paste0('grp',i)]])
+    path.display=gsub('^/root/','',path.display)
+    if(sum(path.display=="")>0){
+     print("path.display[1] is empty")
+     print(path.display)
+     rem.id=which(path.display=="")
+     path.display=path.display[-rem.id]
+     print("remove empty")
+     print(path.display)
+    }
+    
+    path.display <- paste0(path.display, collapse="\n")
+    print("path.display")
+    print(path.display)
+    updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display)
+    # output[[paste0('setup.grp',i,'.r1.filepaths')]]<- renderText({
+    #  path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
+    #  path.display=gsub('^/root/','',path.display)
+    #  path.display <- paste0(path.display[-1], "\n")
+    #  path.display
+    # }) # renderText
+   })# observeEvent r1_files
+    } #function
  )#lapply
- }#updateFilelst
 
- 
- observe({
-  # getting nsamples from add/remove button
-  nsamples <- setup.value()
-  updateFilelst(nsamples)
- })
- 
+
+    # # # get current content of textareainput
+    # setup.grp.r1.file.lst[[paste0('grp',i)]] <- input[[paste0('setup_grp',i,'_r1_filepaths')]]
+    # output[[paste0('setup.grp',i,'.r1.filepaths')]]<- renderText({
+    #  path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
+    #  path.display=gsub('^/root/','',path.display)
+    #  path.display <- paste0(path.display[-1], "\n")
+    #  path.display
+    # }) # renderText
+   
  # select project directory
  shinyDirChoose(input, "setup_proj_dir", root=volumes)
  
@@ -1017,27 +989,44 @@ output$fileExists <- reactive({
    shiny::req(length(repname)==nsamples)
    
    # getting the r1 and r2 fastq for all groups
+   print("input[[setup_grp1_r1_filepaths]]")
+   print(input[[paste0("setup_grp",1,"_r1_filepaths")]])
+   # remove empty paths
+   rem_empty_path <- function(input.name) {
+    filt.path = input[[input.name]]
+    filt.path = unlist(strsplit(filt.path,"\n"))
+    print("filt.path before removing")
+    print(filt.path)
+    empty.id = which(filt.path=="")
+    if(length(empty.id)>0) filt.path = filt.path[-empty.id]
+    print("filt.path after removing")
+    print(filt.path)
+   }
+   r1_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r1_filepaths")))
+   r2_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r2_filepaths")))
+   print("r1_fastq_lst after remove empty path")
+   print(r1_fastq_lst)
+   # sort and unique to make sure the correct pairing of r1 and r2
    r1_fastq_lst=lapply(1:length(grpname),
-          function(x) input[[paste0("setup_grp",x,"_r1_filepaths")]])
+          function(x) sort(unique(r1_fastq_lst[[x]])))
    r2_fastq_lst=lapply(1:length(grpname),
-                       function(x) input[[paste0("setup_grp",x,"_r2_filepaths")]])
+           function(x) sort(unique(r2_fastq_lst[[x]])))
+   print("r1_fastq_lst after unique and sort")
+   print(r1_fastq_lst)
    # changing to hostpath
    if(file.exists("/filepath")){
    r1_fastq=lapply(1:length(grpname),
-                   function(x) gsub("\n",paste0(",",hostfilepath,"/"),
-                                    file.path(hostfilepath,r1_fastq_lst[[x]])))
+                   function(x) paste(file.path(hostfilepath,r1_fastq_lst[[x]]),collapse=","))
    r2_fastq=lapply(1:length(grpname),
-                   function(x) gsub("\n",paste0(",",hostfilepath,"/"),
-                                    file.path(hostfilepath,r2_fastq_lst[[x]])))
+                   function(x) paste(file.path(hostfilepath,r2_fastq_lst[[x]]),collapse=","))
    }else{
     r1_fastq=lapply(1:length(grpname),
-                    function(x) gsub("\n",paste0(",","/"),
-                                     file.path("/",r1_fastq_lst[[x]])))
+                    function(x) paste(file.path("/",r1_fastq_lst[[x]]),collapse=","))
     r2_fastq=lapply(1:length(grpname),
-                    function(x) gsub("\n",paste0(",","/"),
-                                     file.path("/",r2_fastq_lst[[x]])))
+                    function(x) paste(file.path("/",r2_fastq_lst[[x]]),collapse=","))
    }
-   
+   print("r1_fastq_lst after changing to hostpath")
+   print(r1_fastq)
    df <- data.frame(
     grpname=grpname,
     ctrlname=ctrlname,
@@ -1085,8 +1074,8 @@ output$fileExists <- reactive({
   }
    print(paste0("echo 'cd ",projdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-   system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
-                " &> run_rnaseq_full.out' > /hostpipe"))
+   #system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+   #             " &> run_rnaseq_full.out' > /hostpipe"))
   print("end system call")
 })
  

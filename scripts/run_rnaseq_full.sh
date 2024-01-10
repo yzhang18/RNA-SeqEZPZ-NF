@@ -212,6 +212,7 @@ echo ""
 	ref_gtf=$gtf_file ncpus_star=$ncpus_star \
 	&> run_star_index.out
 # also copy to log_dir
+cp run_star_index.out $log_dir/
 
 # skip checking job if not generating star index.
 if [[ $skip_run_star_index == 0 ]];then
@@ -221,7 +222,8 @@ if [[ $skip_run_star_index == 0 ]];then
                 --output=$log_dir/dummy_run_star_index.txt \
                 --job-name=run_star_index \
                 --export message="$message",proj_dir=$proj_dir \
-                --wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out"| cut -f 4 -d' ')
+                --wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out; \
+						cp $proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
 	# message if jobs never satisfied
 	check_jid0=$(echo $jid0 | sed 's/:/,/g')
 	state=($(squeue -j $check_jid0 -h))
@@ -257,8 +259,9 @@ if compgen -G "${proj_dir}/outputs/logs/trim_fastqc_*.out" > /dev/null; then
                 echo ""
                 export run time
                 . $img_dir/scripts/run_trim_qc.sh run=$run time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
+				cp run_trim_qc.out $log_dir/
                 echo "Done running trim and QC."
-                echo "Read run_trim_qc.out log in ${proj_dir} and see whether all steps ran to completion"
+                echo "Read run_trim_qc.out log in ${log_dir} and see whether all steps ran to completion"
                 echo ""
 
         fi
@@ -268,6 +271,7 @@ else
 	echo ""
 	cd $proj_dir
 	. $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
+	cp run_trim_qc.out $log_dir/
 
 	message="Done trimming and QC.\n"
 	message=${message}"See run_trim_qc.out.\n\n\n"
@@ -279,7 +283,8 @@ else
 		--output=$log_dir/dummy_run_trim_qc.txt \
 		--job-name=run_trim_qc \
 		--export message="$message",proj_dir=$proj_dir \
-		--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out"| cut -f 4 -d' ')
+		--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out; \
+		cp $proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
 	# message if jobs never satisfied
 	check_jid2=$(echo $jid2 | sed 's/:/,/g')
 	state=($(squeue -j $check_jid2 -h))
@@ -304,6 +309,7 @@ fi
 cd $proj_dir
 . $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
 	ncpus_star=$ncpus_star &> run_align_create_tracks_rna.out
+cp run_align_create_tracks_rna.out $log_dir/
 
 message="Done alignment and create tracks for visualization.\n"
 message=${message}"See log run_align_create_tracks_rna.out.\n\n\n"
@@ -315,7 +321,8 @@ tmp=$($run sbatch --dependency=afterok:$jid4c \
 		--output=$log_dir/dummy_run_align_create_tracks_rna.txt \
 		--job-name=run_trim_qc \
 		--export message="$message",proj_dir=$proj_dir \
-		--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out"| cut -f 4 -d' ')
+		--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out; \
+		$proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
 # message if jobs failed
 check_jid4c=$(echo $jid4c | sed 's/:/,/g')
 state=($(squeue -j $check_jid4c -h))
@@ -338,6 +345,7 @@ fi
 ### Running differential genes analysis
 cd $proj_dir
 . $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time genome=$ref_ver batch_adjust=$batch_adjust &> run_differential_analysis_rna.out
+cp run_differential_analysis_rna.out $log_dir/
 
 message="Done differential RNA-seq analysis.\n"
 message=$message"See log run_differential_analysis_rna.out\n\n"
@@ -360,7 +368,8 @@ tmp=$($run sbatch --dependency=afterok:$jid8 \
 		--mail-user=$email \
 		--job-name=run_rnaseq_full \
 		--export message="$message",proj_dir=$proj_dir \
-		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_rnaseq_full.out"| cut -f 4 -d' ')
+		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_rnaseq_full.out; \
+		cp $proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
 # message if jobs failed
 check_jid8=$(echo $jid8 | sed 's/:/,/g')
 state=($(squeue -j $check_jid8 -h))
@@ -377,4 +386,4 @@ if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; the
 	scancel $tmp
 	echo -e "Differential RNA-seq analysis failed. Please check run_differential_analysis_rna.out\n"
 fi
-
+cp run_rnaseq_full.out $log_dir/

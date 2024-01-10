@@ -47,6 +47,34 @@ if(dir.exists("/mnt/outputs")){
  # create directory for shiny outputs
  dir.create(file.path(data.loc, "shiny_outputs"))
  out.loc=file.path(data.loc,"shiny_outputs")
+ 
+ # list of files in log directory from most recent
+ files=list.files(path="/mnt/outputs/logs",full.names = TRUE)
+ # Sort files, placing filenames starting with "run_" at the top
+ sorted_files <- c(sort(files[startsWith(files, "run_")]), sort(files[!startsWith(files, "run_")]))
+ log.lst = basename(sorted_files)
+ 
+ # list of failed log files from most recent
+ files=list.files(path=file.path(data.loc,"logs"),pattern=".out",full.names = TRUE)
+ # Filter files containing the word "FAILED"
+ failed.files <- lapply(files, function(file) {
+  if (any(grepl("FAILED", readLines(file), ignore.case = FALSE))) {
+   return(file)
+  }
+ })
+  # Filter out NULL values (files without the word "FAILED")
+  failed.files <- unlist(Filter(Negate(is.null), failed.files))
+  if(is.null(failed.files)){
+   log.fail.lst="NA"
+  }else{
+  # get the first FAILED
+  file_info <- file.info(failed.files)
+  sorted_files <- failed.files[order(as.numeric(file_info$mtime),decreasing=FALSE)]
+  log.fail.lst = basename(sorted_files)
+  }
+  print("log.fail.lst")
+  print(log.fail.lst)
+  
  # filename was changed. Make sure can read both
  if(file.exists("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RData")){
   load("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RData")
@@ -293,8 +321,22 @@ ui <- fluidPage(
            
   ),# tabPanel run analysis
   tabPanel("Log", id="Log", fluid = TRUE,
-           sidebarPanel(width=3),
-           mainPanel(width=9)
+           sidebarPanel(width=3,
+                        # Input: Choose a log file to view
+                        selectInput("logtab.log.path", "Choose a log file to view:",
+                                    choices = log.lst,selected="run_rnaseq_full.out"),
+                        br(),
+                        # Input: Choose a failed log file to view
+                        selectInput("logtab.fail.log.path", "Choose a failed log file to view:",
+                                    choices = log.fail.lst,selected="")
+                        ),
+           mainPanel(width=9,
+                     tags$div(
+                      h5("Log file content:"),
+                     verbatimTextOutput("logtab.log.content"),
+                      h5("Failed log content:"),
+                     verbatimTextOutput("logtab.fail.log.content")))
+                     
   ),# tabPanel Log
   tabPanel("Two Groups", id="two_groups",fluid = TRUE, disabled=TRUE,
            sidebarLayout(
@@ -604,6 +646,7 @@ server <- function(input, output,session) {
  shinyjs::disable(selector = 'a[data-value="Two Groups"')
  shinyjs::disable(selector = 'a[data-value="Three Groups"')
  shinyjs::disable(selector = 'a[data-value="> 3 Groups"')
+ shinyjs::enable(selector = 'a[data-value="> 3 Groups"')
 
  #write.table(isolate(session$clientData$url_port),file="/mnt/outputs/port.txt",
  #	quote=FALSE,row.names=FALSE,col.names=FALSE)
@@ -1074,6 +1117,30 @@ output$fileExists <- reactive({
    #             " &> run_rnaseq_full.out' > /hostpipe"))
   print("end system call")
 })
+ 
+ #### log tab #####
+ react.logtab.log.content <- reactive({
+  path <- file.path("/mnt/",input$logtab.log.path)
+  content <- readLines(path)
+  return(content)
+ })
+ 
+ # display file content in UI
+ output$logtab.log.content <- renderPrint({
+  react.logtab.log.content()
+ })
+ 
+ react.logtab.fail.log.content <- reactive({
+  if(input$logtab.fail.log.path=="NA") return("Nothing failed!")
+  path <- file.path("/mnt/outputs/logs/",input$logtab.fail.log.path)
+  content <- readLines(path)
+  return(content)
+ })
+ 
+ # display file content in UI
+ output$logtab.fail.log.content <- renderPrint({
+  react.logtab.fail.log.content()
+ })
  
  #### processing > 3 groups
  

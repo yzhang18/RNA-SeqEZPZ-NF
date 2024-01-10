@@ -54,6 +54,7 @@ while [[ "$#" -gt 0 ]]; do
                 echo -e '\tset max_nsamples if you have more than 50 samples.'
                 echo -e '\t 50 samples correspond to number of rows in samples.txt'
                 echo -e '\t NOT number of fastq files!'
+                echo -e '\t note: that max_nsamples only needed when running shiny app to run analysis'
                 echo run=echo
                 echo -e "\tdo not run, echo all commands. Default is running all commands"
                 echo -e "\tif set to "debug", it will run with "set -x""

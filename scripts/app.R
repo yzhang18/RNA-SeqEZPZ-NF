@@ -35,8 +35,8 @@ cursor: not-allowed !important;
 border-color: #aaa !important;
 }"
 
-print("hostfilepath")
-print(hostfilepath)
+#default hostfilepath to "/" if not exist
+if(!exists("hostfilepath")) hostfilepath="/"
 
 # default image directory used to run analysis out of container
 if(!exists("img.dir")) img.dir="~/Steve/virtual_server/rnaseq-singularity"
@@ -94,8 +94,8 @@ if(!dir.exists("/mnt/outputs")) {
 }
 # List of choices for genome
 setup.genome.lst <- as.list(c("hg19","hg38","other"))
-# ad-hoc max sample
-max.nsamples=50
+# ad-hoc max.nsamples if not exist set
+if(!exists("max.nsamples")) max.nsamples=50
 
 heatmap_sigf_overlap <- function(data,title=""){
  hm <- ggplot(data,aes(X1,X2,fill=pval.cat)) +
@@ -292,7 +292,10 @@ ui <- fluidPage(
            ),
            
   ),# tabPanel run analysis
-  
+  tabPanel("Log", id="Log", fluid = TRUE,
+           sidebarPanel(width=3),
+           mainPanel(width=9)
+  ),# tabPanel Log
   tabPanel("Two Groups", id="two_groups",fluid = TRUE, disabled=TRUE,
            sidebarLayout(
             sidebarPanel(
@@ -1014,17 +1017,10 @@ output$fileExists <- reactive({
    print("r1_fastq_lst after unique and sort")
    print(r1_fastq_lst)
    # changing to hostpath
-   if(file.exists("/filepath")){
    r1_fastq=lapply(1:length(grpname),
                    function(x) paste(file.path(hostfilepath,r1_fastq_lst[[x]]),collapse=","))
    r2_fastq=lapply(1:length(grpname),
                    function(x) paste(file.path(hostfilepath,r2_fastq_lst[[x]]),collapse=","))
-   }else{
-    r1_fastq=lapply(1:length(grpname),
-                    function(x) paste(file.path("/",r1_fastq_lst[[x]]),collapse=","))
-    r2_fastq=lapply(1:length(grpname),
-                    function(x) paste(file.path("/",r2_fastq_lst[[x]]),collapse=","))
-   }
    print("r1_fastq_lst after changing to hostpath")
    print(r1_fastq)
    df <- data.frame(

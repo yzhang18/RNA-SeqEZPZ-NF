@@ -31,6 +31,10 @@ while [[ "$#" -gt 0 ]]; do
                 filepath=$(echo $1 | cut -d '=' -f 2)
                 shift
         fi
+        if [[ $1 == "max_nsamples"* ]];then
+                max_nsamples=$(echo $1 | cut -d '=' -f 2)
+                shift
+        fi
 
         if [[ $1 == "help" ]];then
 		echo ""
@@ -45,8 +49,11 @@ while [[ "$#" -gt 0 ]]; do
 		echo -e '\tpath to navigate to fastq,reference fasta, GTF files and project folder'
 		echo -e '\tthis path will be bound and used inside singularity and shiny app to navigate to these files.'
 		echo -e '\tif not provided, host root will be used'
-                echo help
-                echo -e '\tdisplay this help and exit'
+                echo max_nsamples
+                echo -e '\tset the maximum number of samples. Default is 50'
+                echo -e '\tset max_nsamples if you have more than 50 samples.'
+                echo -e '\t 50 samples correspond to number of rows in samples.txt'
+                echo -e '\t NOT number of fastq files!'
                 echo run=echo
                 echo -e "\tdo not run, echo all commands. Default is running all commands"
                 echo -e "\tif set to "debug", it will run with "set -x""
@@ -54,6 +61,8 @@ while [[ "$#" -gt 0 ]]; do
                 echo -e "time=1-00:00:00"
                 echo -e "\tset SLURM time limit time=DD-HH:MM:SS, where ‘DD’ is days, ‘HH’ is hours, etc."
                 echo -e ""
+                echo help
+                echo -e '\tdisplay this help and exit'
                 exit
         fi
 done
@@ -70,6 +79,9 @@ if [[ $run == "debug"* ]];then
         set -x
         run=
         debug=1
+fi
+if [[ -z "$max_nsamples" ]];then
+        max_nsamples=50
 fi
 
 proj_dir=$(pwd)
@@ -108,6 +120,8 @@ port_num=$(singularity exec $img_dir/$img_name comm -23 \
 if [[ -z "$filepath" ]];then
 	bind_filepath="--bind /:/root"
 else
+        # get the long path
+        filepath=$(readlink -f $filepath)
 	bind_filepath="--bind $filepath:/filepath"
 fi
 
@@ -119,6 +133,7 @@ node_avail=$(sinfo -o "%20n %20C %T" --partition=general,himem --states=IDLE,MIX
 # Activate environment where shiny is installed and go to "app.R" directory
 jid=$(SINGULARITYENV_port_num=$port_num \
 	SINGULARITYENV_hostfilepath=$filepath \
+        SINGULARITYENV_max_nsamples=$max_nsamples \
 	sbatch --time=$time \
 	--nodelist=$node_avail \
 	--output=run_shiny_analysis.out \

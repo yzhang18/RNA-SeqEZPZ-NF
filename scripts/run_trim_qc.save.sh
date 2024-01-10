@@ -22,7 +22,7 @@
 #set -x
 set -e
 
-# clear python path to prevent mix up of python packages
+# clear python path to prevent mixed up of python packages
 unset PYTHONPATH
 # get command line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -166,36 +166,36 @@ cd $proj_dir
 # the path should be the path that is returned by 'readlink -f'
 
 target_link=$(readlink -f fastq)
-
-# merge fastq files
-if [[ ! -d $work_dir/merged_fastq ]];then
-	mkdir -p $work_dir/merged_fastq
-fi
-for row in ${#path_to_r1_fastq[@]};do
-	cat ${path_to_r1_fastq[$row]//,/ } > ${work_dir}/merged_fastq/${groupname_array[$row]}_${repname_array[$row]}_r1_fastq.gz
-	cat ${path_to_r2_fastq[$row]//,/ } > ${work_dir}/merged_fastq/${groupname_array[$row]}_${repname_array[$row]}_r2_fastq.gz
-done
-
 # note: trim_galore is set to --cores 4 which actually translate to 15 cores
 # see trim_galore help for more info
-for idx in ${#path_to_r1_fastq[@]};do
+for idx in ${!path_to_r1_fastq[@]};do
 	echo $idx
-	groupname=${groupname_array[$idx]}
-	repname=${repname_array[$idx]}
-	prefix=${groupname}_${repname}
-	path_r1=${work_dir}/merged_fastq/${prefix}_r1_fastq.gz
-	path_r2=${work_dir}/merged_fastq/${prefix}_r2_fastq.gz
+	# split path if there are technical reps
+	IFS=, read -a split_path_r1 <<< "${path_to_r1_fastq[$idx]}"
+	#split_path_r1=$(echo ${path_to_r1_fastq[$idx]} | cut -f -d,)
+	IFS=, read -a split_path_r2 <<< "${path_to_r2_fastq[$idx]}"
+	#split_path_r2=$(echo ${path_to_r2_fastq[$idx]} | cut -f -d,)
+	#echo ${split_path_r2[1]}
+		# loop through tech reps
+		for idx_tech in ${!split_path_r1[@]}; do
+			path_tech_r1=${split_path_r1[$idx_tech]}
+			path_tech_r2=${split_path_r2[$idx_tech]}
+			groupname=${groupname_array[$idx]}
+			repname=${repname_array[$idx]}
+			prefix=${groupname}_${repname}
+
 			# echo $prefix $run \
 			# $log_dir $email $proj_dir \
 			# $groupname $repname \
 			# execute inside singularity
 			tmp_jid=$(SINGULARITYENV_PYTHONPATH= \
 			SINGULARITYENV_run=$run \
-			SINGULARITYENV_prefix=${prefix} \
-			SINGULARITYENV_path_r1=$path_r1 \
-			SINGULARITYENV_path_r2=$path_r2 \
+			SINGULARITYENV_prefix=${prefix}_pseudolane${idx_tech} \
+			SINGULARITYENV_file=$file \
+			SINGULARITYENV_path_tech_r1=$path_tech_r1 \
+			SINGULARITYENV_path_tech_r2=$path_tech_r2 \
 			SINGULARITYENV_ncpus_trim=$ncpus_trim \
-				$run sbatch --output=$log_dir/trim_fastqc_${prefix}.out \
+				$run sbatch --output=$log_dir/trim_fastqc_${prefix}_pseudolane${idx_tech}.out \
 					--job-name=trim_fastqc \
 					--partition=general \
 					--time=$time \
@@ -205,11 +205,11 @@ for idx in ${#path_to_r1_fastq[@]};do
 					--wrap "singularity exec \
 					--bind $img_dir/scripts:/scripts \
 					--bind $proj_dir:/mnt \
-					--bind $path_r1 \
-					--bind $path_r2 \
+					--bind $path_tech_r1 \
+					--bind $path_tech_r2 \
 					$img_dir/$img_name \
 					/bin/sh /scripts/trim_fastqc_simg.sbatch" | cut -f 4 -d' ')
-			echo "Processing $path_r1 $path_r2 Job id: $tmp_jid"
+			echo "Processing $path_tech_r1 $path_tech_r2 Job id: $tmp_jid"
 			echo "" 
 			if [ -z "$jid" ]; then
 				jid=$tmp_jid

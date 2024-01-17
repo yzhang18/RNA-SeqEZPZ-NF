@@ -517,5 +517,6 @@ tmp=$($run sbatch --dependency=afterok:$jid4c \
 		--time=5:00 \
 		--job-name=run_align_create_tracks_rna \
 		--export message="$message",proj_dir=$proj_dir \
-		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_align_create_tracks_rna.out"| cut -f 4 -d' ')
+		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_align_create_tracks_rna.out; \
+			cp $proj_dir/run_align_create_tracks_rna.out $log_dir/run_align_create_tracks_rna.out"| cut -f 4 -d' ')
 

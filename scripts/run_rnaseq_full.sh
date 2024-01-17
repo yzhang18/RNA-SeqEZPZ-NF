@@ -309,7 +309,7 @@ fi
 cd $proj_dir
 . $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
 	ncpus_star=$ncpus_star &> run_align_create_tracks_rna.out
-cp run_align_create_tracks_rna.out $log_dir/
+cp $proj_dir/run_align_create_tracks_rna.out $log_dir/
 
 message="Done alignment and create tracks for visualization.\n"
 message=${message}"See log run_align_create_tracks_rna.out.\n\n\n"
@@ -345,7 +345,7 @@ fi
 ### Running differential genes analysis
 cd $proj_dir
 . $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time genome=$ref_ver batch_adjust=$batch_adjust &> run_differential_analysis_rna.out
-cp run_differential_analysis_rna.out $log_dir/
+cp $proj_dir/run_differential_analysis_rna.out $log_dir/
 
 message="Done differential RNA-seq analysis.\n"
 message=$message"See log run_differential_analysis_rna.out\n\n"
@@ -386,4 +386,4 @@ if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; the
 	scancel $tmp
 	echo -e "Differential RNA-seq analysis failed. Please check run_differential_analysis_rna.out\n"
 fi
-cp run_rnaseq_full.out $log_dir/
+cp $proj_dir/run_rnaseq_full.out $log_dir/

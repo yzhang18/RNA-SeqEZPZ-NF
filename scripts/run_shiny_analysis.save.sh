@@ -135,7 +135,6 @@ node_avail=$(sinfo -o "%20n %20C %T" --partition=general,himem --states=IDLE,MIX
 jid=$(SINGULARITYENV_port_num=$port_num \
 	SINGULARITYENV_hostfilepath=$filepath \
         SINGULARITYENV_max_nsamples=$max_nsamples \
-	SINGULARITYENV_img_dir=$img_dir \
 	sbatch --time=$time \
 	--nodelist=$node_avail \
 	--output=run_shiny_analysis.out \
@@ -148,6 +147,7 @@ jid=$(SINGULARITYENV_port_num=$port_num \
 
 echo -e "\n\nYou need to have x11 display server such as Xming running.\n"
 
+
 status=$(squeue -j $jid -o "%t" -h)
 node=$(squeue -j $jid -o "%R" -h)
 while [[ $status != "R"* ]];do
@@ -156,20 +156,6 @@ while [[ $status != "R"* ]];do
 	status=$(squeue -j $jid -o "%t" -h)
 	node=$(squeue -j $jid -o "%R" -h)
 done
-
-# Extra check to make sure shiny app is already at listening point
-# Put this in because sometimes it takes time to load libraries
-while true; do 
-	# get the last line of run_shiny_analysis.out
-	last_line=$(tail -n 1 run_shiny_analysis.out)
-	# check if it contains listening
-	if [[ $last_line == *"Listening"* ]]; then
-		break
-	fi
-	sleep 5
-done
-
-
 
 #creating a job that listen to shiny app
 cd $proj_dir
@@ -191,9 +177,6 @@ done
 
 #cd $proj_dir
 #eval "$(cat mypipe)" &
-
-# adding configuration to send signal every four minutes (240 secs)
-echo -e "Host *\n ServerAliveInterval 240" >> ~/.ssh/config
 
 echo Please ignore \"Failed to open connection..\" message.
 echo ""

@@ -26,7 +26,6 @@ library(ggplotify) #as.ggplot for upsetr
 library(ggpolypath) #ggplot=true for venn
 library(shinyFiles)
 library(shinyjs)
-library(EnsDb.Hsapiens.v86)
 
 css <- "
 .nav li a.disabled {
@@ -38,16 +37,59 @@ border-color: #aaa !important;
 
 #default hostfilepath to "/" if not exist
 if(!exists("hostfilepath")) hostfilepath="/"
-if(exists("hostfilepath") && substr(hostfilepath,nchar(hostfilepath),nchar(hostfilepath))!="/") 
- hostfilepath=paste0(hostfilepath,"/")
 
 # default image directory used to run analysis out of container
-#if(!exists("img.dir")) img.dir="~/Steve/virtual_server/rnaseq-singularity"
+if(!exists("img.dir")) img.dir="~/Steve/virtual_server/rnaseq-singularity"
 
-# ad-hoc variable to prevent error in initialization
-log.lst=""
-log.fail.lst=""
-
+if(dir.exists("/mnt/outputs")){
+ # data directory
+ data.loc="/mnt/outputs"
+ # create directory for shiny outputs
+ dir.create(file.path(data.loc, "shiny_outputs"))
+ out.loc=file.path(data.loc,"shiny_outputs")
+ 
+ # list of files in log directory from most recent
+ files=list.files(path="/mnt/outputs/logs",full.names = TRUE)
+ # Sort files, placing filenames starting with "run_" at the top
+ sorted_files <- c(sort(files[startsWith(files, "run_")]), sort(files[!startsWith(files, "run_")]))
+ log.lst = basename(sorted_files)
+ 
+ # list of failed log files from most recent
+ files=list.files(path=file.path(data.loc,"logs"),pattern=".out",full.names = TRUE)
+ # Filter files containing the word "FAILED"
+ failed.files <- lapply(files, function(file) {
+  if (any(grepl("FAILED", readLines(file), ignore.case = FALSE))) {
+   return(file)
+  }
+ })
+  # Filter out NULL values (files without the word "FAILED")
+  failed.files <- unlist(Filter(Negate(is.null), failed.files))
+  if(is.null(failed.files)){
+   log.fail.lst="NA"
+  }else{
+  # get the first FAILED
+  file_info <- file.info(failed.files)
+  sorted_files <- failed.files[order(as.numeric(file_info$mtime),decreasing=FALSE)]
+  log.fail.lst = basename(sorted_files)
+  }
+  print("log.fail.lst")
+  print(log.fail.lst)
+  
+ # filename was changed. Make sure can read both
+ if(file.exists("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RData")){
+  load("/mnt/outputs/diff_analysis_rslt/RNA-seq_differential_analysis.RData")
+ } else {
+  load("/mnt/outputs/diff_analysis_rslt/RNA-seq differential analysis.RData")
+ }
+ groups= data.frame(
+  var = names(out.DESeq2$results),
+  names = names(out.DESeq2$results)
+ )
+ # List of choices for groupnames
+ groups.lst <- as.list(groups$names)
+ # Name it
+ names(groups.lst) <- groups$var
+}#if(dir.exists("/mnt/outputs"))
 
  # default checkboxes for venn.opts	
  venn.opts=data.frame(
@@ -73,17 +115,17 @@ log.fail.lst=""
  # ad-hoc maximum plot. 
  max_plots=5
 
+
 # arbitrary variables to prevent errors
+if(!dir.exists("/mnt/outputs")) {
  groups.lst=c("a","b","c")
- 
+}
 # List of choices for genome
 setup.genome.lst <- as.list(c("hg19","hg38","other"))
 # ad-hoc max.nsamples if not exist set
 if(!exists("max.nsamples")) max.nsamples=50
 
 heatmap_sigf_overlap <- function(data,title=""){
- print("data")
- print(data)
  hm <- ggplot(data,aes(X1,X2,fill=pval.cat)) +
   # use thin border size 0.1 to separate tiles
   geom_tile(color="white",size=0.1)+
@@ -110,7 +152,7 @@ heatmap_sigf_overlap <- function(data,title=""){
   # color key size
   theme(legend.key.width=unit(0.7,"cm")) +
   ggtitle(title)
- print("inside heatmap_sigf_overlap")
+ 
  # plot venn and overlap heatmap together
  grid.arrange(hm,
               top=textGrob(""),
@@ -148,7 +190,6 @@ plot_euler <- function(s4,colors,cex,venn.opts,title){
 }
 
 ui <- fluidPage(
- title = "Run full RNA-Seq analysis",
  shinyjs::useShinyjs(),
  shinyjs::inlineCSS(css),
  # horizontal vertical bar for r1 and r2 filepaths input text
@@ -158,7 +199,7 @@ ui <- fluidPage(
  tags$style(HTML("#setup_grp1_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tags$style(HTML("#setup_grp2_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tags$style(HTML("#setup_grp2_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
- tabsetPanel(id="inTabset",
+ tabsetPanel(
   tabPanel("Run Analysis", id="run_analysis", fluid = TRUE,
            sidebarPanel(width=3,
                         shinyDirButton("setup_proj_dir", 
@@ -166,12 +207,10 @@ ui <- fluidPage(
                                          title="Please select a folder to run pipeline",multiple=FALSE),
                         verbatimTextOutput('setup.proj.dir.filepaths'),
                         br(),
-                        #verbatimTextOutput("fileExists"),
-                        conditionalPanel(condition="output.fileExists && !input.setup_proj_dir == '' ",
-                               actionButton("setup.load.samples","Click to load existing samples.txt"),
-                        br(),
-                        br(),
-                        ),
+                        # conditionalPanel(condition="output.fileExists",
+                        #       actionButton("setup.load.samples","Click to load existing samples.txt"),
+                        # br(),
+                        # ),
                         
                         selectInput(inputId = "setup.genome",label="Select genome",
                                     choices=setup.genome.lst,selected=1),
@@ -284,9 +323,6 @@ ui <- fluidPage(
   tabPanel("Log", id="Log", fluid = TRUE,
            sidebarPanel(width=3,
                         # Input: Choose a log file to view
-                        actionButton("logtab.refresh.log.path","Refresh list"),
-                        br(),
-                        br(),
                         selectInput("logtab.log.path", "Choose a log file to view:",
                                     choices = log.lst,selected="run_rnaseq_full.out"),
                         br(),
@@ -297,20 +333,171 @@ ui <- fluidPage(
            mainPanel(width=9,
                      tags$div(
                       h5("Log file content:"),
-                      tags$style(type="text/css", ".shiny-text-output {word-wrap: break-word;}"),
                      verbatimTextOutput("logtab.log.content"),
                       h5("Failed log content:"),
                      verbatimTextOutput("logtab.fail.log.content")))
                      
   ),# tabPanel Log
-  tabPanel("QCs",id="qctab",fluid=TRUE,
-            #uiOutput("multiqc")
-           htmlOutput("multiqc")
-  ), #tabPanel Outputs
-  tabPanel("Outputs",id="outputtab",fluid=TRUE,
-            htmlOutput("diff_report")
-           ), #tabPanel Outputs
-  tabPanel("Plots", id="tab3",fluid = TRUE,
+  tabPanel("Two Groups", id="two_groups",fluid = TRUE, disabled=TRUE,
+           sidebarLayout(
+            sidebarPanel(
+             tags$style(type='text/css', 
+                        ".selectize-input { 
+					 font-size: 10pt; 
+					 line-height: 10pt;} 
+					 .selectize-dropdown {
+					 font-size: 10pt; 
+					 line-height: 10pt;}"),
+             width=2,
+             selectInput(
+              inputId="tab0.grp1.name",
+              label = ("Group 1"),
+              selected=groups.lst[1],
+              choices = groups.lst),
+             textInput(inputId="tab0.grp1.plot.title", 
+                       label = ("Group 1 label"), 
+                       value = groups.lst[1]),
+             selectInput(
+              inputId="tab0.grp2.name",
+              label = ("Group 2"),
+              selected=groups.lst[2],
+              choices = groups.lst),
+             textInput(
+              inputId="tab0.grp2.plot.title", 
+              label = ("Group 2 label"), 
+              value = groups.lst[2])
+            ),
+            mainPanel(
+             fluidRow(style = "background-color:#F5F5F5",
+                      column(3,checkboxGroupInput("tab0.venn.opts", label = ("Display on Venns"), 
+                                                  choices = venn.opts.lst,
+                                                  selected = venn.opts$lbl[1:3]),
+                             # slider bar font size
+                             sliderInput("tab0.venn.cex", label = ("Venns' font size"), min = 0, 
+                                         max = 6, value = 1,step = 0.1),
+                             # slider bar pad
+                             sliderInput("tab0.venn.pad", label = ("Venns' circle size"), min = 0, 
+                                         max = 8, value = 1,step = 0.5)	
+                      ),
+                      column(3,
+                             textInput("tab0.color.grp1", label = ("Color for group 1"), 
+                                       value = tab0.colors[1]),
+                             textInput("tab0.color.grp2", label = ("Color for group 2"), 
+                                       value = tab0.colors[2])),
+                      column(3,
+                             numericInput("tab0.fdr.grp1", label = ("FDR cut-off for group 1"), 
+                                          value = 0.05,step=0.01,min=0,max=1),
+                             numericInput("tab0.fdr.grp2", label = ("FDR cut-off for group 2"),
+                                          value = 0.05,step=0.01,min=0,max=1)),
+                      column(3,
+                             numericInput("tab0.fc.grp1", label = ("Fold-change for group 1"), 
+                                          value = 1,step=0.5,min=1),
+                             numericInput("tab0.fc.grp2", label = ("Fold-change for group 2"), 
+                                          value = 1,step=0.5,min=1))
+             ),
+             br(),
+             fluidRow(
+              plotOutput(outputId = "tab0.plot1")),
+             br(),
+             fluidRow(
+              plotOutput(outputId = "tab0.plot2")),
+             br(),
+             br(),
+             fluidRow(column(12,plotOutput(outputId = "tab0.plot3"))),
+             fluidRow(column(12,plotOutput(outputId = "tab0.plot4"))),
+             br()
+            )
+           )
+  ),
+  tabPanel("Three Groups", id="three_groups", fluid = TRUE, disabled=TRUE,
+           sidebarLayout(
+            sidebarPanel(
+             tags$style(type='text/css', 
+                        ".selectize-input { 
+					 font-size: 10pt; 
+					 line-height: 10pt;} 
+					 .selectize-dropdown {
+					 font-size: 10pt; 
+					 line-height: 10pt;}"),
+             width=2,
+             selectInput(
+              inputId="grp1.name",
+              label = ("Group 1"),
+              selected=groups.lst[1],
+              choices = groups.lst),
+             textInput(inputId="grp1.plot.title", 
+                       label = ("Group 1 label"), 
+                       value = groups.lst[1]),
+             selectInput(
+              inputId="grp2.name",
+              label = ("Group 2"),
+              selected=groups.lst[2],
+              choices = groups.lst),
+             textInput(
+              inputId="grp2.plot.title", 
+              label = ("Group 2 label"), 
+              value = groups.lst[2]),
+             selectInput(
+              inputId="grp3.name",
+              label = ("Group 3"),
+              selected=groups.lst[3],
+              choices = groups.lst),
+             textInput(
+              inputId="grp3.plot.title", 
+              label = ("Group 3 label"), 
+              value = groups.lst[3])
+            ),
+            mainPanel(
+             fluidRow(style = "background-color:#F5F5F5",column(3,
+                                                                checkboxGroupInput("venn.opts", label = ("Display on Venns"), 
+                                                                                   choices = venn.opts.lst,
+                                                                                   selected = venn.opts$lbl[1:3]),
+                                                                
+                                                                # slider bar font size
+                                                                sliderInput("venn.cex", label = ("Venns' font size"), min = 0, 
+                                                                            max = 6, value = 1,step = 0.1),
+                                                                # slider bar pad
+                                                                sliderInput("venn.pad", label = ("Venns' circle size"), min = 0, 
+                                                                            max = 8, value = 1,step = 0.5)	
+             ),
+             column(3,
+                    textInput("color.grp1", label = ("Color for group 1"), value = colors[1]),
+                    textInput("color.grp2", label = ("Color for group 2"), value = colors[2]),
+                    textInput("color.grp3", label = ("Color for group 3"), value = colors[3])),
+             column(3,
+                    numericInput("fdr.grp1", label = ("FDR cut-off for group 1"), 
+                                 value = 0.05,step=0.01,min=0,max=1),
+                    numericInput("fdr.grp2", label = ("FDR cut-off for group 2"), 
+                                 value = 0.05,step=0.01,min=0,max=1),
+                    numericInput("fdr.grp3", label = ("FDR cut-off for group 3"), 
+                                 value = 0.05,step=0.01,min=0,max=1)),
+             column(3,
+                    numericInput("fc.grp1", label = ("Fold-change for group 1"), 
+                                 value = 1,min=1,step=0.5),
+                    numericInput("fc.grp2", label = ("Fold-change for group 2"), 
+                                 value = 1,min=1,step=0.5),
+                    numericInput("fc.grp3", label = ("Fold-change for group 3"), 
+                                 value = 1,min=1,step=0.5))			
+             ),
+             hr(),
+             br(),
+             fluidRow(
+              plotOutput(outputId = "plot1")),
+             br(),
+             fluidRow(
+              plotOutput(outputId = "plot2")),
+             br(),
+             br(),
+             fluidRow(
+              plotOutput(outputId = "plot3")),
+             br(),
+             fluidRow(
+              plotOutput(outputId = "plot4")),
+             br()
+            )
+           )
+  ),
+  tabPanel("Plots", id="tab3",fluid = TRUE, disabled=TRUE,
            sidebarLayout(
             sidebarPanel(
              tags$style(type='text/css', 
@@ -329,6 +516,14 @@ ui <- fluidPage(
              textInput(inputId="tab3.grp1.plot.title", 
                        label = ("Group 1 label"), 
                        value = groups.lst[1]),
+             selectInput(
+              inputId="tab3.grp2.name",
+              label = ("Group 2"),
+              selected=groups.lst[2],
+              choices = groups.lst),
+             textInput(inputId="tab3.grp2.plot.title", 
+                       label = ("Group 2 label"), 
+                       value = groups.lst[2]),
              
              tags$div(id = "placeholder"),
              
@@ -380,19 +575,25 @@ ui <- fluidPage(
                              br(),br(),
                       ),
                       column(2,
-                             textInput("tab3.color.grp1", label = HTML("Color for <br/> group 1"), value = tab3.colors[1]),
-                             
+                             textInput("tab3.color.grp1", label = ("Color for group 1"), value = tab3.colors[1]),
+                             textInput("tab3.color.grp2", label = ("Color for group 2"), value = tab3.colors[2]),
                              tags$div(id = "placeholder-col")),
                       column(2,
                              numericInput("tab3.fdr.grp1", label = ("FDR cut-off for group 1"), 
+                                          value = 0.05,step=0.01,min=0,max=1),
+                             numericInput("tab3.fdr.grp2", label = ("FDR cut-off for group 2"), 
                                           value = 0.05,step=0.01,min=0,max=1),
                              tags$div(id = "placeholder-fdr")),
                       column(2,
                              numericInput("tab3.fc.grp1", label = ("Fold-change for group 1"), 
                                           value = 1,min=1,step=0.5),
+                             numericInput("tab3.fc.grp2", label = ("Fold-change for group 2"), 
+                                          value = 1,min=1,step=0.5),
                              tags$div(id = "placeholder-fc")),
                       column(2,
-                             numericInput("tab3.meanDiff.grp1", label = ("Difference for group 1"), 
+                             numericInput("tab3.meanDiff.grp1", label = ("Counts difference for group 1"), 
+                                          value = 0,min=0,step=1),
+                             numericInput("tab3.meanDiff.grp2", label = ("Counts difference for group 2"), 
                                           value = 0,min=0,step=1),
                              tags$div(id = "placeholder-meanDiff"))),
              br(),
@@ -444,7 +645,8 @@ server <- function(input, output,session) {
 
  shinyjs::disable(selector = 'a[data-value="Two Groups"')
  shinyjs::disable(selector = 'a[data-value="Three Groups"')
- #shinyjs::disable(selector = 'a[data-value="Plots"')
+ shinyjs::disable(selector = 'a[data-value="> 3 Groups"')
+ shinyjs::enable(selector = 'a[data-value="> 3 Groups"')
 
  #write.table(isolate(session$clientData$url_port),file="/mnt/outputs/port.txt",
  #	quote=FALSE,row.names=FALSE,col.names=FALSE)
@@ -461,8 +663,6 @@ server <- function(input, output,session) {
   setup.btn <- setup.value() +1
   # update the reactiveVal
   setup.value(setup.btn)
-  print("setup.value in setup.insert.set")
-  print(setup.value())
   # id for new div
   setup.div.id <- paste0("setup_div_",setup.btn)
   # ids for entries in each row
@@ -518,53 +718,50 @@ server <- function(input, output,session) {
    setup.btn <- setup.value()-1
    # update the reactiveVal
    setup.value(setup.btn)
-   print("setup value")
-   print(setup.value())
+   print(paste0("#",setup.inserted.div[length(setup.inserted.div)]))
    removeUI(
     selector = paste0("#",setup.inserted.div[length(setup.inserted.div)])
    )
-   print("length(setup.inserted.div)+2")
-   print(length(setup.inserted.div)+2)
    # remove the last values
    updateTextInput(
     session,
-    paste0("setup.grp", length(setup.inserted.div)+2,".name"),
+    paste0("setup.grp", length(setup.inserted.div)+1,".name"),
     NULL,
     ""
    )
    updateTextInput(
     session,
-    paste0("setup.grp", length(setup.inserted.div)+2,"ctrl.name"),
+    paste0("setup.grp", length(setup.inserted.div)+1,"ctrl.name"),
     NULL,
     ""
    )
    updateTextInput(
     session,
-    paste0("setup.grp", length(setup.inserted.div)+2,".rep.name"),
+    paste0("setup.grp", length(setup.inserted.div)+1,".rep.name"),
     NULL,
     ""
    )
    updateTextInput(
     session,
-    paste0("setup_grp", length(setup.inserted.div)+2,"_r1_files"),
+    paste0("setup_grp", length(setup.inserted.div)+1,"_r1_files"),
     NULL,
     ""
    )
    updateTextInput(
     session,
-    paste0("setup_grp", length(setup.inserted.div)+2,"_r2_files"),
+    paste0("setup_grp", length(setup.inserted.div)+1,"_r2_files"),
     NULL,
     ""
    )
    updateTextInput(
     session,
-    paste0("setup.grp", length(setup.inserted.div)+2,".r1.filepath"),
+    paste0("setup.grp", length(setup.inserted.div)+1,".r1.filepath"),
     NULL,
     ""
    )
    updateTextInput(
     session,
-    paste0("setup.grp", length(setup.inserted.div)+2,".r2.filepath"),
+    paste0("setup.grp", length(setup.inserted.div)+1,".r2.filepath"),
     NULL,
     ""
    )
@@ -575,7 +772,7 @@ server <- function(input, output,session) {
   }
  })
  
-  react.setup.grp.name <- reactive({
+ react.setup.grp.name <- reactive({
   grp.name <- sapply(grep("setup\\.grp\\d+\\.name", x = names(input), value = TRUE),
                      function(x) input[[x]])
   grp.name=as.vector(grp.name[order(names(grp.name))])
@@ -624,9 +821,9 @@ server <- function(input, output,session) {
  
  # browse from /filepath if it's specified otherwise /root
  if(file.exists("/filepath")){
-  volumes=c(root="/filepath/")
+  volumes=c(root="/filepath")
  }else{ 
-  volumes=c(root="/root/")
+  volumes=c(root="/root")
  }
  
  # shinyFileChoose doesn't work inside a reactive
@@ -743,111 +940,21 @@ server <- function(input, output,session) {
  # select project directory
  shinyDirChoose(input, "setup_proj_dir", root=volumes)
  
-react.setup.proj.dir <- reactive({
+react.proj.dir <- reactive({
   proj.dir = input$setup_proj_dir
   proj.path=parseDirPath(roots = volumes,proj.dir)
-  proj.path=paste0(proj.path,"/")
  })
 
 output$fileExists <- reactive({
- proj.dir <- react.setup.proj.dir ()
- print(file.path(proj.dir,"samples.txt"))
- file_exists=file.exists(file.path(proj.dir,"samples.txt"))
- file_exists
-})
-outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
+ proj.dir <- react.proj.dir()
+ file.exists(file.path(proj.dir,"samples.txt"))
+}) 
 
  output$setup.proj.dir.filepaths <- renderText({
-  projdir <- react.setup.proj.dir()
+  projdir <- react.proj.dir()
   path.display=gsub('^/filepath/','',projdir)
   path.display=gsub('^/root/','',path.display)
   path.display
- })
- 
- observeEvent(input$setup.load.samples,{
-  projdir <- react.setup.proj.dir()
-  print("hostfilepath")
-  print(hostfilepath)
-  # load existing samples treating "NA" as regulating string
-  df = read.table(file.path(projdir,"samples.txt"),na.strings=character(0),stringsAsFactors = FALSE)
-  updateTextInput(session,inputId="setup.email",value=df[1,5])
-  setup.btn <- setup.value()
-  # number of rows to add
-  add.row <- dim(df)[1]-setup.btn
-  for (i in (1:dim(df)[1])){
-   # ids for entries in each row
-   setup.id.grp.name <- paste0("setup.grp",i,".name")
-   setup.id.ctrl.name <- paste0("setup.grp",i,".ctrl.name")
-   setup.id.rep.name <- paste0("setup.grp",i,".rep.name")
-   setup.id.r1.files <- paste0("setup_grp",i,"_r1_files")
-   setup.id.r2.files <- paste0("setup_grp",i,"_r2_files")
-   setup.id.r1.filepath <- paste0("setup_grp",i,"_r1_filepaths")
-   setup.id.r2.filepath <- paste0("setup_grp",i,"_r2_filepaths")
-   # formatting path read from table
-   # remove hostfilepath 
-   setup.df.path.display.r1=gsub(hostfilepath,'',df[i,6])
-   setup.df.path.display.r1 <- gsub(",","\n",setup.df.path.display.r1)
-   setup.df.path.display.r2=gsub(hostfilepath,'',df[i,7])
-   setup.df.path.display.r2 <- gsub(",","\n",setup.df.path.display.r2)
-   # add new rows if needed
-  if(i > (dim(df)[1]-add.row)){
-   print("i")
-   print(i)
-   # update the reactiveVal
-   setup.value(i)
-  # id for new div
-  setup.div.id <- paste0("setup_div_",i)
-
-  if(i %% 2 == 0) row.color="#FFFFFF"
-  if(i %% 2 != 0) row.color="#f9f9f9"
-  print(paste0("background-color:",row.color))
-  insertUI(
-   selector = "#setup-placeholder",
-   ui = tags$div(
-    tags$style(HTML(paste0("#setup_grp",i,"_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}"))),
-    tags$style(HTML(paste0("#setup_grp",i,"_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}"))),
-    fluidRow(style = paste0("background-color:",row.color),
-             column(2,
-                    column(2,
-                           tags$label(paste0(i,"."), style = "padding-top: 30px;"),
-                           style = "padding-right: 0px;padding-left:0px"),
-                    column(10,textInput(inputId=setup.id.grp.name,
-                                        label = "",value=df[i,1]),
-                           style = "padding-right: 0px;padding-left:0px")
-             ),
-             column(2,textInput(inputId=setup.id.ctrl.name,
-                                label = "",value=df[i,2] )),
-             column(2,textInput(inputId=setup.id.rep.name,
-                                label = "",value=df[i,3] )),
-             br(),
-             column(3,shinyFilesButton(setup.id.r1.files,
-                                       label = "Select R1 fastq files",
-                                       title=paste("Please select Group",i,"R1 fastq files"),
-                                       multiple=TRUE ),
-                    textAreaInput(setup.id.r1.filepath,label="",width='150px',height='100px',
-                                  value=setup.df.path.display.r1)),
-             column(3,shinyFilesButton(setup.id.r2.files,
-                                       label = "Select R2 fastq files",
-                                       title=paste("Please select Group",i,"R1 fastq files"),
-                                       multiple=TRUE),
-                    textAreaInput(setup.id.r2.filepath,label="",width='150px',height='100px',
-                                  value=setup.df.path.display.r2)),
-             
-    ),#fluidrow
-    id = setup.div.id
-   )
-  )#insertUI
-  setup.inserted.div <<- c(setup.inserted.div, setup.div.id)
-  print("setup.inserted.div")
-  print(setup.inserted.div)
-  } # if(i > (dim(df)[1]-add.row))
-   # fill out rows
-   updateTextInput(session,setup.id.grp.name,value = df[i,1])
-   updateTextInput(session,setup.id.ctrl.name,value = df[i,2])
-   updateTextInput(session,setup.id.rep.name,value = df[i,3])
-   updateTextAreaInput(session,setup.id.r1.filepath,value = setup.df.path.display.r1)
-   updateTextAreaInput(session,setup.id.r2.filepath,value = setup.df.path.display.r2)
-  }# for (i in (1:dim(df)[1]))
  })
  
  # select other genome files
@@ -891,7 +998,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  })
  
  output$err_msg <- renderText({
-  projdir=react.setup.proj.dir()
+  projdir=react.proj.dir()
   grpname=react.setup.grp.name()
   ctrlname=react.setup.grp.ctrl.name()
   repname=react.setup.grp.rep.name()
@@ -906,7 +1013,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  
  observeEvent(input$setup.run.analysis,{
   # create samples.txt
-   projdir=react.setup.proj.dir()
+   projdir=react.proj.dir()
    grpname=react.setup.grp.name()
    ctrlname=react.setup.grp.ctrl.name()
    repname=react.setup.grp.rep.name()
@@ -954,9 +1061,9 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    print(r1_fastq_lst)
    # changing to hostpath
    r1_fastq=lapply(1:length(grpname),
-                   function(x) paste(paste0(hostfilepath,r1_fastq_lst[[x]]),collapse=","))
+                   function(x) paste(file.path(hostfilepath,r1_fastq_lst[[x]]),collapse=","))
    r2_fastq=lapply(1:length(grpname),
-                   function(x) paste(paste0(hostfilepath,r2_fastq_lst[[x]]),collapse=","))
+                   function(x) paste(file.path(hostfilepath,r2_fastq_lst[[x]]),collapse=","))
    print("r1_fastq_lst after changing to hostpath")
    print(r1_fastq)
    df <- data.frame(
@@ -986,11 +1093,11 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    gtf.file=react.setup.genome.gtf ()
    # convert path to hostpath
    if(file.exists("/filepath")){
-    hostfa=gsub('/filepath/',hostfilepath,fa.file)
-    hostgtf=gsub('/filepath/',hostfilepath,gtf.file)
+    hostfa=gsub('/filepath',hostfilepath,fa.file)
+    hostgtf=gsub('/filepath',hostfilepath,gtf.file)
    }else{ 
-    hostfa=gsub('/root/','/',fa.file)
-    hostgtf=gsub('/root/','/',gtf.file)
+    hostfa=gsub('/root','/',fa.file)
+    hostgtf=gsub('/root','/',gtf.file)
    }
    options=paste0("genome=",input$setup.genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
   
@@ -1000,159 +1107,50 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                  " ncpus_trim=",input$setup.ncpus.trim," ncpus_star=",input$setup.ncpus.star)
   # converting project dir to host path
   if(file.exists("/filepath")){
-   hostprojdir=gsub('/filepath/',hostfilepath,projdir)
+   hostprojdir=gsub('/filepath',hostfilepath,projdir)
   }else{ 
-   hostprojdir=gsub('/root/','/',projdir)
+   hostprojdir=gsub('/root','/',projdir)
   }
    print(paste0("echo 'cd ",projdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-   system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
-                " &> run_rnaseq_full.out' > /hostpipe"))
+   #system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+   #             " &> run_rnaseq_full.out' > /hostpipe"))
   print("end system call")
 })
  
  #### log tab #####
- # update log file list
- observeEvent(input$logtab.refresh.log.path,{
-  # list of files in log directory from most recent
-  projdir <- react.setup.proj.dir()
-  print("projdir")
-  print(projdir)
-  files=list.files(paste0(projdir,"outputs/logs"),pattern = "\\.txt$|\\.out$",full.names = TRUE)
-  # Sort files, placing filenames starting with "run_" at the top
-  sorted_files <- c(sort(files[startsWith(files, "run_")]), sort(files[!startsWith(files, "run_")]))
-  log.lst = basename(sorted_files)
-  if(file.exists(paste0(projdir,"outputs/logs/run_rnaseq_full.out"))){
-   updateSelectInput(session,"logtab.log.path",choices=log.lst,selected = "run_rnaseq_full.out")
-  }else{
-   updateSelectInput(session,"logtab.log.path",choices=log.lst,selected="")
-  }
-  # list only *.out file
-  files=list.files(paste0(projdir,"outputs/logs"),pattern = "\\.out$",full.names = TRUE)
-  # Filter files containing the word "FAILED"
-  failed.files <- lapply(files, function(file) {
-   if (any(grepl("FAILED", tail(readLines(file),2), ignore.case = FALSE))) {
-    return(file)
-   }
-  })
-  # Filter out NULL values (files without the word "FAILED")
-  failed.files <- unlist(Filter(Negate(is.null), failed.files))
-  if(is.null(failed.files)){
-   log.fail.lst=""
-  }else{
-   # get the first FAILED
-   file_info <- file.info(failed.files)
-   sorted_files <- failed.files[order(as.numeric(file_info$mtime),decreasing=FALSE)]
-   log.fail.lst = basename(sorted_files)
-  }
-  updateSelectInput(session,"logtab.fail.log.path",choices=log.fail.lst)
- })
- 
  react.logtab.log.content <- reactive({
-    projdir <- react.setup.proj.dir()
-    path <- paste0(projdir,"outputs/logs/",input$logtab.log.path)
+  path <- file.path("/mnt/",input$logtab.log.path)
   content <- readLines(path)
   return(content)
  })
  
  # display file content in UI
- output$logtab.log.content <- renderPrint({ 
-  shiny::req(input$logtab.log.path!="")
-  cat(react.logtab.log.content(),sep="\n")
+ output$logtab.log.content <- renderPrint({
+  react.logtab.log.content()
  })
  
  react.logtab.fail.log.content <- reactive({
-  projdir <- react.setup.proj.dir()
   if(input$logtab.fail.log.path=="NA") return("Nothing failed!")
-  path <- paste0(projdir,"outputs/logs",input$logtab.fail.log.path)
+  path <- file.path("/mnt/outputs/logs/",input$logtab.fail.log.path)
   content <- readLines(path)
   return(content)
  })
  
  # display file content in UI
  output$logtab.fail.log.content <- renderPrint({
-  shiny::req(input$logtab.fail.log.path!="")
   react.logtab.fail.log.content()
  })
  
- #### QC tab #####
- output$multiqc <- renderUI({
-  projdir <- react.setup.proj.dir()
-  # path for fastqc report html to be referred to in iframe
-  addResourcePath("fastqc_rslt", paste0(projdir,"outputs/fastqc_rslt"))
-  tags$iframe(seamless="seamless",
-              src="fastqc_rslt/multiqc_report.html",
-              width="100%",
-              height="1000")
- })
+ #### processing > 3 groups
  
- ## Differential genes analysis report ###
- output$diff_report <- renderUI({
-  projdir <- react.setup.proj.dir()
-  # path for differential report html to be referred to in iframe
-  addResourcePath("diff_report_path",paste0(projdir,"outputs/diff_analysis_rslt/"))
-  tags$iframe(seamless="seamless", 
-              src= "diff_report_path/RNA-seq_differential_analysis_report.html",
-              width="100%", 
-              height=800)
- })
- 
- #### processing plots tab #####
- 
- react.tab3.data.loc <- reactive({
-  projdir <- react.setup.proj.dir()
-  data.loc = paste0(projdir,"outputs/")
- })
- 
- react.tab3.out.loc <- reactive({
-  shiny::req(dir.exists(data.loc))
-  # create directory for shiny outputs
-  dir.create(paste0(data.loc, "shiny_outputs"))
-  out.loc=paste0(data.loc,"shiny_outputs/")
- })
- 
- # initialize values for tab
-react.tab3.rdata <- reactive({
- selected_tab <- input$inTabset
- projdir <- react.setup.proj.dir()
- data.loc <- react.tab3.data.loc()
- rdata.loc1=paste0(data.loc,"diff_analysis_rslt/RNA-seq_differential_analysis.RData")
- rdata.loc2=paste0(data.loc,"diff_analysis_rslt/RNA-seq differential analysis.RData")
- shiny::req(file.exists(rdata.loc1)||file.exists(rdata.loc2))
- # filename was changed. Make sure can read both
- if(file.exists(rdata.loc1)){
-  load(rdata.loc1)
-   } else if (file.exists(rdata.loc2)){
-  load(rdata.loc2)
-   }
- return(out.DESeq2)
-})
-
- react.tab3.groups.lst <- reactive({
-  out.DESeq2 <- react.tab3.rdata()
-  groups= data.frame(
-  var = names(out.DESeq2$results),
-  names = names(out.DESeq2$results)
- )
- # List of choices for groupnames
- groups.lst <- as.list(groups$names)
- # Name it
- names(groups.lst) <- groups$var
- groups.lst
-})
-
- observe({
-  groups.lst <- react.tab3.groups.lst()
-  updateSelectInput(session, "tab3.grp1.name",choices=groups.lst)
-  updateTextInput(session, "tab3.grp1.plot.title",value=groups.lst[[1]])
- })
  # vals will contain all plots and table grobs
  vals.plot <- reactiveValues(venn.up1=NULL,venn.up2=NULL,venn.dwn1=NULL,
                              venn.dwn2=NULL,hm.up=NULL,hm.dwn=NULL,
                              upset.up=NULL,upset.dwn=NULL,msig.mf=NULL,
                              msig.bp=NULL,msig.cc=NULL,msig.curate=NULL)
  
- value <- reactiveVal(1)
+ value <- reactiveVal(2)
  inserted <- c()		
  inserted.col <- c()
  inserted.fdr <- c()
@@ -1171,7 +1169,6 @@ react.tab3.rdata <- reactive({
  })
  
  observeEvent(input$insert_set, {
-  groups.lst <- react.tab3.groups.lst()
   btn <- value() +1
   value(btn)
   id <- paste0("txt1_", btn)
@@ -1231,7 +1228,7 @@ react.tab3.rdata <- reactive({
    selector = "#placeholder-meanDiff",
    ui = tags$div(
     numericInput(inputId=paste0("tab3.meanDiff.grp",btn), 
-                 label = (paste0("Difference for group ",btn)), 
+                 label = (paste0("Counts difference for group ",btn)), 
                  value = 0,min=0,step=1),
     id = id.meanDiff
    )
@@ -1240,7 +1237,7 @@ react.tab3.rdata <- reactive({
  })
  
  observeEvent(input$remove_set, {
-  if(value()>1){
+  if(value()>2){
    btn <- value() -1
    value(btn)
    print(paste0("#",inserted[length(inserted)]))
@@ -1261,37 +1258,37 @@ react.tab3.rdata <- reactive({
    )
    updateSelectInput(
     session,
-    paste0("tab3.grp",length(inserted)+1 ,".name"),
+    paste0("tab3.grp",length(inserted)+2 ,".name"),
     NULL,
     NA
    )
    updateTextInput(
     session,
-    paste0("tab3.grp", length(inserted)+1,".plot.title"),
+    paste0("tab3.grp", length(inserted)+2,".plot.title"),
     NULL,
     NA
    )
    updateTextInput(
     session,
-    paste0("tab3.color.grp",length(inserted.col)+1),
+    paste0("tab3.color.grp",length(inserted.col)+2),
     NULL,
     NA
    )
    updateNumericInput(
     session,
-    paste0("tab3.fdr.grp",length(inserted.fdr)+1),
+    paste0("tab3.fdr.grp",length(inserted.fdr)+2),
     NULL,
     NA
    )
    updateNumericInput(
     session,
-    paste0("tab3.fc.grp",length(inserted.fc)+1),
+    paste0("tab3.fc.grp",length(inserted.fc)+2),
     NULL,
     NA
    )
    updateNumericInput(
     session,
-    paste0("tab3.meanDiff.grp",length(inserted.meanDiff)+1),
+    paste0("tab3.meanDiff.grp",length(inserted.meanDiff)+2),
     NULL,
     NA
    )
@@ -1301,7 +1298,7 @@ react.tab3.rdata <- reactive({
    inserted.fdr <<- inserted.fdr[-length(inserted.fdr)]
    inserted.fc <<- inserted.fc[-length(inserted.fc)]
    inserted.meanDiff <<- inserted.meanDiff[-length(inserted.meanDiff)]
-  }else{ btn <- 1
+  }else{ btn <- 2
   value(btn)}
  })
  
@@ -1532,7 +1529,7 @@ react.tab3.rdata <- reactive({
  })
  
  output$plot2 <- renderPlot({
-   pad = react.venn.pad()
+  pad = react.venn.pad()
   data=data.up()
   hm.up <- heatmap_sigf_overlap(data)
   data=data.dwn()
@@ -1857,13 +1854,12 @@ react.tab3.rdata <- reactive({
  react.tab3.result <- reactive({
   grp.name=react.tab3.grp.name()
   grp.plot.title=react.tab3.grp.plot.title()
-  out.DESeq2 <- react.tab3.rdata()
+  
   idx=match(grp.name,names(out.DESeq2$results))
   results=out.DESeq2$results[idx]
  })
  
  react.tab3.normCts <- reactive({
-  out.DESeq2 <- react.tab3.rdata()
   normCts=counts(out.DESeq2$dds,normalized=TRUE)
  })
  
@@ -2137,11 +2133,6 @@ react.tab3.rdata <- reactive({
   pad=react.tab3.venn.pad()
   set.seed(1)
   s4 <- tab3.s4.up()
-  print("s4")
-  print(s4)
-  # if all lists contains 0 genes then do not proceeds
-  nonzero_s4=sum(sapply(s4,function(x) length(x)!=0))
-  shiny::req(nonzero_s4>0)
   vals.plot$venn.up2<-plot_euler(s4=s4,colors=colors,cex=cex,
                                  venn.opts=venn.opts,title="")
   # remove label if requested
@@ -2162,9 +2153,6 @@ react.tab3.rdata <- reactive({
   pad=react.tab3.venn.pad()
   set.seed(1)
   s4 <- tab3.s4.dwn()
-  # if all lists contains 0 genes then do not proceeds
-  nonzero_s4=sum(sapply(s4,function(x) length(x)!=0))
-  shiny::req(nonzero_s4>0)
   vals.plot$venn.dwn2<-plot_euler(s4=s4,colors=colors,cex=cex,
                                   venn.opts=venn.opts,title="")
   # remove label if requested
@@ -2179,22 +2167,19 @@ react.tab3.rdata <- reactive({
  
  output[["tab3.hm"]] <- renderPlot({
   pad = react.venn.pad()
-  data = tab3.data.up()
-  grp.name = react.tab3.grp.name()
-  shiny::req(length(grp.name)>1)
+  data=tab3.data.up()
   vals.plot$hm.up <- heatmap_sigf_overlap(data,"Up-regulated genes")
   data=tab3.data.dwn()
   vals.plot$hm.dwn<- heatmap_sigf_overlap(data,"Down-regulated genes")
-  print("after heatmap_sigf_overlap")
-  grid.arrange(vals.plot$hm.dwn,vals.plot$hm.up,ncol=2)
+  grid.arrange(vals.plot$hm.up,vals.plot$hm.dwn,ncol=2,padding=unit(pad,"line"),
+               bottom="",right="",left="",top="")
  })
  
  output$tab3.plot1 <- renderPlot({
   s4 <- tab3.s4.up()
   grp.name <- react.tab3.grp.name()
-  # only draw upset up-regulated if there are more than two groups with non-empty list of up genes
-  shiny::req(length(grp.name)>1 && sum(sapply(s4,function(x)length(x)!=0))>1)
   nintersects <- react.tab3.nintersects.upset()
+  
   vals.plot$upset.up <- as.ggplot(upset(fromList(s4), order.by = "freq",
                                         nsets=length(grp.name), nintersects=nintersects, 
                                         mainbar.y.label = "# Up-regulated Genes", sets.x.label = "Significant Genes", 
@@ -2207,8 +2192,6 @@ react.tab3.rdata <- reactive({
  output$tab3.plot2 <- renderPlot({
   s4 <- tab3.s4.dwn()
   grp.name <- react.tab3.grp.name()
-  # only draw upset if there are more than two groups with non-empty list of diff genes
-  shiny::req(length(grp.name)>1 && sum(sapply(s4,function(x)length(x)!=0))>1)
   nintersects <- react.tab3.nintersects.upset()
   vals.plot$upset.dwn <- as.ggplot(upset(fromList(s4), order.by = "freq",nsets=length(grp.name), 
                                          nintersects=nintersects,
@@ -2252,25 +2235,10 @@ react.tab3.rdata <- reactive({
                                             c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
                                               "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
                                               "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
-                                              "Lncrna" = "lncRNA","Snrna" = "snRNA",
-                                              "Ncrna" = "ncRNA"))
-    
-    beera <- function(expr){
-     tryCatch(expr,
-              error = function(e){
-               message("An error occurred:\n", e)
-              },
-              warning = function(w){
-               message("A warning occured:\n", w)
-              },
-              finally = {
-               message("Finally done!")
-              })
-    }
-    
-    formula_res <- beera({compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
+                                              "Lncrna" = "lncRNA","Snrna" = "snRNA"))
+    formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
-                                  pAdjustMethod="BH")})
+                                  pAdjustMethod="BH")
     
     # re-arrange datasets using factor
     # and do pathway analysis using up- and down-regulated genes separately
@@ -2337,7 +2305,6 @@ react.tab3.rdata <- reactive({
                                               "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
                                               "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
                                               "Lncrna" = "lncRNA","Snrna" = "snRNA"))
-
     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
                                   pAdjustMethod="BH")
@@ -2353,6 +2320,7 @@ react.tab3.rdata <- reactive({
  
  
  observeEvent(input$gen.go,{
+  print("output$tab3.plot3.4")
   output$tab3.plot3.4 <- renderPlot({
    withProgress(message="Generating enrichment plots",{
     enrich.pval.co <- react.tab3.enrich.pval.co()
@@ -2388,7 +2356,6 @@ react.tab3.rdata <- reactive({
  observeEvent( input$export,{
   if(input$export==0) return()
   gen.go <- react.val.gen.go()
-  out.loc <- react.tab3.out.loc()
   withProgress(message="Saving pdf",{
    pad = react.tab3.venn.pad()
    file=file.path(out.loc,"plots.pdf")
@@ -2428,27 +2395,29 @@ react.tab3.rdata <- reactive({
    fc.co = react.tab3.fc.cutoff()
    fdr.co = react.tab3.fdr.cutoff()
    meanDiff.co = react.tab3.meanDiff.cutoff()
-   projdir = react.setup.proj.dir()
-   out.loc = react.tab3.out.loc()
    for (i in (1:length(grp.name))){
     # filter the complete table file
     in.file=paste0(gsub("_","",grp.name[i]),".complete.txt")
-    df=read.table(paste0(projdir,"outputs/diff_analysis_rslt/tables/",in.file),
+    df=read.table(file.path("/mnt/outputs/diff_analysis_rslt/tables/",in.file),
                   sep="\t",header=TRUE)
     df.filt=df[grp.up[[i]]$row.pass,]
     df.filt$norm.diff.mean = df[grp.up[[i]]$row.pass,"norm.diff.mean"]
+    print("up")
+    print(grp.name[i])
+    print(dim(df.filt))
+    print(grp.up[[i]]$row.pass)
     # write filter up txt
     out.up.file=paste0(gsub("_","",grp.name[i]),
                        paste0("_FC_",fc.co[i],"_FDR_",fdr.co[i],
                               "_meanDiff_",meanDiff.co[i]),".up.txt")
-    write.table(df.filt,file=paste0(out.loc,"/",out.up.file),sep="\t",row.names = FALSE,
+    write.table(df.filt,file=file.path(out.loc,out.up.file),sep="\t",row.names = FALSE,
                 quote=FALSE)
     df.filt=df[grp.dwn[[i]]$row.pass,]
     df.filt$norm.diff.mean = df[grp.dwn[[i]]$row.pass,"norm.diff.mean"]
     out.dwn.file=paste0(gsub("_","",grp.name[i]),
                         paste0("_FC_",fc.co[i],"_FDR_",fdr.co[i],
                                "_meanDiff_",meanDiff.co[i]),".down.txt")
-    write.table(df.filt,file=paste0(out.loc,"/",out.dwn.file),sep="\t",row.names = FALSE,
+    write.table(df.filt,file=file.path(out.loc,out.dwn.file),sep="\t",row.names = FALSE,
                 quote=FALSE)
    }
   })#withProgress

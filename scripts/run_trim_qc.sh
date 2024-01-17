@@ -171,20 +171,26 @@ target_link=$(readlink -f fastq)
 if [[ ! -d $work_dir/merged_fastq ]];then
 	mkdir -p $work_dir/merged_fastq
 fi
-for row in ${#path_to_r1_fastq[@]};do
+len_row=${#path_to_r1_fastq[@]}
+for  (( row = 0; row <= len_row-1; row++ ));do
 	cat ${path_to_r1_fastq[$row]//,/ } > ${work_dir}/merged_fastq/${groupname_array[$row]}_${repname_array[$row]}_r1_fastq.gz
 	cat ${path_to_r2_fastq[$row]//,/ } > ${work_dir}/merged_fastq/${groupname_array[$row]}_${repname_array[$row]}_r2_fastq.gz
 done
 
 # note: trim_galore is set to --cores 4 which actually translate to 15 cores
 # see trim_galore help for more info
-for idx in ${#path_to_r1_fastq[@]};do
+for (( idx =0; idx <= len_row-1; idx++ ));do
 	echo $idx
 	groupname=${groupname_array[$idx]}
+	echo $groupname
 	repname=${repname_array[$idx]}
+	echo $repname
 	prefix=${groupname}_${repname}
+	echo $prefix
 	path_r1=${work_dir}/merged_fastq/${prefix}_r1_fastq.gz
+	echo $path_r1
 	path_r2=${work_dir}/merged_fastq/${prefix}_r2_fastq.gz
+	echo $path_r2
 			# echo $prefix $run \
 			# $log_dir $email $proj_dir \
 			# $groupname $repname \
@@ -217,7 +223,6 @@ for idx in ${#path_to_r1_fastq[@]};do
 				jid=${jid}:${tmp_jid}
 			fi
 			#set +x
-		done
 done
 
 ##### run multiqc

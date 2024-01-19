@@ -27,6 +27,11 @@ library(ggpolypath) #ggplot=true for venn
 library(shinyFiles)
 library(shinyjs)
 library(EnsDb.Hsapiens.v86)
+library(ggrepel)
+library(dplyr) #bind_rows, case_when
+library(plotly)
+library(DT)
+#library(tidyverse)
 
 css <- "
 .nav li a.disabled {
@@ -82,8 +87,6 @@ setup.genome.lst <- as.list(c("hg19","hg38","other"))
 if(!exists("max.nsamples")) max.nsamples=50
 
 heatmap_sigf_overlap <- function(data,title=""){
- print("data")
- print(data)
  hm <- ggplot(data,aes(X1,X2,fill=pval.cat)) +
   # use thin border size 0.1 to separate tiles
   geom_tile(color="white",size=0.1)+
@@ -310,7 +313,7 @@ ui <- fluidPage(
   tabPanel("Outputs",id="outputtab",fluid=TRUE,
             htmlOutput("diff_report")
            ), #tabPanel Outputs
-  tabPanel("Plots", id="tab3",fluid = TRUE,
+  tabPanel("Plots", value="tab3",fluid = TRUE,
            sidebarLayout(
             sidebarPanel(
              tags$style(type='text/css', 
@@ -364,15 +367,15 @@ ui <- fluidPage(
                              # upset plot number of intersection
                              numericInput("tab3.nintersects.upset", label = ("Upset plot max intersections"), 
                                           value = 40,min=1,step=1),
+                                      # gene set enrichment pvalue numeric input
+                             numericInput("tab3.enrich.pval.co", label = ("FDR for enrichment"), 
+                                          value = 0.05,min=0,step=0.01),
                              # species for msigdb
                              selectInput(
                               inputId="tab3.msigdb.species",
                               label = ("Select your species"),
                               selected="Homo sapiens",
                               choices = msigdb.species.lst),
-                             # gene set enrichment pvalue numeric input
-                             numericInput("tab3.enrich.pval.co", label = ("FDR for enrichment"), 
-                                          value = 0.05,min=0,step=0.01),
                              actionButton(
                               inputId = "gen.go",
                               label = "Generate Enrichment plots"
@@ -397,9 +400,15 @@ ui <- fluidPage(
                              tags$div(id = "placeholder-meanDiff"))),
              br(),
              br(),
+             # Table of diff genes
+             fluidRow(
+              textInput("tab3.search.term", "Search by gene names separated by commas:"),
+              uiOutput("tables")
+             ),
              # This is the dynamic UI for the plots
-             fluidRow(column(12,
-                             uiOutput("tab3.plots"))),
+             fluidRow(
+              column(5,textInput("tab3.hilite.genes",label = "Enter gene names separated by comma:",value="")),
+              column(12,uiOutput("tab3.plots"))),
              br(),
              br(),
              fluidRow(
@@ -461,8 +470,6 @@ server <- function(input, output,session) {
   setup.btn <- setup.value() +1
   # update the reactiveVal
   setup.value(setup.btn)
-  print("setup.value in setup.insert.set")
-  print(setup.value())
   # id for new div
   setup.div.id <- paste0("setup_div_",setup.btn)
   # ids for entries in each row
@@ -928,8 +935,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    shiny::req(length(repname)==nsamples)
    
    # getting the r1 and r2 fastq for all groups
-   print("input[[setup_grp1_r1_filepaths]]")
-   print(input[[paste0("setup_grp",1,"_r1_filepaths")]])
    # remove empty paths
    rem_empty_path <- function(input.name) {
     filt.path = input[[input.name]]
@@ -1146,6 +1151,10 @@ react.tab3.rdata <- reactive({
   updateSelectInput(session, "tab3.grp1.name",choices=groups.lst)
   updateTextInput(session, "tab3.grp1.plot.title",value=groups.lst[[1]])
  })
+ 
+ # volcano plots
+ 
+ 
  # vals will contain all plots and table grobs
  vals.plot <- reactiveValues(venn.up1=NULL,venn.up2=NULL,venn.dwn1=NULL,
                              venn.dwn2=NULL,hm.up=NULL,hm.dwn=NULL,
@@ -1476,7 +1485,6 @@ react.tab3.rdata <- reactive({
   data$pval.cat=ifelse(data$pval==0,pval.names[1],ifelse(data$pval<=0.05,pval.names[2],
                                                          ifelse(data$pval<0.5,pval.names[3],pval.names[4])))
   data$pval.cat=factor(data$pval.cat,levels=pval.names)
-  print(head(data))
   data
  })
  
@@ -2108,17 +2116,77 @@ react.tab3.rdata <- reactive({
   compare.df
  })
  
+  # preprocess multiple search term
+ react.search.term <- reactive({
+  if(!is.null(input$tab3.search.term) && !input$tab3.search.term =="")
+   paste(str_trim(unlist(strsplit(input$tab3.search.term,","))),collapse="|")
+ })
+ 
+ # Filter data based on the search input
+ react.tab3.filtered.data <- reactive({
+  search_term <- react.search.term()
+  data_list <- react.tab3.expr.tbl()
+  if (is.null(search_term) || search_term == "") {
+   return(data_list)
+  } else {
+   filtered_list <- lapply(data_list, function(df) {
+    df[grep(search_term, df$Genes, ignore.case = TRUE), , drop = FALSE]
+   })
+   return(filtered_list)
+  }
+ })
+# 
+#  # Dynamically generate renderTable functions
+#  output$tables <- renderUI({
+#   data_list <- react.tab3.expr.tbl()
+#   filtered.data <- react.tab3.filtered.data()
+#   tables <- lapply(names(data_list), function(name) {
+#    renderTable({
+#       filtered.data[[name]][1:20,]
+#    })
+#   })
+#   do.call(tagList, tables)
+#  })
+ 
+ # Dynamically generate tables with titles
+ output$tables <- renderUI({
+  data_list <- react.tab3.expr.tbl()
+  print("names(data_list)")
+  print(names(data_list))
+  lapply(names(data_list), function(tab_name) {
+   table_id <- paste0("table_", tab_name)
+   tagList(
+    h3(paste("Gene expression for", tab_name)),
+    tableOutput(table_id)
+   )
+  })
+ })
+ 
+ # Render the filtered data tables
+ observe({
+  data_list <- react.tab3.expr.tbl()
+  filtered.data <- react.tab3.filtered.data()
+  for (tab_name in names(data_list)) {
+   table_id <- paste0("table_", tab_name)
+   output[[table_id]] <- renderTable({
+    as.data.frame(filtered.data[[tab_name]])
+   })
+  }
+ })
+
  # Insert the right number of plot output objects into the web page
  output$tab3.plots <- renderUI({
   grp.name=react.tab3.grp.name()
-  
   plot_output_list<-list()
+  for (i in 1:length(grp.name)){
+   plot_output_list[[i]] <- plotOutput(paste0("tab3.volcano.grp",i),height="500px")
+  }
   if(length(grp.name)<8){
-   plot_output_list[[1]] <- plotOutput("tab3.venn.up")
-   plot_output_list[[2]] <- plotOutput("tab3.venn.dwn")
-   plot_output_list[[3]] <- plotOutput("tab3.hm")
+   plot_output_list[[length(grp.name)+1]] <- plotOutput("tab3.venn.up")
+   plot_output_list[[length(grp.name)+2]] <- plotOutput("tab3.venn.dwn")
+   plot_output_list[[length(grp.name)+3]] <- plotOutput("tab3.hm")
   }else{
-   plot_output_list[[1]] <- plotOutput("tab3.hm")
+   plot_output_list[[length(grp.name)+1]] <- plotOutput("tab3.hm")
   }
   
   # Convert the list to a tagList - this is necessary for the list of items
@@ -2129,6 +2197,127 @@ react.tab3.rdata <- reactive({
  # # Call renderPlot for each one. Plots are only actually generated when they
  # # are visible on the web page.
  
+ react.tab3.hilite.genes <- reactive({
+  unlist(sapply(strsplit(input$tab3.hilite.genes,","),function(x)str_trim(x)))
+ })
+ 
+ react.tab3.expr.tbl <- reactive({
+  print("input$inTabSet")
+  print(input$inTabSet)
+  req(input$inTabset=="tab3")
+  print("here")
+  grp.name=react.tab3.grp.name()
+  grp.plot.title=react.tab3.grp.plot.title()
+  results=react.tab3.result()
+  normCts=react.tab3.normCts()
+  fdr.co <- react.tab3.fdr.cutoff()
+  fc.cutoff <- react.tab3.fc.cutoff()
+  meanDiff.cutoff <- react.tab3.meanDiff.cutoff()
+  expr.tbl <- list()
+  for(i in 1:length(grp.name)){
+   # get indiv grpname
+   grps=strsplit(grp.name[i],"_vs_")
+   treat.grp=grps[[1]][1]
+   ref.grp=grps[[1]][2]
+   treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
+   ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   diff.mean=treat.mean-ref.mean
+   data=data.frame(
+    Genes=rownames(results[[grp.name[i]]]),
+    logFC=results[[grp.name[i]]]$log2FoldChange,
+    FDR=results[[grp.name[i]]]$padj,
+    diff.mean=diff.mean)
+   data <- data %>% 
+    mutate(
+     Expression = 
+      case_when(logFC >= log2(fc.cutoff[i]) & 
+                 FDR <= fdr.co[i] & 
+                 diff.mean >= meanDiff.cutoff[i] ~ "Up-regulated",
+                logFC < -log2(fc.cutoff[i]) &
+                 FDR <= fdr.co[i] & 
+                 diff.mean <= -meanDiff.cutoff[i] ~ "Down-regulated",
+                TRUE ~ "NS")
+    )
+   expr.tbl[[i]] <- data
+  }
+  names(expr.tbl)=grp.plot.title
+  expr.tbl
+ })
+ 
+ observe({
+ grp.name=react.tab3.grp.name()
+ grp.plot.title=react.tab3.grp.plot.title()
+ results=react.tab3.result()
+ normCts=react.tab3.normCts()
+ fdr.co <- react.tab3.fdr.cutoff()
+ fc.cutoff <- react.tab3.fc.cutoff()
+ meanDiff.cutoff <- react.tab3.meanDiff.cutoff()
+ hilite.genes <- react.tab3.hilite.genes()
+ for(i in 1:length(grp.name)){
+  # Need local so that each item gets its own number. Without it, the value
+  # of i in the renderPlot() will be the same across all instances, because
+  # of when the expression is evaluated.
+  # https://gist.github.com/wch/5436415/
+  local({
+   my_i <- i
+ output[[paste0("tab3.volcano.grp",my_i)]] <- renderPlot({
+   # get indiv group name
+   grps=strsplit(grp.name[my_i],"_vs_")
+   treat.grp=grps[[1]][1]
+   ref.grp=grps[[1]][2]
+   treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
+   ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   diff.mean=treat.mean-ref.mean
+   data=data.frame(
+    Genes=rownames(results[[grp.name[my_i]]]),
+    logFC=results[[grp.name[my_i]]]$log2FoldChange,
+    FDR=results[[grp.name[my_i]]]$padj,
+    diff.mean=diff.mean)
+   data <- data %>% 
+    mutate(
+     Expression = 
+      case_when(logFC >= log2(fc.cutoff[my_i]) & 
+                 FDR <= fdr.co[my_i] & 
+                 diff.mean >= meanDiff.cutoff[my_i] ~ "Up-regulated",
+                logFC < -log2(fc.cutoff[my_i]) &
+                 FDR <= fdr.co[my_i] & 
+                 diff.mean <= -meanDiff.cutoff[my_i] ~ "Down-regulated",
+                TRUE ~ "NS")
+    )
+   # change FDR=0 so it can be graphed correctly
+   data$logFDR=-log(data$FDR+min(c(data$FDR[data$FDR>0],1e-32),na.rm=TRUE),10)
+   genes_show = hilite.genes
+   genes_show_data <- dplyr::bind_rows(
+    data %>%
+     filter(Genes %in% genes_show)
+   )
+   xlim=c(min(data$logFC)*1.1,max(data$logFC)*1.1)
+   ylim=c(0,max(data$logFDR,na.rm=TRUE)*1.1)
+   p <- ggplot(data, aes(logFC, logFDR)) +
+    geom_hline(yintercept=-log10(fdr.co[my_i]), col="#5d5d5d",linetype="dashed")+
+    geom_point(aes(color = Expression), size = 4,alpha=4/5) +
+    xlab(expression("log"[2]*"FC")) + 
+    ylab(expression("-log"[10]*"FDR")) +
+    scale_color_manual(values = c(tab3.colors[2], "gray50", tab3.colors[6])) +
+    guides(colour = guide_legend(override.aes = list(size=2))) + 
+    geom_label_repel(data = genes_show_data,mapping=aes(logFC,logFDR,label=Genes),
+                     size=5,min.segment.length = 0) +
+    theme_classic(base_size = 18) +
+    theme(panel.grid.major=element_line(color = "#EBEBEB"),
+          panel.grid.minor=element_line(color = "#EBEBEB"),
+          plot.title=element_text(hjust=0.5))+
+    ggtitle(paste0("Expression changes in ",grp.plot.title[my_i]))
+   if(fc.cutoff[my_i]>1){
+    p <- p + 
+     geom_vline(xintercept=c(-log2(fc.cutoff[my_i]), log2(fc.cutoff[my_i])), col="#5d5d5d",linetype="dashed")
+   }
+   p
+ })#renderPlot  
+  })#local
+  }#for(i in 1:length(grp.name))
+ })#observe
+
+ 
  output[["tab3.venn.up"]] <- renderPlot({
   venn.opts=react.tab3.venn.opts()
   grp.name=react.tab3.grp.name()
@@ -2137,8 +2326,6 @@ react.tab3.rdata <- reactive({
   pad=react.tab3.venn.pad()
   set.seed(1)
   s4 <- tab3.s4.up()
-  print("s4")
-  print(s4)
   # if all lists contains 0 genes then do not proceeds
   nonzero_s4=sum(sapply(s4,function(x) length(x)!=0))
   shiny::req(nonzero_s4>0)
@@ -2255,23 +2442,9 @@ react.tab3.rdata <- reactive({
                                               "Lncrna" = "lncRNA","Snrna" = "snRNA",
                                               "Ncrna" = "ncRNA"))
     
-    beera <- function(expr){
-     tryCatch(expr,
-              error = function(e){
-               message("An error occurred:\n", e)
-              },
-              warning = function(w){
-               message("A warning occured:\n", w)
-              },
-              finally = {
-               message("Finally done!")
-              })
-    }
-    
-    formula_res <- beera({compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
+    formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
-                                  pAdjustMethod="BH")})
-    
+                                  pAdjustMethod="BH")
     # re-arrange datasets using factor
     # and do pathway analysis using up- and down-regulated genes separately
     vals.plot$msig.mf <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 

@@ -33,14 +33,25 @@ server <- function(input, output) {
   }
  })
  
- # Dynamically generate renderTable functions
+ # Dynamically generate tables with titles
  output$tables <- renderUI({
-  tables <- lapply(names(data_list), function(name) {
-   renderTable({
-    as.data.frame(filtered_data()[[name]])
-   })
+  lapply(names(data_list), function(tab_name) {
+   table_id <- paste0("table_", tab_name)
+   tagList(
+    h3(paste("Title for", tab_name)),
+    tableOutput(table_id)
+   )
   })
-  do.call(tagList, tables)
+ })
+ 
+ # Render the filtered data tables
+ observe({
+  for (tab_name in names(data_list)) {
+   table_id <- paste0("table_", tab_name)
+   output[[table_id]] <- renderTable({
+    as.data.frame(filtered_data()[[tab_name]])
+   })
+  }
  })
 }
 

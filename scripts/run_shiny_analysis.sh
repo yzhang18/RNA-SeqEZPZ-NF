@@ -1,5 +1,6 @@
 #!/bin/bash
-set -x
+#set -x
+set -e
 # script to run shiny app in the beginning
 # How to run
 # cd <project_dir>
@@ -98,7 +99,7 @@ work_dir=$proj_dir/outputs
 img_dir=$(dirname $(dirname $(readlink -f $0)))
 
 # singularity image name
-img_name=rnaseq-pipe-container_try28.sif
+img_name=rnaseq-pipe-container.sif
 # IMPORTANT: It is assumed that:
 # scripts to run analysis are in $img_dir/scripts
 # reference to run analysis are in $img_dir/ref

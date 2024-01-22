@@ -31,6 +31,7 @@ library(ggrepel)
 library(dplyr) #bind_rows, case_when
 library(plotly)
 library(DT)
+library(purrr)
 #library(tidyverse)
 
 css <- "
@@ -403,6 +404,7 @@ ui <- fluidPage(
              # Table of diff genes
              fluidRow(
               textInput("tab3.search.term", "Search by gene names separated by commas:"),
+              numericInput("currentPage","Current Page",value=1,min=1),
               uiOutput("tables")
              ),
              # This is the dynamic UI for the plots
@@ -2126,12 +2128,24 @@ react.tab3.rdata <- reactive({
  react.tab3.filtered.data <- reactive({
   search_term <- react.search.term()
   data_list <- react.tab3.expr.tbl()
+  current_page <- input$currentPage
+  print("here")
   if (is.null(search_term) || search_term == "") {
-   return(data_list)
+   rows_per_page <- 10
+   start_row <- (current_page-1)*rows_per_page+1
+   end_row <- min(current_page*rows_per_page,sum(sapply(data_list, nrow)))
+   slided_data_lst <- lapply(data_list, function(df) {
+     slice(df, start_row:end_row)
+    })
+   print("names sliced_data")
+   print(names(sliced_data_lst))
+   return(sliced_data_lst)
   } else {
    filtered_list <- lapply(data_list, function(df) {
     df[grep(search_term, df$Genes, ignore.case = TRUE), , drop = FALSE]
    })
+   print("filtered_list")
+   print(filtered_list)
    return(filtered_list)
   }
  })
@@ -2148,11 +2162,23 @@ react.tab3.rdata <- reactive({
 #   do.call(tagList, tables)
 #  })
  
+ # # paginated data
+ # react.paginated.data <- reactive({
+ #  data_list <- react.tab3.expr.tbl()
+ #  current_page <- input$currentPage
+ #   rows_per_page <- 10
+ #   start_row <- (current_page-1)*rows_per_page+1
+ #   end_row <- min(current_page*rows_per_page,sum(sapply(data_list, nrow)))
+ #   data <- do.call(rbind, lapply(data_list, function(df) df))
+ #   sliced_data <- slice(data, start_row:end_row)
+ #   print("sliced_data")
+ #   print(sliced_data)
+ #   return(sliced_data)
+ # })
+ 
  # Dynamically generate tables with titles
  output$tables <- renderUI({
   data_list <- react.tab3.expr.tbl()
-  print("names(data_list)")
-  print(names(data_list))
   lapply(names(data_list), function(tab_name) {
    table_id <- paste0("table_", tab_name)
    tagList(
@@ -2167,10 +2193,17 @@ react.tab3.rdata <- reactive({
   data_list <- react.tab3.expr.tbl()
   filtered.data <- react.tab3.filtered.data()
   for (tab_name in names(data_list)) {
+   # Need local so that each item gets its own number. Without it, the value
+   # of tab_name in the renderTable() will be the same across all instances, because
+   # of when the expression is evaluated.
+   # https://gist.github.com/wch/5436415/
+   local({
+    tab_name <- tab_name
    table_id <- paste0("table_", tab_name)
    output[[table_id]] <- renderTable({
-    as.data.frame(filtered.data[[tab_name]])
+     as.data.frame(filtered.data[[tab_name]])
    })
+   })#local
   }
  })
 
@@ -2205,7 +2238,6 @@ react.tab3.rdata <- reactive({
   print("input$inTabSet")
   print(input$inTabSet)
   req(input$inTabset=="tab3")
-  print("here")
   grp.name=react.tab3.grp.name()
   grp.plot.title=react.tab3.grp.plot.title()
   results=react.tab3.result()
@@ -2241,6 +2273,8 @@ react.tab3.rdata <- reactive({
    expr.tbl[[i]] <- data
   }
   names(expr.tbl)=grp.plot.title
+  print("names(expr.tbl)")
+  print(names(expr.tbl))
   expr.tbl
  })
  

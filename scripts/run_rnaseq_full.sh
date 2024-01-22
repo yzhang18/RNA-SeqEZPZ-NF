@@ -25,7 +25,7 @@
 # bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh run=debug &> run_rnaseq_full.out &
 
 
-set -x
+#set -x
 set -e
 # set 'run' to echo to simply echoing all commands
 # set to empty to run all commands

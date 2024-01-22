@@ -31,6 +31,7 @@ library(ggrepel)
 library(dplyr) #bind_rows, case_when
 library(plotly)
 library(DT)
+library(purrr)
 #library(tidyverse)
 
 css <- "
@@ -113,7 +114,6 @@ heatmap_sigf_overlap <- function(data,title=""){
   # color key size
   theme(legend.key.width=unit(0.7,"cm")) +
   ggtitle(title)
- print("inside heatmap_sigf_overlap")
  # plot venn and overlap heatmap together
  grid.arrange(hm,
               top=textGrob(""),
@@ -401,12 +401,14 @@ ui <- fluidPage(
              br(),
              br(),
              # Table of diff genes
-             fluidRow(
+             fluidRow(style = "background-color:#F5F5F5",
               textInput("tab3.search.term", "Search by gene names separated by commas:"),
               numericInput("currentPage","Current Page",value=1,min=1),
               uiOutput("tables")
              ),
              # This is the dynamic UI for the plots
+             br(),
+             br(),
              fluidRow(
               column(5,textInput("tab3.hilite.genes",label = "Enter gene names separated by comma:",value="")),
               column(12,uiOutput("tab3.plots"))),
@@ -483,7 +485,6 @@ server <- function(input, output,session) {
   setup.id.r2.filepath <- paste0("setup_grp",setup.btn,"_r2_filepaths")
   if(setup.btn %% 2 == 0) row.color="#FFFFFF"
   if(setup.btn %% 2 != 0) row.color="#f9f9f9"
-  print(paste0("background-color:",row.color))
   insertUI(
    selector = "#setup-placeholder",
    ui = tags$div(
@@ -526,13 +527,9 @@ server <- function(input, output,session) {
    setup.btn <- setup.value()-1
    # update the reactiveVal
    setup.value(setup.btn)
-   print("setup value")
-   print(setup.value())
    removeUI(
     selector = paste0("#",setup.inserted.div[length(setup.inserted.div)])
    )
-   print("length(setup.inserted.div)+2")
-   print(length(setup.inserted.div)+2)
    # remove the last values
    updateTextInput(
     session,
@@ -670,27 +667,17 @@ server <- function(input, output,session) {
     # getting path in textAreaInput
     text.path=input[[paste0('setup_grp',i,'_r1_filepaths')]]
     text.path=unlist(strsplit(text.path,"\n"))
-    print("new.path")
-    print(new.path)
-    print("text.path")
-    print(text.path)
     # combine new.path and paths in textarea
     setup.grp.r1.file.lst[[paste0('grp',i)]] <- sort(unique(c(new.path,text.path)))
     path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
     path.display=gsub('^/root/','',path.display)
     # remove empty path
     if(sum(path.display=="")>0){
-         print("path.display[1] is empty")
-         print(path.display)
          rem.id=which(path.display=="")
          path.display=path.display[-rem.id]
-         print("remove empty")
-         print(path.display)
     }
      
     path.display <- paste0(path.display, collapse="\n")
-    print("path.display")
-    print(path.display)
     updateTextAreaInput(session, paste0('setup_grp',i,'_r1_filepaths'),value=path.display)
     # output[[paste0('setup.grp',i,'.r1.filepaths')]]<- renderText({
     #  path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
@@ -707,26 +694,16 @@ server <- function(input, output,session) {
     new.path=gsub('^/root/','',new.path)
     text.path=input[[paste0('setup_grp',i,'_r2_filepaths')]]
     text.path=unlist(strsplit(text.path,"\n"))
-    print("new.path")
-    print(new.path)
-    print("text.path")
-    print(text.path)
     # combine new.path and paths in textarea
     setup.grp.r2.file.lst[[paste0('grp',i)]] <- sort(unique(c(new.path,text.path)))
     path.display=gsub('^/filepath/','',setup.grp.r2.file.lst[[paste0('grp',i)]])
     path.display=gsub('^/root/','',path.display)
     if(sum(path.display=="")>0){
-     print("path.display[1] is empty")
-     print(path.display)
      rem.id=which(path.display=="")
      path.display=path.display[-rem.id]
-     print("remove empty")
-     print(path.display)
     }
     
     path.display <- paste0(path.display, collapse="\n")
-    print("path.display")
-    print(path.display)
     updateTextAreaInput(session, paste0('setup_grp',i,'_r2_filepaths'),value=path.display)
     # output[[paste0('setup.grp',i,'.r1.filepaths')]]<- renderText({
     #  path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
@@ -759,7 +736,6 @@ react.setup.proj.dir <- reactive({
 
 output$fileExists <- reactive({
  proj.dir <- react.setup.proj.dir ()
- print(file.path(proj.dir,"samples.txt"))
  file_exists=file.exists(file.path(proj.dir,"samples.txt"))
  file_exists
 })
@@ -774,8 +750,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  
  observeEvent(input$setup.load.samples,{
   projdir <- react.setup.proj.dir()
-  print("hostfilepath")
-  print(hostfilepath)
   # load existing samples treating "NA" as regulating string
   df = read.table(file.path(projdir,"samples.txt"),na.strings=character(0),stringsAsFactors = FALSE)
   updateTextInput(session,inputId="setup.email",value=df[1,5])
@@ -799,8 +773,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    setup.df.path.display.r2 <- gsub(",","\n",setup.df.path.display.r2)
    # add new rows if needed
   if(i > (dim(df)[1]-add.row)){
-   print("i")
-   print(i)
    # update the reactiveVal
    setup.value(i)
   # id for new div
@@ -808,7 +780,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
 
   if(i %% 2 == 0) row.color="#FFFFFF"
   if(i %% 2 != 0) row.color="#f9f9f9"
-  print(paste0("background-color:",row.color))
   insertUI(
    selector = "#setup-placeholder",
    ui = tags$div(
@@ -846,8 +817,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    )
   )#insertUI
   setup.inserted.div <<- c(setup.inserted.div, setup.div.id)
-  print("setup.inserted.div")
-  print(setup.inserted.div)
   } # if(i > (dim(df)[1]-add.row))
    # fill out rows
    updateTextInput(session,setup.id.grp.name,value = df[i,1])
@@ -940,31 +909,21 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    rem_empty_path <- function(input.name) {
     filt.path = input[[input.name]]
     filt.path = unlist(strsplit(filt.path,"\n"))
-    print("filt.path before removing")
-    print(filt.path)
     empty.id = which(filt.path=="")
     if(length(empty.id)>0) filt.path = filt.path[-empty.id]
-    print("filt.path after removing")
-    print(filt.path)
    }
    r1_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r1_filepaths")))
    r2_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r2_filepaths")))
-   print("r1_fastq_lst after remove empty path")
-   print(r1_fastq_lst)
    # sort and unique to make sure the correct pairing of r1 and r2
    r1_fastq_lst=lapply(1:length(grpname),
           function(x) sort(unique(r1_fastq_lst[[x]])))
    r2_fastq_lst=lapply(1:length(grpname),
            function(x) sort(unique(r2_fastq_lst[[x]])))
-   print("r1_fastq_lst after unique and sort")
-   print(r1_fastq_lst)
    # changing to hostpath
    r1_fastq=lapply(1:length(grpname),
                    function(x) paste(paste0(hostfilepath,r1_fastq_lst[[x]]),collapse=","))
    r2_fastq=lapply(1:length(grpname),
                    function(x) paste(paste0(hostfilepath,r2_fastq_lst[[x]]),collapse=","))
-   print("r1_fastq_lst after changing to hostpath")
-   print(r1_fastq)
    df <- data.frame(
     grpname=grpname,
     ctrlname=ctrlname,
@@ -978,7 +937,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                file=file.path(projdir,"samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE)
    write.table(df,file=file.path(projdir,"samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE,
                append = TRUE)
-  print("system call")
   #system("echo 'sbatch --help' > /hostpipe")
   # getting genome options
   if(genome=="hg38") options="genome=hg38"
@@ -1014,7 +972,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                 " &> run_rnaseq_full.out' > /hostpipe"))
    system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-  print("end system call")
 })
  
  #### log tab #####
@@ -1022,8 +979,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  observeEvent(input$logtab.refresh.log.path,{
   # list of files in log directory from most recent
   projdir <- react.setup.proj.dir()
-  print("projdir")
-  print(projdir)
   files=list.files(paste0(projdir,"outputs/logs"),pattern = "\\.txt$|\\.out$",full.names = TRUE)
   # Sort files, placing filenames starting with "run_" at the top
   sorted_files <- c(sort(files[startsWith(files, "run_")]), sort(files[!startsWith(files, "run_")]))
@@ -1173,11 +1128,7 @@ react.tab3.rdata <- reactive({
  # adjust reactive value as gen.go button is pressed
  observeEvent(input$gen.go, {
   gen.go <- react.val.gen.go()
-  print("gen.go observeEvent")
-  print(gen.go)
   gen.go <- react.val.gen.go(1)
-  print("gen.go observeEvent after set to 1")
-  print(gen.go)
  })
  
  observeEvent(input$insert_set, {
@@ -1253,7 +1204,6 @@ react.tab3.rdata <- reactive({
   if(value()>1){
    btn <- value() -1
    value(btn)
-   print(paste0("#",inserted[length(inserted)]))
    removeUI(
     selector = paste0("#",inserted[length(inserted)])
    )
@@ -1504,7 +1454,6 @@ react.tab3.rdata <- reactive({
   data$pval.cat=ifelse(data$pval==0,pval.names[1],ifelse(data$pval<=0.05,pval.names[2],
                                                          ifelse(data$pval<0.5,pval.names[3],pval.names[4])))
   data$pval.cat=factor(data$pval.cat,levels=pval.names)
-  print(head(data))
   data
  })
  
@@ -2127,11 +2076,15 @@ react.tab3.rdata <- reactive({
  react.tab3.filtered.data <- reactive({
   search_term <- react.search.term()
   data_list <- react.tab3.expr.tbl()
-  paginated.data <- react.paginated.data ()
+  current_page <- input$currentPage
   if (is.null(search_term) || search_term == "") {
-   print("head data_list[[1]]")
-   print(head(data_list[[1]]))
-   return(data_list)
+   rows_per_page <- 10
+   start_row <- (current_page-1)*rows_per_page+1
+   end_row <- min(current_page*rows_per_page,sum(sapply(data_list, nrow)))
+   sliced_data_lst <- lapply(data_list, function(df) {
+     slice(df, start_row:end_row)
+    })
+   return(sliced_data_lst)
   } else {
    filtered_list <- lapply(data_list, function(df) {
     df[grep(search_term, df$Genes, ignore.case = TRUE), , drop = FALSE]
@@ -2139,38 +2092,14 @@ react.tab3.rdata <- reactive({
    return(filtered_list)
   }
  })
-# 
-#  # Dynamically generate renderTable functions
-#  output$tables <- renderUI({
-#   data_list <- react.tab3.expr.tbl()
-#   filtered.data <- react.tab3.filtered.data()
-#   tables <- lapply(names(data_list), function(name) {
-#    renderTable({
-#       filtered.data[[name]][1:20,]
-#    })
-#   })
-#   do.call(tagList, tables)
-#  })
- 
- # paginated data
- react.paginated.data <- reactive({
-  data_list <- react.tab3.expr.tbl()
-  current_page <- input$currentPage
-   rows_per_page <- 10
-   start_row <- (current_page-1)*rows_per_page+1
-   end_row <- min(current_page*rows_per_page,sum(sapply(data_list, nrow)))
-   data <- do.call(rbind, lapply(data_list, function(df) df))
-   sliced_data <- slice(data, start_row:end_row)
-   return(sliced_data)
- })
- 
+
  # Dynamically generate tables with titles
  output$tables <- renderUI({
   data_list <- react.tab3.expr.tbl()
   lapply(names(data_list), function(tab_name) {
    table_id <- paste0("table_", tab_name)
    tagList(
-    h3(paste("Gene expression for", tab_name)),
+    h4(paste("Gene expression for", tab_name)),
     tableOutput(table_id)
    )
   })
@@ -2226,7 +2155,6 @@ react.tab3.rdata <- reactive({
   print("input$inTabSet")
   print(input$inTabSet)
   req(input$inTabset=="tab3")
-  print("here")
   grp.name=react.tab3.grp.name()
   grp.plot.title=react.tab3.grp.plot.title()
   results=react.tab3.result()
@@ -2262,8 +2190,6 @@ react.tab3.rdata <- reactive({
    expr.tbl[[i]] <- data
   }
   names(expr.tbl)=grp.plot.title
-  print("names(expr.tbl)")
-  print(names(expr.tbl))
   expr.tbl
  })
  
@@ -2395,7 +2321,6 @@ react.tab3.rdata <- reactive({
   vals.plot$hm.up <- heatmap_sigf_overlap(data,"Up-regulated genes")
   data=tab3.data.dwn()
   vals.plot$hm.dwn<- heatmap_sigf_overlap(data,"Down-regulated genes")
-  print("after heatmap_sigf_overlap")
   grid.arrange(vals.plot$hm.dwn,vals.plot$hm.up,ncol=2)
  })
  

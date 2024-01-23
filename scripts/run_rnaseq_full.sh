@@ -213,6 +213,7 @@ echo ""
 	&> run_star_index.out
 # also copy to log_dir
 cp run_star_index.out $log_dir/
+cp run_rnaseq_full.out $log_dir/
 
 # skip checking job if not generating star index.
 if [[ $skip_run_star_index == 0 ]];then
@@ -249,6 +250,7 @@ echo ""
 ### trimming and QC
 date
 echo "Checking whether trimming already ran to completion"
+cp $proj_dir/run_rnaseq_full.out $log_dir/
 if compgen -G "${proj_dir}/outputs/logs/trim_fastqc_*.out" > /dev/null; then
         # check whether any fail
         n_failed=$(grep FAILED $proj_dir/outputs/logs/trim_fastqc*.out | wc -l)
@@ -257,18 +259,21 @@ if compgen -G "${proj_dir}/outputs/logs/trim_fastqc_*.out" > /dev/null; then
         else
             	echo Trimming and QC.....see progress in ${proj_dir}/run_trim_qc.out
                 echo ""
+		cp $proj_dir/run_rnaseq_full.out $log_dir/
                 export run time
                 . $img_dir/scripts/run_trim_qc.sh run=$run time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
 				cp run_trim_qc.out $log_dir/
                 echo "Done running trim and QC."
                 echo "Read run_trim_qc.out log in ${log_dir} and see whether all steps ran to completion"
                 echo ""
-
+		cp $proj_dir/run_rnaseq_full.out $log_dir/
         fi
+	cp $proj_dir/run_rnaseq_full.out $log_dir/
 else
 	echo ""
 	echo Trimming and QC.....see progress in run_trim_qc.out
 	echo ""
+	cp $proj_dir/run_rnaseq_full.out $log_dir/
 	cd $proj_dir
 	. $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
 	cp run_trim_qc.out $log_dir/
@@ -315,6 +320,7 @@ message="Done alignment and create tracks for visualization.\n"
 message=${message}"See log run_align_create_tracks_rna.out.\n\n\n"
 message=${message}"Performing differential genes analysis.....\n"
 message=${message}"See progress in run_differential_analysis_rna.out.\n"
+cp $proj_dir/run_rnaseq_full.out $log_dir/
 
 tmp=$($run sbatch --dependency=afterok:$jid4c \
 		--time=5:00 \
@@ -340,7 +346,7 @@ if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; the
 	echo -e "Alignment and/or track creation failed. Please check run_align_create_tracks_rna.out\n"
 	exit
 fi
-
+cp $proj_dir/run_rnaseq_full.out $log_dir/
 
 ### Running differential genes analysis
 cd $proj_dir
@@ -360,6 +366,7 @@ message=$message"bw_files folder contains the track files for visualization in I
 message=$message"STAR_2pass/Pass2/ contains the aligned bam files, and feature counts for each sample\n"
 message=$message"fastqc_rslt contains the Quality Control files. See multiqc_report.html for summary of all QC metrics\n"
 message=$message"trim folder contains the trimmed fastq files\n\n"
+cp $proj_dir/run_rnaseq_full.out $log_dir/
 
 tmp=$($run sbatch --dependency=afterok:$jid8 \
 		--time=5:00 \

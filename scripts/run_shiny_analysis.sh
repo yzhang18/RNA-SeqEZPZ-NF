@@ -1,6 +1,6 @@
 #!/bin/bash
 #set -x
-set -e
+#set -e
 # script to run shiny app in the beginning
 # How to run
 # cd <project_dir>
@@ -90,7 +90,8 @@ proj_dir=$(pwd)
 cd $proj_dir
 
 # create a named pipe
-mkfifo $proj_dir/mypipe
+# supress message if pipe exist
+mkfifo $proj_dir/mypipe 2> /dev/null
 
 work_dir=$proj_dir/outputs
 
@@ -163,6 +164,8 @@ done
 while true; do 
 	# get the last line of run_shiny_analysis.out
 	last_line=$(tail -n 1 run_shiny_analysis.out)
+	# exit if shiny fail to load
+	if grep -q "Execution halted" "run_shiny_analysis.out"; then exit 1; fi
 	# check if it contains listening
 	if [[ $last_line == *"Listening"* ]]; then
 		break
@@ -205,10 +208,11 @@ echo -e "After typing in your password, please wait until firefox appears ....\n
 echo -e "It may take some time for firefox to be responsive as it tries to load all the data\n"
 echo -e "If a pop-up window appears, click on \"Create New Profile\"\n"
 sleep 5
-ssh -tX "$node" 'export port_num='"'$port_num'"'; \
+ssh -tX "$node" 'export port_num='"'$port_num'"'; 
         export img_dir='"'$img_dir'"'; \
         export img_name='"'$img_name'"'; \
 	export proj_dir='"'$proj_dir'"'; \
+	export run=$run; \
         bash $img_dir/scripts/run_firefox.sh'
 
 #salloc -w $node --x11
@@ -216,7 +220,6 @@ ssh -tX "$node" 'export port_num='"'$port_num'"'; \
 #	firefox --no-remote --new-window -P \"default\" http://127.0.0.1:$port_num"
 
 ## this should not be run until firefox is closed
+sleep 60
 scancel $jid
 scancel $jid2
-
-

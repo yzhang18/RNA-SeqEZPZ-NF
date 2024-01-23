@@ -29,8 +29,8 @@ library(shinyjs)
 library(EnsDb.Hsapiens.v86)
 library(ggrepel)
 library(dplyr) #bind_rows, case_when
-library(plotly)
-library(DT)
+#library(plotly)
+#library(DT)
 library(purrr)
 #library(tidyverse)
 
@@ -410,7 +410,8 @@ ui <- fluidPage(
              br(),
              br(),
              fluidRow(
-              column(5,textInput("tab3.hilite.genes",label = "Enter gene names separated by comma:",value="")),
+              column(5,textInput("tab3.hilite.genes",
+                                 label = "Enter official gene names separated by comma:",value="")),
               column(12,uiOutput("tab3.plots"))),
              br(),
              br(),
@@ -654,7 +655,7 @@ server <- function(input, output,session) {
  setup.grp.r1.file.lst <- do.call("reactiveValues",x)
  setup.grp.r2.file.lst <- do.call("reactiveValues",x)
 
- # getting all the r1 and r2 fastq files for all groups
+  # getting all the r1 and r2 fastq files for all groups
   lapply(
   1:max.nsamples,
   function(i){
@@ -905,15 +906,26 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    shiny::req(length(repname)==nsamples)
    
    # getting the r1 and r2 fastq for all groups
-   # remove empty paths
+   
+   # function to remove empty paths
    rem_empty_path <- function(input.name) {
     filt.path = input[[input.name]]
     filt.path = unlist(strsplit(filt.path,"\n"))
+    print("filt.path")
+    print(filt.path)
     empty.id = which(filt.path=="")
+    print("empty.id")
+    print(empty.id)
     if(length(empty.id)>0) filt.path = filt.path[-empty.id]
+    print("filt.path after rem empty")
+    print(filt.path)
    }
+   print("input[[setup_grp1_r1_filepaths)]]")
+   print(input[[paste0("setup_grp",1,"_r1_filepaths")]])
    r1_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r1_filepaths")))
    r2_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r2_filepaths")))
+   print("r1_fastq_lst")
+   print(r1_fastq_lst)
    # sort and unique to make sure the correct pairing of r1 and r2
    r1_fastq_lst=lapply(1:length(grpname),
           function(x) sort(unique(r1_fastq_lst[[x]])))
@@ -924,6 +936,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                    function(x) paste(paste0(hostfilepath,r1_fastq_lst[[x]]),collapse=","))
    r2_fastq=lapply(1:length(grpname),
                    function(x) paste(paste0(hostfilepath,r2_fastq_lst[[x]]),collapse=","))
+   print("r1_fastq")
+   print(r1_fastq)
    df <- data.frame(
     grpname=grpname,
     ctrlname=ctrlname,
@@ -988,7 +1002,12 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   }else{
    updateSelectInput(session,"logtab.log.path",choices=log.lst,selected="")
   }
-  # list only *.out file
+     # display file content in UI
+   output$logtab.log.content <- renderPrint({ 
+    shiny::req(input$logtab.log.path!="")
+    cat(react.logtab.log.content(),sep="\n")
+   })
+  # list only failed *.out file
   files=list.files(paste0(projdir,"outputs/logs"),pattern = "\\.out$",full.names = TRUE)
   # Filter files containing the word "FAILED"
   failed.files <- lapply(files, function(file) {
@@ -1007,19 +1026,14 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    log.fail.lst = basename(sorted_files)
   }
   updateSelectInput(session,"logtab.fail.log.path",choices=log.fail.lst)
- })
+ 
+  })#observEvent refresh
  
  react.logtab.log.content <- reactive({
     projdir <- react.setup.proj.dir()
     path <- paste0(projdir,"outputs/logs/",input$logtab.log.path)
   content <- readLines(path)
   return(content)
- })
- 
- # display file content in UI
- output$logtab.log.content <- renderPrint({ 
-  shiny::req(input$logtab.log.path!="")
-  cat(react.logtab.log.content(),sep="\n")
  })
  
  react.logtab.fail.log.content <- reactive({
@@ -2129,7 +2143,7 @@ react.tab3.rdata <- reactive({
   grp.name=react.tab3.grp.name()
   plot_output_list<-list()
   for (i in 1:length(grp.name)){
-   plot_output_list[[i]] <- plotOutput(paste0("tab3.volcano.grp",i),height="500px")
+   plot_output_list[[i]] <- plotOutput(paste0("tab3.volcano.grp",i),height="600px")
   }
   if(length(grp.name)<8){
    plot_output_list[[length(grp.name)+1]] <- plotOutput("tab3.venn.up")
@@ -2255,7 +2269,7 @@ react.tab3.rdata <- reactive({
     theme(panel.grid.major=element_line(color = "#EBEBEB"),
           panel.grid.minor=element_line(color = "#EBEBEB"),
           plot.title=element_text(hjust=0.5))+
-    ggtitle(paste0("Expression changes in ",grp.plot.title[my_i]))
+    ggtitle(paste0("Volcano plot for ",grp.plot.title[my_i]))
    if(fc.cutoff[my_i]>1){
     p <- p + 
      geom_vline(xintercept=c(-log2(fc.cutoff[my_i]), log2(fc.cutoff[my_i])), col="#5d5d5d",linetype="dashed")
@@ -2266,7 +2280,6 @@ react.tab3.rdata <- reactive({
   }#for(i in 1:length(grp.name))
  })#observe
 
- 
  output[["tab3.venn.up"]] <- renderPlot({
   venn.opts=react.tab3.venn.opts()
   grp.name=react.tab3.grp.name()

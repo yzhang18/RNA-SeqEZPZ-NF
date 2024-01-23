@@ -20,7 +20,7 @@
 
 
 #set -x
-set -e
+#set -e
 
 # clear python path to prevent mix up of python packages
 unset PYTHONPATH
@@ -135,6 +135,7 @@ if [[ ! -d $log_dir/scripts ]];then
 fi
 $(cp $img_dir/scripts/run_trim_qc.sh $log_dir/scripts)
 $(cp $img_dir/scripts/trim_fastqc_simg.sbatch $log_dir/scripts/)
+cp $proj_dir/run_trim_qc.out $log_dir/
 
 # getting samples info from samples.txt
 $(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)
@@ -217,6 +218,7 @@ for (( idx =0; idx <= len_row-1; idx++ ));do
 					/bin/sh /scripts/trim_fastqc_simg.sbatch" | cut -f 4 -d' ')
 			echo "Processing $path_r1 $path_r2 Job id: $tmp_jid"
 			echo "" 
+			cp $proj_dir/run_trim_qc.out $log_dir/
 			if [ -z "$jid" ]; then
 				jid=$tmp_jid
 			else
@@ -269,6 +271,7 @@ fi
 message="Done trimming reads and quality control\n\n\
 summary of quality control result is in $work_dir/trim/fastqc_rslt/multiqc_report.html\n\
 trimmed fastq files are in $work_dir/trim\n\n"
+cp $proj_dir/run_trim_qc.out $log_dir/
 
 tmp=$($run sbatch --dependency=afterok:$jid2 \
 		--output=$log_dir/dummy.txt \
@@ -295,3 +298,4 @@ if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; the
 	scancel $tmp
 	echo -e "multiqc failed. Please check multiqc.out in $log_dir\n"
 fi
+cp $proj_dir/run_trim_qc.out $log_dir/

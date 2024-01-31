@@ -29,6 +29,7 @@ library(shinyjs)
 library(EnsDb.Hsapiens.v86)
 library(ggrepel)
 library(dplyr) #bind_rows, case_when
+library(gtools) # mixedsort
 #library(plotly)
 #library(DT)
 library(purrr)
@@ -584,14 +585,14 @@ server <- function(input, output,session) {
   react.setup.grp.name <- reactive({
   grp.name <- sapply(grep("setup\\.grp\\d+\\.name", x = names(input), value = TRUE),
                      function(x) input[[x]])
-  grp.name=as.vector(grp.name[order(names(grp.name))])
+  grp.name=as.vector(grp.name[mixedorder(names(grp.name))])
   grp.name[grp.name!=""]
  })
  
  react.setup.grp.ctrl.name <- reactive({
   grp.ctrl.name <- sapply(grep("setup\\.grp\\d+\\.ctrl\\.name", x = names(input), value = TRUE),
                           function(x) input[[x]])
-  grp.ctrl.name=as.vector(grp.ctrl.name[order(names(grp.ctrl.name))])
+  grp.ctrl.name=as.vector(grp.ctrl.name[mixedorder(names(grp.ctrl.name))])
   grp.ctrl.name[grp.ctrl.name!=""]
  })
  
@@ -599,7 +600,7 @@ server <- function(input, output,session) {
   grp.rep.name <- sapply(grep("setup\\.grp\\d+\\.rep\\.name", x = names(input), value = TRUE),
                          function(x) input[[x]])
   # need to do order otherwise the new one will be the first in the vector
-  grp.rep.name=as.vector(grp.rep.name[order(names(grp.rep.name))])
+  grp.rep.name=as.vector(grp.rep.name[mixedorder(names(grp.rep.name))])
   grp.rep.name[grp.rep.name!=""]
  })
  
@@ -1779,37 +1780,39 @@ react.tab3.rdata <- reactive({
  react.tab3.grp.name <- reactive({
   grp.name <- sapply(grep("tab3\\.grp.+\\.name", x = names(input), value = TRUE),
                      function(x) input[[x]])
-  grp.name=as.vector(grp.name[order(names(grp.name))])
+  grp.name=as.vector(grp.name[mixedorder(names(grp.name))])
+  print("grp.name")
+  print(grp.name)
   grp.name[grp.name!="NA"]
  })
  react.tab3.grp.plot.title <- reactive({
   grp.plot.title <- sapply(grep("tab3\\.grp.+\\.plot\\.title", x = names(input), value = TRUE),
                            function(x) input[[x]])
-  grp.plot.title=as.vector(grp.plot.title[order(names(grp.plot.title))])
+  grp.plot.title=as.vector(grp.plot.title[mixedorder(names(grp.plot.title))])
   grp.plot.title[grp.plot.title!=""]
  })
  react.tab3.color <- reactive({
   colors <- sapply(grep("tab3\\.color.+", x = names(input), value = TRUE),
                    function(x) input[[x]])
-  colors=as.vector(colors[order(names(colors))])
+  colors=as.vector(colors[mixedorder(names(colors))])
   colors[colors!=""]
  })
  react.tab3.fdr.cutoff <- reactive({
   fdr.cutoff <- sapply(grep("tab3\\.fdr.+", x = names(input), value = TRUE),
                        function(x) input[[x]])
-  fdr.cutoff=as.vector(fdr.cutoff[order(names(fdr.cutoff))])
+  fdr.cutoff=as.vector(fdr.cutoff[mixedorder(names(fdr.cutoff))])
   fdr.cutoff[fdr.cutoff!="NA"]
  })  
  react.tab3.fc.cutoff <- reactive({
   fc.cutoff <- sapply(grep("tab3\\.fc.+", x = names(input), value = TRUE),
                       function(x) input[[x]])
-  fc.cutoff=as.vector(fc.cutoff[order(names(fc.cutoff))])
+  fc.cutoff=as.vector(fc.cutoff[mixedorder(names(fc.cutoff))])
   fc.cutoff[fc.cutoff!="NA"]
  })
  react.tab3.meanDiff.cutoff <- reactive({
   meanDiff.cutoff <- sapply(grep("tab3\\.meanDiff.+", x = names(input), value = TRUE),
                             function(x) input[[x]])
-  meanDiff.cutoff=as.vector(meanDiff.cutoff[order(names(meanDiff.cutoff))])
+  meanDiff.cutoff=as.vector(meanDiff.cutoff[mixedorder(names(meanDiff.cutoff))])
   meanDiff.cutoff[meanDiff.cutoff!="NA"]
  }) 
  react.tab3.venn.opts <- reactive({input$tab3.venn.opts})

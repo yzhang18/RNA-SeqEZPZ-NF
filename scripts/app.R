@@ -541,7 +541,7 @@ server <- function(input, output,session) {
    )
    updateTextInput(
     session,
-    paste0("setup.grp", length(setup.inserted.div)+2,"ctrl.name"),
+    paste0("setup.grp", length(setup.inserted.div)+2,".ctrl.name"),
     NULL,
     ""
    )

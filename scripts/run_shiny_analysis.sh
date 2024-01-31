@@ -222,6 +222,5 @@ ssh -tX "$node" 'export port_num='"'$port_num'"';
 #	firefox --no-remote --new-window -P \"default\" http://127.0.0.1:$port_num"
 
 ## this should not be run until firefox is closed
-sleep 30
 scancel $jid
 scancel $jid2

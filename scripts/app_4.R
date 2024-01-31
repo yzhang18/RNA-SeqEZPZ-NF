@@ -1,20 +1,25 @@
 library(shiny)
 
-## Only run this example in interactive R sessions
- # Define UI
- ui <- fluidPage(
-  actionButton("rmv", "Remove UI"),
-  textInput("setup_txt2", "This is no longer useful")
+ui <- fluidPage(
+ tags$head(
+  tags$style(
+   HTML("
+        /* Set a consistent height for selectInput, textInput, and numericInput */
+        .same-height {
+          height: 30px; /* Set your desired height here */
+        }
+      ")
+  )
+ ),
+ fluidRow(
+  column(4, selectInput("select", "Select", choices = c("Option 1", "Option 2"), class = "same-height")),
+  column(4, textInput("text", "Text", class = "same-height")),
+  column(4, numericInput("numeric", "Numeric", value = 1, class = "same-height"))
  )
- 
- # Server logic
- server <- function(input, output, session) {
-  observeEvent(input$rmv, {
-   removeUI(
-    selector = "div:has(> #setup_txt2)"
-   )
-  })
- }
- 
- # Complete app with UI and server components
- shinyApp(ui, server)
+)
+
+server <- function(input, output) {
+ # Your server logic goes here
+}
+
+shinyApp(ui, server)

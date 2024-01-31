@@ -26,7 +26,6 @@ library(ggplotify) #as.ggplot for upsetr
 library(ggpolypath) #ggplot=true for venn
 library(shinyFiles)
 library(shinyjs)
-library(EnsDb.Hsapiens.v86)
 library(ggrepel)
 library(dplyr) #bind_rows, case_when
 library(gtools) # mixedsort
@@ -205,6 +204,8 @@ ui <- fluidPage(
                         
                         numericInput(inputId = "setup.ncpus.star",label="# of CPUs for STAR alignment",
                                      value=20,min=1),
+                        checkboxInput(inputId = "setup.debug",label="Run debug",
+                                      value=FALSE),
                         conditionalPanel(condition = "input.setup.proj.dir == ''",
                         textOutput('err_msg')),
                         #conditionalPanel(condition = "input.setup.genome == 'other' && (input.setup.genome.name == '' || input.setup_genome_fa == '' || input.setup_genome_gtf == '')",
@@ -325,23 +326,7 @@ ui <- fluidPage(
 					 font-size: 10pt; 
 					 line-height: 10pt;}"),
              width=2,
-             selectInput(
-              inputId="tab3.grp1.name",
-              label = ("Group 1"),
-              selected=groups.lst[1],
-              choices = groups.lst),
-             textInput(inputId="tab3.grp1.plot.title", 
-                       label = ("Group 1 label"), 
-                       value = groups.lst[1]),
              
-             tags$div(id = "placeholder"),
-             
-             splitLayout(
-              actionButton("insert_set", "Insert", width = "100%"),
-              actionButton("remove_set", "Remove", width = "100%")
-             ),
-             br(),
-             br(),
              splitLayout(
               numericInput("pdf.width", label = HTML("PDF <br/> width (in)"), 
                            value = 11),
@@ -354,96 +339,113 @@ ui <- fluidPage(
             ),
             mainPanel(
              fluidRow(style = "background-color:#F5F5F5",
+                      column(2,selectInput(
+                       inputId="tab3.grp1.name",
+                       label = ("Group 1"),
+                       selected=groups.lst[1],
+                       choices = groups.lst)),
+                      column(2,textInput(inputId="tab3.grp1.plot.title", 
+                                label = ("Group 1 label"), 
+                                value = groups.lst[1])),
+                      
+                      
+                      
+
+
                       column(2,
-                             checkboxGroupInput("tab3.venn.opts", label = ("Display on Venns"), 
-                                                choices = venn.opts.lst,
-                                                selected = venn.opts$lbl[1:3]),
-                             
-                             # slider bar font size
-                             sliderInput("tab3.venn.cex", label = ("Venns' font size"), min = 0, 
-                                         max = 6, value = 1,step = 0.1),
-                             # slider bar pad
-                             sliderInput("tab3.venn.pad", label = ("Venns' circle size"), min = 0, 
-                                         max = 8, value = 1,step = 0.5),
-                             # upset plot number of intersection
-                             numericInput("tab3.nintersects.upset", label = ("Upset plot max intersections"), 
-                                          value = 40,min=1,step=1),
-                                      # gene set enrichment pvalue numeric input
-                             numericInput("tab3.enrich.pval.co", label = ("FDR for enrichment"), 
-                                          value = 0.05,min=0,step=0.01),
-                             # species for msigdb
-                             selectInput(
-                              inputId="tab3.msigdb.species",
-                              label = ("Select your species"),
-                              selected="Homo sapiens",
-                              choices = msigdb.species.lst),
-                             actionButton(
-                              inputId = "gen.go",
-                              label = "Generate Enrichment plots"
-                             ),
-                             br(),br(),
-                      ),
-                      column(2,
-                             textInput("tab3.color.grp1", label = HTML("Color for <br/> group 1"), value = tab3.colors[1]),
-                             
-                             tags$div(id = "placeholder-col")),
+                             #textInput("tab3.color.grp1", label = HTML("Color for <br/> group 1"), value = tab3.colors[1]),
+                             textInput("tab3.color.grp1", label = ("Color for group 1"), value = tab3.colors[1])),
                       column(2,
                              numericInput("tab3.fdr.grp1", label = ("FDR cut-off for group 1"), 
-                                          value = 0.05,step=0.01,min=0,max=1),
-                             tags$div(id = "placeholder-fdr")),
+                                          value = 0.05,step=0.01,min=0,max=1)),
                       column(2,
                              numericInput("tab3.fc.grp1", label = ("Fold-change for group 1"), 
-                                          value = 1,min=1,step=0.5),
-                             tags$div(id = "placeholder-fc")),
+                                          value = 1,min=1,step=0.5)),
                       column(2,
                              numericInput("tab3.meanDiff.grp1", label = ("Difference for group 1"), 
-                                          value = 0,min=0,step=1),
-                             tags$div(id = "placeholder-meanDiff"))),
+                                          value = 0,min=0,step=1))),
+                      tags$div(id = "placeholder"),
+             splitLayout(
+              actionButton("insert_set", "Insert", width = "100%"),
+              actionButton("remove_set", "Remove", width = "100%")
+             ),
              br(),
              br(),
+             tabsetPanel(
+              tabPanel("Table(s)",
              # Table of diff genes
              fluidRow(style = "background-color:#F5F5F5",
               textInput("tab3.search.term", "Search by gene names separated by commas:"),
               numericInput("currentPage","Current Page",value=1,min=1),
               uiOutput("tables")
-             ),
-             # This is the dynamic UI for the plots
-             br(),
-             br(),
+             )),
+             
+
+ 
+             tabPanel("Volcano Plot(s)",
              fluidRow(
+              # genes to highlight in volcano plot
               column(5,textInput("tab3.hilite.genes",
                                  label = "Enter official gene names separated by comma:",value="")),
-              column(12,uiOutput("tab3.plots"))),
+               # This is the dynamic UI for volcano plots
+               column(12,uiOutput("tab3.volcano.plots"))
+              )),
+              tabPanel("Overlaps",
+                       column(2,
+                              checkboxGroupInput("tab3.venn.opts", label = ("Display on Venns"),
+                                                 choices = venn.opts.lst,
+                                                 selected = venn.opts$lbl[1:3])),
+                              
+                              # slider bar font size
+                       column(2,sliderInput("tab3.venn.cex", label = ("Venns' font size"), min = 0,
+                                          max = 6, value = 1,step = 0.1)),
+                              # slider bar pad
+                       column(2,sliderInput("tab3.venn.pad", label = ("Venns' circle size"), min = 0,
+                                          max = 8, value = 1,step = 0.5)),
+                       br(),
+               column(12,uiOutput("tab3.venn.plots"))
+              ),
+             tabPanel("Upset Plot(s)",
+                             # upset plot number of intersection
+                             numericInput("tab3.nintersects.upset", label = ("Upset plot max intersections"),
+                                          value = 40,min=1,step=1),
+                      
+              plotOutput(outputId = "tab3.plot1")
+             ,
              br(),
              br(),
-             fluidRow(
-              column(12,plotOutput(outputId = "tab3.plot1"))
-             ),
-             br(),
-             br(),
-             fluidRow(
               column(12,plotOutput(outputId = "tab3.plot2"))
+              ),
+             tabPanel("Pathway",
+                      fluidRow(
+             # species for msigdb
+             selectInput(
+              inputId="tab3.msigdb.species",
+              label = ("Select your species"),
+              selected="Homo sapiens",
+              choices = msigdb.species.lst),
+             # gene set enrichment pvalue numeric input
+             numericInput("tab3.enrich.pval.co", label = ("FDR for enrichment"), 
+                          value = 0.05,min=0,step=0.01),
+             actionButton(
+              inputId = "gen.go",
+              label = "Generate Enrichment plots"
              ),
              br(),
              br(),
              conditionalPanel(
               condition= "input['gen.go'] >= 1",
-              fluidRow(
-               column(12,plotOutput(outputId = "tab3.plot3.1",height="auto"))
-              ),
+              fluidRow(column(12,textInput("tab3.chg.enrich.terms", label = ("Enter terms to change in enrichment plots"),
+                        value="")),
+               column(12,plotOutput(outputId = "tab3.plot3.1",height="auto")),
+         
               br(),
-              fluidRow(
-               column(12,plotOutput(outputId = "tab3.plot3.2",height="auto"))
-              ),
+               column(12,plotOutput(outputId = "tab3.plot3.2",height="auto")),
               br(),
-              fluidRow(
-               column(12,plotOutput(outputId = "tab3.plot3.3",height="auto"))
-              ),
+               column(12,plotOutput(outputId = "tab3.plot3.3",height="auto")),
               br(),
-              fluidRow(
-               column(12,plotOutput(outputId = "tab3.plot3.4",height="auto"))
-              )
-             ), # conditionalpanel
+               column(12,plotOutput(outputId = "tab3.plot3.4",height="auto"))),
+              )))), 
              textOutput("tab3.text")
             )
            )
@@ -486,7 +488,7 @@ server <- function(input, output,session) {
   setup.id.r1.filepath <- paste0("setup_grp",setup.btn,"_r1_filepaths")
   setup.id.r2.filepath <- paste0("setup_grp",setup.btn,"_r2_filepaths")
   if(setup.btn %% 2 == 0) row.color="#FFFFFF"
-  if(setup.btn %% 2 != 0) row.color="#f9f9f9"
+  if(setup.btn %% 2 != 0) row.color="#f5f5f5"
   insertUI(
    selector = "#setup-placeholder",
    ui = tags$div(
@@ -971,12 +973,18 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
     hostfa=gsub('/root/','/',fa.file)
     hostgtf=gsub('/root/','/',gtf.file)
    }
+   if(input$setup.genome.name=="other"){
    options=paste0("genome=",input$setup.genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
-  
+   }else{options=paste0("genome=",input$setup.genome)}
+    
   if(input$setup.batch.adjust==TRUE){ batch_adjust="yes"
   }else{ batch_adjust="no"}
+   
+   if(input$setup.debug==TRUE){ run="debug"
+   }else{ run=""}
   options=paste0(options," time=",input$setup.time," batch_adjust=",batch_adjust,
-                 " ncpus_trim=",input$setup.ncpus.trim," ncpus_star=",input$setup.ncpus.star)
+                 " ncpus_trim=",input$setup.ncpus.trim," ncpus_star=",input$setup.ncpus.star,
+                 " run=",run)
   # converting project dir to host path
   if(file.exists("/filepath")){
    hostprojdir=gsub('/filepath/',hostfilepath,projdir)
@@ -985,8 +993,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   }
    print(paste0("echo 'cd ",projdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-   system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
-                " &> run_rnaseq_full.out' > /hostpipe"))
+   #system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+   #             " &> run_rnaseq_full.out' > /hostpipe"))
 })
  
  #### log tab #####
@@ -1122,16 +1130,14 @@ react.tab3.rdata <- reactive({
   updateSelectInput(session, "tab3.grp1.name",choices=groups.lst)
   updateTextInput(session, "tab3.grp1.plot.title",value=groups.lst[[1]])
  })
- 
- # volcano plots
- 
- 
+
  # vals will contain all plots and table grobs
  vals.plot <- reactiveValues(venn.up1=NULL,venn.up2=NULL,venn.dwn1=NULL,
                              venn.dwn2=NULL,hm.up=NULL,hm.dwn=NULL,
                              upset.up=NULL,upset.dwn=NULL,msig.mf=NULL,
                              msig.bp=NULL,msig.cc=NULL,msig.curate=NULL)
  
+ # adding groups
  value <- reactiveVal(1)
  inserted <- c()		
  inserted.col <- c()
@@ -1150,69 +1156,39 @@ react.tab3.rdata <- reactive({
   groups.lst <- react.tab3.groups.lst()
   btn <- value() +1
   value(btn)
+  if(btn %% 2 == 0) row.color="#FFFFFF"
+  if(btn %% 2 != 0) row.color="#f9f9f9"
   id <- paste0("txt1_", btn)
   insertUI(
    selector = "#placeholder",
    ui = tags$div(
+    fluidRow(style = paste0("background-color:",row.color),
+     column(2,
     selectInput(inputId=paste0("tab3.grp",btn,".name"),
                 label=(paste0("Group ",btn)), 
                 selected=groups.lst[btn],
-                choices=groups.lst),
-    textInput(inputId=paste0("tab3.grp",btn,".plot.title"),
+                choices=groups.lst)),
+    column(2,textInput(inputId=paste0("tab3.grp",btn,".plot.title"),
               label=(paste0("Group ",btn," label")), 
-              value = groups.lst[btn]),
+              value = groups.lst[btn])),
+    column(2,textInput(inputId=paste0("tab3.color.grp",btn), 
+              label = (paste0("Color for group ",btn)), 
+              value = tab3.colors[btn])),
+    column(2,numericInput(inputId=paste0("tab3.fdr.grp",btn), 
+                          label = (paste0("FDR cut-off for group ",btn)), 
+                          value = 0.05,step=0.01,min=0,max=1)),
+    column(2,numericInput(inputId=paste0("tab3.fc.grp",btn), 
+                 label = (paste0("Fold-change for group ",btn)), 
+                 value = 1,min=1,step=0.5)),
+    column(2,numericInput(inputId=paste0("tab3.meanDiff.grp",btn), 
+                 label = (paste0("Difference for group ",btn)), 
+                 value = 0,min=0,step=1))
+    ),
     id = id
    )
   )
   inserted <<- c(inserted, id)
   
-  id.col <- paste0("txt2_",btn)
-  insertUI(
-   selector = "#placeholder-col",
-   ui = tags$div(
-    textInput(inputId=paste0("tab3.color.grp",btn), 
-              label = (paste0("Color for group ",btn)), 
-              value = tab3.colors[btn]),
-    id = id.col
-   )
-  )
-  inserted.col <<- c(inserted.col, id.col)
-  
-  id.fdr <- paste0("txt3_",btn)
-  insertUI(
-   selector = "#placeholder-fdr",
-   ui = tags$div(
-    numericInput(inputId=paste0("tab3.fdr.grp",btn), 
-                 label = (paste0("FDR cut-off for group ",btn)), 
-                 value = 0.05,step=0.01,min=0,max=1),
-    id = id.fdr
-   )
-  )
-  inserted.fdr <<- c(inserted.fdr, id.fdr)
-  
-  id.fc <- paste0("txt4_",btn)
-  insertUI(
-   selector = "#placeholder-fc",
-   ui = tags$div(
-    numericInput(inputId=paste0("tab3.fc.grp",btn), 
-                 label = (paste0("Fold-change for group ",btn)), 
-                 value = 1,min=1,step=0.5),
-    id = id.fc
-   )
-  )
-  inserted.fc <<- c(inserted.fc, id.fc)
-  
-  id.meanDiff <- paste0("txt5_",btn)
-  insertUI(
-   selector = "#placeholder-meanDiff",
-   ui = tags$div(
-    numericInput(inputId=paste0("tab3.meanDiff.grp",btn), 
-                 label = (paste0("Difference for group ",btn)), 
-                 value = 0,min=0,step=1),
-    id = id.meanDiff
-   )
-  )
-  inserted.meanDiff <<- c(inserted.meanDiff, id.meanDiff)
  })
  
  observeEvent(input$remove_set, {
@@ -1222,18 +1198,7 @@ react.tab3.rdata <- reactive({
    removeUI(
     selector = paste0("#",inserted[length(inserted)])
    )
-   removeUI(
-    selector = paste0("#",inserted.col[length(inserted.col)])
-   )
-   removeUI(
-    selector = paste0("#",inserted.fdr[length(inserted.fdr)])
-   )
-   removeUI(
-    selector = paste0("#",inserted.fc[length(inserted.fc)])
-   )
-   removeUI(
-    selector = paste0("#",inserted.meanDiff[length(inserted.meanDiff)])
-   )
+
    updateSelectInput(
     session,
     paste0("tab3.grp",length(inserted)+1 ,".name"),
@@ -1272,10 +1237,6 @@ react.tab3.rdata <- reactive({
    )
    
    inserted <<- inserted[-length(inserted)]
-   inserted.col <<- inserted.col[-length(inserted.col)]
-   inserted.fdr <<- inserted.fdr[-length(inserted.fdr)]
-   inserted.fc <<- inserted.fc[-length(inserted.fc)]
-   inserted.meanDiff <<- inserted.meanDiff[-length(inserted.meanDiff)]
   }else{ btn <- 1
   value(btn)}
  })
@@ -1777,6 +1738,7 @@ react.tab3.rdata <- reactive({
  })	
  
  #### processing > 3 groups	
+ 
  react.tab3.grp.name <- reactive({
   grp.name <- sapply(grep("tab3\\.grp.+\\.name", x = names(input), value = TRUE),
                      function(x) input[[x]])
@@ -1828,6 +1790,26 @@ react.tab3.rdata <- reactive({
  react.tab3.nintersects.upset <- reactive({input$tab3.nintersects.upset})
  
  react.tab3.enrich.pval.co <- reactive({input$tab3.enrich.pval.co})
+ 
+ react.tab3.chg.enrich.terms<- reactive({
+  tmp=str_trim(unlist(strsplit(input$tab3.chg.enrich.terms,",")))
+  tmp=strsplit(tmp,"=")
+  shiny::req(!is.null(tmp))
+  terms=sapply(tmp,"[[",2)
+  names(terms)=sapply(tmp,"[[",1)
+  print("terms")
+  print(terms)
+  dict = c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
+           "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
+           "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
+           "Lncrna" = "lncRNA","Snrna" = "snRNA",
+           "Ncrna" = "ncRNA")
+  
+  if(length(terms)>0){
+   dict = c(dict,terms)
+  }
+  dict
+  })
  
  react.tab3.result <- reactive({
   grp.name=react.tab3.grp.name()
@@ -2142,18 +2124,39 @@ react.tab3.rdata <- reactive({
  })
 
  # Insert the right number of plot output objects into the web page
- output$tab3.plots <- renderUI({
+ output$tab3.volcano.plots <- renderUI({
   grp.name=react.tab3.grp.name()
+  genes.lists.dwn = tab3.genes.lists.dwn()
+  genes.lists.up = tab3.genes.lists.up()
   plot_output_list<-list()
   for (i in 1:length(grp.name)){
    plot_output_list[[i]] <- plotOutput(paste0("tab3.volcano.grp",i),height="600px")
   }
+  # Convert the list to a tagList - this is necessary for the list of items
+  # to display properly.
+  do.call(tagList, plot_output_list)
+ })
+ 
+ # Insert the right number of plot output objects into the web page
+ output$tab3.venn.plots <- renderUI({
+  grp.name=react.tab3.grp.name()
+  genes.lists.dwn = tab3.genes.lists.dwn()
+  genes.lists.up = tab3.genes.lists.up()
+  plot_output_list<-list()
+  plot.i=1
   if(length(grp.name)<8){
-   plot_output_list[[length(grp.name)+1]] <- plotOutput("tab3.venn.up")
-   plot_output_list[[length(grp.name)+2]] <- plotOutput("tab3.venn.dwn")
-   plot_output_list[[length(grp.name)+3]] <- plotOutput("tab3.hm")
+   if(sum(unlist(sapply(genes.lists.up,function(x)length(x))))>0){
+    plot_output_list[[length(grp.name)+plot.i]] <- plotOutput("tab3.venn.up")
+    plot.i = plot.i +1
+   }
+   if(sum(unlist(sapply(genes.lists.dwn,function(x)length(x))))>0){
+    plot_output_list[[length(grp.name)+plot.i]] <- plotOutput("tab3.venn.dwn")
+    plot.i=plot.i+1
+   }
+   if(length(grp.name)>1)
+    plot_output_list[[length(grp.name)+plot.i]] <- plotOutput("tab3.hm")
   }else{
-   plot_output_list[[length(grp.name)+1]] <- plotOutput("tab3.hm")
+   plot_output_list[[length(grp.name)+plot.i]] <- plotOutput("tab3.hm")
   }
   
   # Convert the list to a tagList - this is necessary for the list of items
@@ -2343,7 +2346,7 @@ react.tab3.rdata <- reactive({
  output$tab3.plot1 <- renderPlot({
   s4 <- tab3.s4.up()
   grp.name <- react.tab3.grp.name()
-  # only draw upset up-regulated if there are more than two groups with non-empty list of up genes
+  # only draw upset up-regulated if there are more than 1 group with non-empty list of up genes
   shiny::req(length(grp.name)>1 && sum(sapply(s4,function(x)length(x)!=0))>1)
   nintersects <- react.tab3.nintersects.upset()
   vals.plot$upset.up <- as.ggplot(upset(fromList(s4), order.by = "freq",
@@ -2354,6 +2357,7 @@ react.tab3.rdata <- reactive({
                                         text.scale = c(1.8, 1.8, 1.4, 1.8, 1.8, 1.5)))
   vals.plot$upset.up
  })
+
  
  output$tab3.plot2 <- renderPlot({
   s4 <- tab3.s4.dwn()
@@ -2384,141 +2388,113 @@ react.tab3.rdata <- reactive({
  # m_t2g.c2.biocarta <- msigdbr(species = msigdb.species, category = "C2",subcategory = "CP:BIOCARTA") %>%
  #  dplyr::select(gs_name, gene_symbol)
  
- observeEvent(input$gen.go,{
+ 
   output$tab3.plot3.1 <- renderPlot({
+   shiny::req(input$gen.go)
+   isolate({
    withProgress(message="Generating enrichment plots",{
     enrich.pval.co <- react.tab3.enrich.pval.co()
-    compare.df <- tab3.compare.df()
+    compare.df <- tab3.compare.df()  
     grp.plot.title <- react.tab3.grp.plot.title()
+    chg.enrich.terms <- react.tab3.chg.enrich.terms()
     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
     msigdb.species <- react.tab3.msigdb.species()
     msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "MF") %>%
      dplyr::select(gs_name, gene_symbol)
     msig.name ="MSigDB GO Molecular Function"
-    msig.gene.set$gs_name = gsub("GOMF_","",msig.gene.set$gs_name)
-    msig.gene.set$gs_name = gsub("_"," ",msig.gene.set$gs_name)
-    msig.gene.set$gs_name = tolower(msig.gene.set$gs_name)
-    msig.gene.set$gs_name = str_to_title(msig.gene.set$gs_name)
-    msig.gene.set$gs_name = str_replace_all(msig.gene.set$gs_name, 
-                                            c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
-                                              "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
-                                              "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
-                                              "Lncrna" = "lncRNA","Snrna" = "snRNA",
-                                              "Ncrna" = "ncRNA"))
-    
-    formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
-                                  TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
-                                  pAdjustMethod="BH")
-    # re-arrange datasets using factor
-    # and do pathway analysis using up- and down-regulated genes separately
-    vals.plot$msig.mf <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
-     facet_grid(~group2) +
-     scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
-     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues')
-    vals.plot$msig.mf
-   })#withProgress
-  },height=1000)
- })#observeEvent
- 
- observeEvent(input$gen.go,{
-  output$tab3.plot3.2 <- renderPlot({
-   withProgress(message="Generating enrichment plots",{
-    enrich.pval.co <- react.tab3.enrich.pval.co()
-    compare.df <- tab3.compare.df()
-    grp.plot.title <- react.tab3.grp.plot.title()
-    # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-    msigdb.species <- react.tab3.msigdb.species()
-    msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "BP") %>%
-     dplyr::select(gs_name, gene_symbol)
-    msig.name ="MSigDB GO Biological Process"
-    msig.gene.set$gs_name = gsub("GOBP_","",msig.gene.set$gs_name)
-    msig.gene.set$gs_name = gsub("_"," ",msig.gene.set$gs_name)
-    msig.gene.set$gs_name = tolower(msig.gene.set$gs_name)
-    msig.gene.set$gs_name = str_to_title(msig.gene.set$gs_name)
-    msig.gene.set$gs_name = str_replace_all(msig.gene.set$gs_name, 
-                                            c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
-                                              "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
-                                              "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
-                                              "Lncrna" = "lncRNA","Snrna" = "snRNA"))
-    formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
-                                  TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
-                                  pAdjustMethod="BH")
-    vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
-     facet_grid(~group2) +
-     scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
-     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues')
-    vals.plot$msig.bp
-   })#withProgress
-  },height=1000)
- })#observeEvent
- 
- observeEvent(input$gen.go,{
-  output$tab3.plot3.3 <- renderPlot({
-   withProgress(message="Generating enrichment plots",{
-    enrich.pval.co <- react.tab3.enrich.pval.co()
-    compare.df <- tab3.compare.df()
-    grp.plot.title <- react.tab3.grp.plot.title()
-    # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-    msigdb.species <- react.tab3.msigdb.species()
-    msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "CC") %>%
-     dplyr::select(gs_name, gene_symbol)
-    msig.name ="MSigDB GO Cellular Component"
-    msig.gene.set$gs_name = gsub("GOCC_","",msig.gene.set$gs_name)
-    msig.gene.set$gs_name = gsub("_"," ",msig.gene.set$gs_name)
-    msig.gene.set$gs_name = tolower(msig.gene.set$gs_name)
-    msig.gene.set$gs_name = str_to_title(msig.gene.set$gs_name)
-    msig.gene.set$gs_name = str_replace_all(msig.gene.set$gs_name, 
-                                            c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
-                                              "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
-                                              "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
-                                              "Lncrna" = "lncRNA","Snrna" = "snRNA"))
 
     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
                                   pAdjustMethod="BH")
-    vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
+
+    # re-arrange datasets using factor
+    # and do pathway analysis using up- and down-regulated genes separately
+    vals.plot$msig.mf <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
      facet_grid(~group2) +
-     scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
-     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+     scale_y_discrete(labels=function(x) 
+      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOMF_","",x)))),chg.enrich.terms), width=40)) +
+     scale_x_discrete(labels=function(x) 
+      str_wrap(x,width=10)) +
      scale_color_distiller(palette = 'Blues')
-    vals.plot$msig.cc
-   }) #withProgress
-  },height=1000)
- }) #observeEvent
+    vals.plot$msig.mf
+   })#withProgress
+   }) #isolate
+  },height=1000) #renderPlot
  
- 
- observeEvent(input$gen.go,{
-  output$tab3.plot3.4 <- renderPlot({
-   withProgress(message="Generating enrichment plots",{
-    enrich.pval.co <- react.tab3.enrich.pval.co()
-    compare.df <- tab3.compare.df()
-    grp.plot.title <- react.tab3.grp.plot.title()
-    # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-    msigdb.species <- react.tab3.msigdb.species()
-    msig.gene.set <- msigdbr(species = msigdb.species, category = "C2") %>%
-     dplyr::select(gs_name, gene_symbol)
-    msig.name ="MSigDB Curated Gene Sets"
-    msig.gene.set$gs_name = gsub("_"," ",msig.gene.set$gs_name)
-    msig.gene.set$gs_name = tolower(msig.gene.set$gs_name)
-    msig.gene.set$gs_name = str_to_title(msig.gene.set$gs_name)
-    msig.gene.set$gs_name = str_replace_all(msig.gene.set$gs_name, 
-                                            c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
-                                              "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
-                                              "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
-                                              "Lncrna" = "lncRNA","Snrna" = "snRNA"))
-    formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
-                                  TERM2GENE=msig.gene.set,
-                                  pvalueCutoff=enrich.pval.co,pAdjustMethod="BH")
-    vals.plot$msig.curate <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
-     scale_y_discrete(labels=function(x) str_wrap(x, width=40)) +
-     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues')
-    vals.plot$msig.curate
-   }) # withProgress
-  },height=1000)
- })#observeEvent
+  # output$tab3.plot3.2 <- renderPlot({
+  #  shiny::req(input$gen.go)
+  #  withProgress(message="Generating enrichment plots",{
+  #   enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
+  #   compare.df <- isolate(tab3.compare.df())
+  #   grp.plot.title <- isolate(react.tab3.grp.plot.title())
+  #   # Using clusterProfiler to perform hypergeometric test on msigdb signatures
+  #   msigdb.species <- isolate(react.tab3.msigdb.species())
+  #   msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "BP") %>%
+  #    dplyr::select(gs_name, gene_symbol)
+  #   msig.name ="MSigDB GO Biological Process"
+  #   chg.enrich.terms <- react.tab3.chg.enrich.terms()
+  #   formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
+  #                                 TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
+  #                                 pAdjustMethod="BH")
+  #   vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
+  #    facet_grid(~group2) +
+  #    scale_y_discrete(labels=function(x) 
+  #     str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOBP_","",x)))),chg.enrich.terms), width=40)) +
+  #    scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+  #    scale_color_distiller(palette = 'Blues')
+  #   vals.plot$msig.bp
+  #  })#withProgress
+  # },height=1000)
+  # 
+  # output$tab3.plot3.3 <- renderPlot({
+  #  shiny::req(input$gen.go)
+  #  withProgress(message="Generating enrichment plots",{
+  #   enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
+  #   compare.df <- isolate(tab3.compare.df())
+  #   grp.plot.title <- isolate(react.tab3.grp.plot.title())
+  #   chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+  #   # Using clusterProfiler to perform hypergeometric test on msigdb signatures
+  #   msigdb.species <- isolate(react.tab3.msigdb.species())
+  #   msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "CC") %>%
+  #    dplyr::select(gs_name, gene_symbol)
+  #   msig.name ="MSigDB GO Cellular Component"
+  #   formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
+  #                                 TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
+  #                                 pAdjustMethod="BH")
+  #   vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
+  #    facet_grid(~group2) +
+  #    scale_y_discrete(labels=function(x) 
+  #     str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOCC_","",x)))),chg.enrich.terms), width=40)) +
+  #    scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+  #    scale_color_distiller(palette = 'Blues')
+  #   vals.plot$msig.cc
+  #  }) #withProgress
+  # },height=1000)
+  # 
+  # 
+  # output$tab3.plot3.4 <- renderPlot({
+  #  shiny::req(input$gen.go)
+  #  withProgress(message="Generating enrichment plots",{
+  #   enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
+  #   compare.df <- isolate(tab3.compare.df())
+  #   grp.plot.title <- isolate(react.tab3.grp.plot.title())
+  #   chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+  #   # Using clusterProfiler to perform hypergeometric test on msigdb signatures
+  #   msigdb.species <- isolate(react.tab3.msigdb.species())
+  #   msig.gene.set <- msigdbr(species = msigdb.species, category = "C2") %>%
+  #    dplyr::select(gs_name, gene_symbol)
+  #   msig.name ="MSigDB Curated Gene Sets"
+  #   formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
+  #                                 TERM2GENE=msig.gene.set,
+  #                                 pvalueCutoff=enrich.pval.co,pAdjustMethod="BH")
+  #   vals.plot$msig.curate <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
+  #    scale_y_discrete(labels=function(x) 
+  #           str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
+  #    scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+  #    scale_color_distiller(palette = 'Blues')
+  #   vals.plot$msig.curate
+  #  }) # withProgress
+  # },height=1000)
  
  ## clicking on the export button will generate a pdf file 
  ## containing all plots

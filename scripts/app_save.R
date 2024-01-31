@@ -347,76 +347,80 @@ ui <- fluidPage(
                                 label = ("Group 1 label"), 
                                 value = groups.lst[1])),
                       
+                      tags$div(id = "placeholder"),
                       
-                      
-
-
+                                      br(),
+                      br(),
+                      # column(2,
+                      #        checkboxGroupInput("tab3.venn.opts", label = ("Display on Venns"), 
+                      #                           choices = venn.opts.lst,
+                      #                           selected = venn.opts$lbl[1:3]),
+                      #        
+                      #        # slider bar font size
+                      #        sliderInput("tab3.venn.cex", label = ("Venns' font size"), min = 0, 
+                      #                    max = 6, value = 1,step = 0.1),
+                      #        # slider bar pad
+                      #        sliderInput("tab3.venn.pad", label = ("Venns' circle size"), min = 0, 
+                      #                    max = 8, value = 1,step = 0.5),
+                      #        # upset plot number of intersection
+                      #        numericInput("tab3.nintersects.upset", label = ("Upset plot max intersections"), 
+                      #                     value = 40,min=1,step=1),
+                      # ),
                       column(2,
-                             #textInput("tab3.color.grp1", label = HTML("Color for <br/> group 1"), value = tab3.colors[1]),
-                             textInput("tab3.color.grp1", label = ("Color for group 1"), value = tab3.colors[1])),
+                             textInput("tab3.color.grp1", label = HTML("Color for <br/> group 1"), value = tab3.colors[1]),
+                             
+                             tags$div(id = "placeholder-col")),
                       column(2,
                              numericInput("tab3.fdr.grp1", label = ("FDR cut-off for group 1"), 
-                                          value = 0.05,step=0.01,min=0,max=1)),
-                      column(2,
+                                          value = 0.05,step=0.01,min=0,max=1),
+                             tags$div(id = "placeholder-fdr")),
+                      column(1,
                              numericInput("tab3.fc.grp1", label = ("Fold-change for group 1"), 
-                                          value = 1,min=1,step=0.5)),
-                      column(2,
+                                          value = 1,min=1,step=0.5),
+                             tags$div(id = "placeholder-fc")),
+                      column(1,
                              numericInput("tab3.meanDiff.grp1", label = ("Difference for group 1"), 
-                                          value = 0,min=0,step=1))),
-                      tags$div(id = "placeholder"),
+                                          value = 0,min=0,step=1),
+                             tags$div(id = "placeholder-meanDiff"))),
              splitLayout(
               actionButton("insert_set", "Insert", width = "100%"),
               actionButton("remove_set", "Remove", width = "100%")
              ),
              br(),
              br(),
-             tabsetPanel(
-              tabPanel("Table(s)",
              # Table of diff genes
              fluidRow(style = "background-color:#F5F5F5",
               textInput("tab3.search.term", "Search by gene names separated by commas:"),
               numericInput("currentPage","Current Page",value=1,min=1),
               uiOutput("tables")
-             )),
-             
-
- 
-             tabPanel("Volcano Plot(s)",
+             ),
+             # This is the dynamic UI for the plots
+             br(),
+             br(),
              fluidRow(
               # genes to highlight in volcano plot
               column(5,textInput("tab3.hilite.genes",
                                  label = "Enter official gene names separated by comma:",value="")),
-               # This is the dynamic UI for volcano plots
-               column(12,uiOutput("tab3.volcano.plots"))
-              )),
-              tabPanel("Overlaps",
-                       column(2,
-                              checkboxGroupInput("tab3.venn.opts", label = ("Display on Venns"),
-                                                 choices = venn.opts.lst,
-                                                 selected = venn.opts$lbl[1:3])),
-                              
-                              # slider bar font size
-                       column(2,sliderInput("tab3.venn.cex", label = ("Venns' font size"), min = 0,
-                                          max = 6, value = 1,step = 0.1)),
-                              # slider bar pad
-                       column(2,sliderInput("tab3.venn.pad", label = ("Venns' circle size"), min = 0,
-                                          max = 8, value = 1,step = 0.5)),
-                       br(),
-               column(12,uiOutput("tab3.venn.plots"))
-              ),
-             tabPanel("Upset Plot(s)",
-                             # upset plot number of intersection
-                             numericInput("tab3.nintersects.upset", label = ("Upset plot max intersections"),
-                                          value = 40,min=1,step=1),
-                      
+              column(12,uiOutput("tab3.plots"))),
+             br(),
+             br(),
+             fluidRow(
+              conditionalPanel(
+               condition="output.tab3.plot1 != null",
               plotOutput(outputId = "tab3.plot1")
-             ,
+             )
+             ),
              br(),
              br(),
+             fluidRow(
+              conditionalPanel(
+               condition="output.tab3.plot2 != null",
               column(12,plotOutput(outputId = "tab3.plot2"))
-              ),
-             tabPanel("Pathway",
-                      fluidRow(
+              )
+             ),
+             br(),
+             br(),
+             fluidRow(
              # species for msigdb
              selectInput(
               inputId="tab3.msigdb.species",
@@ -434,7 +438,7 @@ ui <- fluidPage(
              br(),
              conditionalPanel(
               condition= "input['gen.go'] >= 1",
-              column(12,textInput("tab3.chg.enrich.terms", label = ("Enter terms to change in enrichment plots"),
+              column(12,textInput("tab3.cap.enrich.terms", label = ("Enter terms to capitalize in enrichment plots"),
                         value="")),
                column(12,plotOutput(outputId = "tab3.plot3.1",height="auto")),
          
@@ -444,7 +448,8 @@ ui <- fluidPage(
                column(12,plotOutput(outputId = "tab3.plot3.3",height="auto")),
               br(),
                column(12,plotOutput(outputId = "tab3.plot3.4",height="auto")),
-              )))), 
+             )#fluidrow
+              ), # conditionalpanel
              textOutput("tab3.text")
             )
            )
@@ -487,7 +492,7 @@ server <- function(input, output,session) {
   setup.id.r1.filepath <- paste0("setup_grp",setup.btn,"_r1_filepaths")
   setup.id.r2.filepath <- paste0("setup_grp",setup.btn,"_r2_filepaths")
   if(setup.btn %% 2 == 0) row.color="#FFFFFF"
-  if(setup.btn %% 2 != 0) row.color="#f5f5f5"
+  if(setup.btn %% 2 != 0) row.color="#f9f9f9"
   insertUI(
    selector = "#setup-placeholder",
    ui = tags$div(
@@ -1155,39 +1160,69 @@ react.tab3.rdata <- reactive({
   groups.lst <- react.tab3.groups.lst()
   btn <- value() +1
   value(btn)
-  if(btn %% 2 == 0) row.color="#FFFFFF"
-  if(btn %% 2 != 0) row.color="#f9f9f9"
   id <- paste0("txt1_", btn)
   insertUI(
    selector = "#placeholder",
    ui = tags$div(
-    fluidRow(style = paste0("background-color:",row.color),
-     column(2,
     selectInput(inputId=paste0("tab3.grp",btn,".name"),
                 label=(paste0("Group ",btn)), 
                 selected=groups.lst[btn],
-                choices=groups.lst)),
-    column(2,textInput(inputId=paste0("tab3.grp",btn,".plot.title"),
+                choices=groups.lst),
+    textInput(inputId=paste0("tab3.grp",btn,".plot.title"),
               label=(paste0("Group ",btn," label")), 
-              value = groups.lst[btn])),
-    column(2,textInput(inputId=paste0("tab3.color.grp",btn), 
-              label = (paste0("Color for group ",btn)), 
-              value = tab3.colors[btn])),
-    column(2,numericInput(inputId=paste0("tab3.fdr.grp",btn), 
-                          label = (paste0("FDR cut-off for group ",btn)), 
-                          value = 0.05,step=0.01,min=0,max=1)),
-    column(2,numericInput(inputId=paste0("tab3.fc.grp",btn), 
-                 label = (paste0("Fold-change for group ",btn)), 
-                 value = 1,min=1,step=0.5)),
-    column(2,numericInput(inputId=paste0("tab3.meanDiff.grp",btn), 
-                 label = (paste0("Difference for group ",btn)), 
-                 value = 0,min=0,step=1))
-    ),
+              value = groups.lst[btn]),
     id = id
    )
   )
   inserted <<- c(inserted, id)
   
+  id.col <- paste0("txt2_",btn)
+  insertUI(
+   selector = "#placeholder-col",
+   ui = tags$div(
+    textInput(inputId=paste0("tab3.color.grp",btn), 
+              label = (paste0("Color for group ",btn)), 
+              value = tab3.colors[btn]),
+    id = id.col
+   )
+  )
+  inserted.col <<- c(inserted.col, id.col)
+  
+  id.fdr <- paste0("txt3_",btn)
+  insertUI(
+   selector = "#placeholder-fdr",
+   ui = tags$div(
+    numericInput(inputId=paste0("tab3.fdr.grp",btn), 
+                 label = (paste0("FDR cut-off for group ",btn)), 
+                 value = 0.05,step=0.01,min=0,max=1),
+    id = id.fdr
+   )
+  )
+  inserted.fdr <<- c(inserted.fdr, id.fdr)
+  
+  id.fc <- paste0("txt4_",btn)
+  insertUI(
+   selector = "#placeholder-fc",
+   ui = tags$div(
+    numericInput(inputId=paste0("tab3.fc.grp",btn), 
+                 label = (paste0("Fold-change for group ",btn)), 
+                 value = 1,min=1,step=0.5),
+    id = id.fc
+   )
+  )
+  inserted.fc <<- c(inserted.fc, id.fc)
+  
+  id.meanDiff <- paste0("txt5_",btn)
+  insertUI(
+   selector = "#placeholder-meanDiff",
+   ui = tags$div(
+    numericInput(inputId=paste0("tab3.meanDiff.grp",btn), 
+                 label = (paste0("Difference for group ",btn)), 
+                 value = 0,min=0,step=1),
+    id = id.meanDiff
+   )
+  )
+  inserted.meanDiff <<- c(inserted.meanDiff, id.meanDiff)
  })
  
  observeEvent(input$remove_set, {
@@ -1197,7 +1232,18 @@ react.tab3.rdata <- reactive({
    removeUI(
     selector = paste0("#",inserted[length(inserted)])
    )
-
+   removeUI(
+    selector = paste0("#",inserted.col[length(inserted.col)])
+   )
+   removeUI(
+    selector = paste0("#",inserted.fdr[length(inserted.fdr)])
+   )
+   removeUI(
+    selector = paste0("#",inserted.fc[length(inserted.fc)])
+   )
+   removeUI(
+    selector = paste0("#",inserted.meanDiff[length(inserted.meanDiff)])
+   )
    updateSelectInput(
     session,
     paste0("tab3.grp",length(inserted)+1 ,".name"),
@@ -1236,6 +1282,10 @@ react.tab3.rdata <- reactive({
    )
    
    inserted <<- inserted[-length(inserted)]
+   inserted.col <<- inserted.col[-length(inserted.col)]
+   inserted.fdr <<- inserted.fdr[-length(inserted.fdr)]
+   inserted.fc <<- inserted.fc[-length(inserted.fc)]
+   inserted.meanDiff <<- inserted.meanDiff[-length(inserted.meanDiff)]
   }else{ btn <- 1
   value(btn)}
  })
@@ -1788,14 +1838,9 @@ react.tab3.rdata <- reactive({
  
  react.tab3.enrich.pval.co <- reactive({input$tab3.enrich.pval.co})
  
- react.tab3.chg.enrich.terms<- reactive({
-  tmp=str_trim(unlist(strsplit(input$tab3.chg.enrich.terms,",")))
-  tmp=strsplit(tmp,"=")
-  shiny::req(!is.null(tmp))
-  terms=sapply(tmp,"[[",2)
-  names(terms)=sapply(tmp,"[[",1)
-  print("terms")
-  print(terms)
+ react.tab3.cap.enrich.terms<- reactive({
+  terms=toupper(str_trim(unlist(strsplit(input$tab3.cap.enrich.terms,","))))
+  names(terms)=str_to_title(terms)
   dict = c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
            "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
            "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
@@ -2121,7 +2166,7 @@ react.tab3.rdata <- reactive({
  })
 
  # Insert the right number of plot output objects into the web page
- output$tab3.volcano.plots <- renderUI({
+ output$tab3.plots <- renderUI({
   grp.name=react.tab3.grp.name()
   genes.lists.dwn = tab3.genes.lists.dwn()
   genes.lists.up = tab3.genes.lists.up()
@@ -2129,17 +2174,6 @@ react.tab3.rdata <- reactive({
   for (i in 1:length(grp.name)){
    plot_output_list[[i]] <- plotOutput(paste0("tab3.volcano.grp",i),height="600px")
   }
-  # Convert the list to a tagList - this is necessary for the list of items
-  # to display properly.
-  do.call(tagList, plot_output_list)
- })
- 
- # Insert the right number of plot output objects into the web page
- output$tab3.venn.plots <- renderUI({
-  grp.name=react.tab3.grp.name()
-  genes.lists.dwn = tab3.genes.lists.dwn()
-  genes.lists.up = tab3.genes.lists.up()
-  plot_output_list<-list()
   plot.i=1
   if(length(grp.name)<8){
    if(sum(unlist(sapply(genes.lists.up,function(x)length(x))))>0){
@@ -2343,6 +2377,8 @@ react.tab3.rdata <- reactive({
  output$tab3.plot1 <- renderPlot({
   s4 <- tab3.s4.up()
   grp.name <- react.tab3.grp.name()
+    print("is.null(vals.plot$upset.up)")
+  print(is.null(vals.plot$upset.up))
   # only draw upset up-regulated if there are more than 1 group with non-empty list of up genes
   shiny::req(length(grp.name)>1 && sum(sapply(s4,function(x)length(x)!=0))>1)
   nintersects <- react.tab3.nintersects.upset()
@@ -2385,16 +2421,15 @@ react.tab3.rdata <- reactive({
  # m_t2g.c2.biocarta <- msigdbr(species = msigdb.species, category = "C2",subcategory = "CP:BIOCARTA") %>%
  #  dplyr::select(gs_name, gene_symbol)
  
- 
+ observeEvent(input$gen.go,{
   output$tab3.plot3.1 <- renderPlot({
-   input$gen.go
    withProgress(message="Generating enrichment plots",{
-    enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
-    compare.df <- isolate(tab3.compare.df())
-    grp.plot.title <- isolate(react.tab3.grp.plot.title())
-    chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+    enrich.pval.co <- react.tab3.enrich.pval.co()
+    compare.df <- tab3.compare.df()
+    grp.plot.title <- react.tab3.grp.plot.title()
+    cap.enrich.terms <- react.tab3.cap.enrich.terms()
     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-    msigdb.species <- isolate(react.tab3.msigdb.species())
+    msigdb.species <- react.tab3.msigdb.species()
     msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "MF") %>%
      dplyr::select(gs_name, gene_symbol)
     msig.name ="MSigDB GO Molecular Function"
@@ -2402,54 +2437,57 @@ react.tab3.rdata <- reactive({
     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
                                   pAdjustMethod="BH")
-
+    print("formula_res")
+    print(formula_res)
     # re-arrange datasets using factor
     # and do pathway analysis using up- and down-regulated genes separately
     vals.plot$msig.mf <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
      facet_grid(~group2) +
      scale_y_discrete(labels=function(x) 
-      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOMF_","",x)))),chg.enrich.terms), width=40)) +
+      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOMF_","",x)))),cap.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) 
       str_wrap(x,width=10)) +
      scale_color_distiller(palette = 'Blues')
     vals.plot$msig.mf
    })#withProgress
-  },height=1000) #renderPlot
+  },height=1000)
+ })#observeEvent
  
+ observeEvent(input$gen.go,{
   output$tab3.plot3.2 <- renderPlot({
-   input$gen.go
    withProgress(message="Generating enrichment plots",{
-    enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
-    compare.df <- isolate(tab3.compare.df())
-    grp.plot.title <- isolate(react.tab3.grp.plot.title())
+    enrich.pval.co <- react.tab3.enrich.pval.co()
+    compare.df <- tab3.compare.df()
+    grp.plot.title <- react.tab3.grp.plot.title()
     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-    msigdb.species <- isolate(react.tab3.msigdb.species())
+    msigdb.species <- react.tab3.msigdb.species()
     msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "BP") %>%
      dplyr::select(gs_name, gene_symbol)
     msig.name ="MSigDB GO Biological Process"
-    chg.enrich.terms <- react.tab3.chg.enrich.terms()
+    cap.enrich.terms <- react.tab3.cap.enrich.terms()
     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
                                   pAdjustMethod="BH")
     vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
      facet_grid(~group2) +
      scale_y_discrete(labels=function(x) 
-      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOBP_","",x)))),chg.enrich.terms), width=40)) +
+      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOBP_","",x)))),cap.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
      scale_color_distiller(palette = 'Blues')
     vals.plot$msig.bp
    })#withProgress
   },height=1000)
+ })#observeEvent
  
+ observeEvent(input$gen.go,{
   output$tab3.plot3.3 <- renderPlot({
-   input$gen.go
    withProgress(message="Generating enrichment plots",{
-    enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
-    compare.df <- isolate(tab3.compare.df())
-    grp.plot.title <- isolate(react.tab3.grp.plot.title())
-    chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+    enrich.pval.co <- react.tab3.enrich.pval.co()
+    compare.df <- tab3.compare.df()
+    grp.plot.title <- react.tab3.grp.plot.title()
+    cap.enrich.terms <- react.tab3.cap.enrich.terms()
     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-    msigdb.species <- isolate(react.tab3.msigdb.species())
+    msigdb.species <- react.tab3.msigdb.species()
     msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "CC") %>%
      dplyr::select(gs_name, gene_symbol)
     msig.name ="MSigDB GO Cellular Component"
@@ -2459,23 +2497,24 @@ react.tab3.rdata <- reactive({
     vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
      facet_grid(~group2) +
      scale_y_discrete(labels=function(x) 
-      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOCC_","",x)))),chg.enrich.terms), width=40)) +
+      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOCC_","",x)))),cap.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
      scale_color_distiller(palette = 'Blues')
     vals.plot$msig.cc
    }) #withProgress
   },height=1000)
+ }) #observeEvent
  
  
+ observeEvent(input$gen.go,{
   output$tab3.plot3.4 <- renderPlot({
-   input$gen.go
    withProgress(message="Generating enrichment plots",{
-    enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
-    compare.df <- isolate(tab3.compare.df())
-    grp.plot.title <- isolate(react.tab3.grp.plot.title())
-    chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+    enrich.pval.co <- react.tab3.enrich.pval.co()
+    compare.df <- tab3.compare.df()
+    grp.plot.title <- react.tab3.grp.plot.title()
+    cap.enrich.terms <- react.tab3.cap.enrich.terms()
     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-    msigdb.species <- isolate(react.tab3.msigdb.species())
+    msigdb.species <- react.tab3.msigdb.species()
     msig.gene.set <- msigdbr(species = msigdb.species, category = "C2") %>%
      dplyr::select(gs_name, gene_symbol)
     msig.name ="MSigDB Curated Gene Sets"
@@ -2484,12 +2523,13 @@ react.tab3.rdata <- reactive({
                                   pvalueCutoff=enrich.pval.co,pAdjustMethod="BH")
     vals.plot$msig.curate <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
      scale_y_discrete(labels=function(x) 
-            str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
+            str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),cap.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
      scale_color_distiller(palette = 'Blues')
     vals.plot$msig.curate
    }) # withProgress
   },height=1000)
+ })#observeEvent
  
  ## clicking on the export button will generate a pdf file 
  ## containing all plots

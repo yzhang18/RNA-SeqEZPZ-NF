@@ -132,8 +132,8 @@ fi
 # to avoid being stuck when the app is hosted on a full node
 #node_avail=$(sinfo -o "%20n %20C %T" --partition=general,himem --states=IDLE,MIXED | awk '/mixed/ || /idle/ {split($2,a,"/"); if(a[1] > 1) {print $1;exit}}')
 # temporary to also avoid gpu nodes
-node_avail=$(sinfo -o "%20n %20C %T" --partition=general,himem --states=IDLE,MIXED | \
-awk 'NR > 1' |  awk '!/r1pl-hpcf-g0/ {split($2,a,"/"); if(a[1] > 1) {print $1;exit}}')
+#node_avail=$(sinfo -o "%20n %20C %T" --partition=general,himem --states=IDLE,MIXED | \
+#awk 'NR > 1' |  awk '!/r1pl-hpcf-g0/ {split($2,a,"/"); if(a[1] > 1) {print $1;exit}}')
 
 # Activate environment where shiny is installed and go to "app.R" directory
 jid=$(SINGULARITYENV_port_num=$port_num \
@@ -141,7 +141,6 @@ jid=$(SINGULARITYENV_port_num=$port_num \
         SINGULARITYENV_max_nsamples=$max_nsamples \
 	SINGULARITYENV_img_dir=$img_dir \
 	sbatch --time=$time \
-	--nodelist=$node_avail \
 	--output=run_shiny_analysis.out \
 	--wrap "singularity exec \
 	--bind $proj_dir:/mnt \
@@ -187,9 +186,14 @@ jid2=$(sbatch --nodelist=$node \
 
 # waiting for the listening job to be run
 status=$(squeue -j $jid2 -o "%t" -h)
+reason=$(squeue -j $jid2 -o "%r" -h)
 sleep 2
 while [[ $status != "R"* ]];do
-        echo -e "Please wait finding available node and setting up pipe ....\n"
+	if [[ $reason == "ReqNodeNotAvail"* ]];then
+		echo -e "Please restart run_shiny_analysis.sh\n"
+		exit 1
+	fi
+	echo -e "Please wait finding available node and setting up pipe ....\n"
         sleep 10
         status=$(squeue -j $jid2 -o "%t" -h)
         node=$(squeue -j $jid2 -o "%R" -h)

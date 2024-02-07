@@ -435,7 +435,7 @@ ui <- fluidPage(
              br(),
              conditionalPanel(
               condition= "input['gen.go'] >= 1",
-              fluidRow(column(12,textInput("tab3.chg.enrich.terms", label = ("Enter terms to change in enrichment plots"),
+              fluidRow(column(12,textInput("tab3.chg.enrich.terms", label = ("Enter terms to change in enrichment plots (e.g., Gtpase=GTPase, Hiv=HIV)"),
                         value="")),
                column(12,plotOutput(outputId = "tab3.plot3.1",height="auto")),
          
@@ -2421,80 +2421,86 @@ react.tab3.rdata <- reactive({
    }) #isolate
   },height=1000) #renderPlot
  
-  # output$tab3.plot3.2 <- renderPlot({
-  #  shiny::req(input$gen.go)
-  #  withProgress(message="Generating enrichment plots",{
-  #   enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
-  #   compare.df <- isolate(tab3.compare.df())
-  #   grp.plot.title <- isolate(react.tab3.grp.plot.title())
-  #   # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-  #   msigdb.species <- isolate(react.tab3.msigdb.species())
-  #   msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "BP") %>%
-  #    dplyr::select(gs_name, gene_symbol)
-  #   msig.name ="MSigDB GO Biological Process"
-  #   chg.enrich.terms <- react.tab3.chg.enrich.terms()
-  #   formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
-  #                                 TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
-  #                                 pAdjustMethod="BH")
-  #   vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
-  #    facet_grid(~group2) +
-  #    scale_y_discrete(labels=function(x) 
-  #     str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOBP_","",x)))),chg.enrich.terms), width=40)) +
-  #    scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-  #    scale_color_distiller(palette = 'Blues')
-  #   vals.plot$msig.bp
-  #  })#withProgress
-  # },height=1000)
-  # 
-  # output$tab3.plot3.3 <- renderPlot({
-  #  shiny::req(input$gen.go)
-  #  withProgress(message="Generating enrichment plots",{
-  #   enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
-  #   compare.df <- isolate(tab3.compare.df())
-  #   grp.plot.title <- isolate(react.tab3.grp.plot.title())
-  #   chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
-  #   # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-  #   msigdb.species <- isolate(react.tab3.msigdb.species())
-  #   msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "CC") %>%
-  #    dplyr::select(gs_name, gene_symbol)
-  #   msig.name ="MSigDB GO Cellular Component"
-  #   formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
-  #                                 TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
-  #                                 pAdjustMethod="BH")
-  #   vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
-  #    facet_grid(~group2) +
-  #    scale_y_discrete(labels=function(x) 
-  #     str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOCC_","",x)))),chg.enrich.terms), width=40)) +
-  #    scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-  #    scale_color_distiller(palette = 'Blues')
-  #   vals.plot$msig.cc
-  #  }) #withProgress
-  # },height=1000)
-  # 
-  # 
-  # output$tab3.plot3.4 <- renderPlot({
-  #  shiny::req(input$gen.go)
-  #  withProgress(message="Generating enrichment plots",{
-  #   enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
-  #   compare.df <- isolate(tab3.compare.df())
-  #   grp.plot.title <- isolate(react.tab3.grp.plot.title())
-  #   chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
-  #   # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-  #   msigdb.species <- isolate(react.tab3.msigdb.species())
-  #   msig.gene.set <- msigdbr(species = msigdb.species, category = "C2") %>%
-  #    dplyr::select(gs_name, gene_symbol)
-  #   msig.name ="MSigDB Curated Gene Sets"
-  #   formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
-  #                                 TERM2GENE=msig.gene.set,
-  #                                 pvalueCutoff=enrich.pval.co,pAdjustMethod="BH")
-  #   vals.plot$msig.curate <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
-  #    scale_y_discrete(labels=function(x) 
-  #           str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
-  #    scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-  #    scale_color_distiller(palette = 'Blues')
-  #   vals.plot$msig.curate
-  #  }) # withProgress
-  # },height=1000)
+  output$tab3.plot3.2 <- renderPlot({
+   shiny::req(input$gen.go)
+   shiny::isolate({
+   withProgress(message="Generating enrichment plots",{
+    enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
+    compare.df <- isolate(tab3.compare.df())
+    grp.plot.title <- isolate(react.tab3.grp.plot.title())
+    # Using clusterProfiler to perform hypergeometric test on msigdb signatures
+    msigdb.species <- isolate(react.tab3.msigdb.species())
+    msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "BP") %>%
+     dplyr::select(gs_name, gene_symbol)
+    msig.name ="MSigDB GO Biological Process"
+    chg.enrich.terms <- react.tab3.chg.enrich.terms()
+    formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
+                                  TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
+                                  pAdjustMethod="BH")
+    vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) +
+     facet_grid(~group2) +
+     scale_y_discrete(labels=function(x)
+      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOBP_","",x)))),chg.enrich.terms), width=40)) +
+     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+     scale_color_distiller(palette = 'Blues')
+    vals.plot$msig.bp
+   })#withProgress
+   }) #isolate
+  },height=1000)
+
+  output$tab3.plot3.3 <- renderPlot({
+   shiny::req(input$gen.go)
+   shiny::isolate({
+   withProgress(message="Generating enrichment plots",{
+    enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
+    compare.df <- isolate(tab3.compare.df())
+    grp.plot.title <- isolate(react.tab3.grp.plot.title())
+    chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+    # Using clusterProfiler to perform hypergeometric test on msigdb signatures
+    msigdb.species <- isolate(react.tab3.msigdb.species())
+    msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "CC") %>%
+     dplyr::select(gs_name, gene_symbol)
+    msig.name ="MSigDB GO Cellular Component"
+    formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
+                                  TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
+                                  pAdjustMethod="BH")
+    vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) +
+     facet_grid(~group2) +
+     scale_y_discrete(labels=function(x)
+      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOCC_","",x)))),chg.enrich.terms), width=40)) +
+     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+     scale_color_distiller(palette = 'Blues')
+    vals.plot$msig.cc
+   }) #withProgress
+   }) #isolate
+  },height=1000)
+
+
+  output$tab3.plot3.4 <- renderPlot({
+   shiny::req(input$gen.go)
+   shiny::isolate({
+    withProgress(message="Generating enrichment plots",{
+    enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
+    compare.df <- isolate(tab3.compare.df())
+    grp.plot.title <- isolate(react.tab3.grp.plot.title())
+    chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+    # Using clusterProfiler to perform hypergeometric test on msigdb signatures
+    msigdb.species <- isolate(react.tab3.msigdb.species())
+    msig.gene.set <- msigdbr(species = msigdb.species, category = "C2") %>%
+     dplyr::select(gs_name, gene_symbol)
+    msig.name ="MSigDB Curated Gene Sets"
+    formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
+                                  TERM2GENE=msig.gene.set,
+                                  pvalueCutoff=enrich.pval.co,pAdjustMethod="BH")
+    vals.plot$msig.curate <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
+     scale_y_discrete(labels=function(x)
+            str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
+     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+     scale_color_distiller(palette = 'Blues')
+    vals.plot$msig.curate
+   }) # withProgress
+   }) #isolate
+  },height=1000)
  
  ## clicking on the export button will generate a pdf file 
  ## containing all plots

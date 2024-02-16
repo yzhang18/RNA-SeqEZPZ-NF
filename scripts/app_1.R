@@ -28,9 +28,11 @@ library(shinyFiles)
 library(shinyjs)
 library(ggrepel)
 library(dplyr) #bind_rows, case_when
+library(gtools) # mixedsort
 #library(plotly)
 #library(DT)
 library(purrr)
+library(shinyBS)
 #library(tidyverse)
 
 css <- "
@@ -79,7 +81,7 @@ log.fail.lst=""
  max_plots=5
 
 # arbitrary variables to prevent errors
- groups.lst=c("a","b","c")
+# groups.lst=c("a","b","c")
  
 # List of choices for genome
 setup.genome.lst <- as.list(c("hg19","hg38","other"))
@@ -160,8 +162,8 @@ ui <- fluidPage(
  tags$style(HTML("#setup_grp1_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tags$style(HTML("#setup_grp2_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tags$style(HTML("#setup_grp2_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
- tabsetPanel(id="inTabset",
-  tabPanel("Run Analysis", id="run_analysis", fluid = TRUE,
+ tabsetPanel(id="tabset",
+  tabPanel("Run Analysis","run_analysis", fluid = TRUE,
            sidebarPanel(width=3,
                         shinyDirButton("setup_proj_dir", 
                                          label = "Select project folder",
@@ -314,7 +316,7 @@ ui <- fluidPage(
   tabPanel("Outputs",id="outputtab",fluid=TRUE,
             htmlOutput("diff_report")
            ), #tabPanel Outputs
-  tabPanel("Plots", value="tab3",fluid = TRUE,
+  tabPanel("Plots", id="tab3",fluid = TRUE,
            sidebarLayout(
             sidebarPanel(
              tags$style(type='text/css', 
@@ -341,17 +343,11 @@ ui <- fluidPage(
                       column(2,selectInput(
                        inputId="tab3.grp1.name",
                        label = ("Group 1"),
-                       selected=groups.lst[1],
-                       choices = groups.lst)),
+                       choices = NULL)),
                       column(2,textInput(inputId="tab3.grp1.plot.title", 
                                 label = ("Group 1 label"), 
-                                value = groups.lst[1])),
-                      
-                      
-                      
-
-
-                      column(2,
+                                value = "")),
+                     column(2,
                              #textInput("tab3.color.grp1", label = HTML("Color for <br/> group 1"), value = tab3.colors[1]),
                              textInput("tab3.color.grp1", label = ("Color for group 1"), value = tab3.colors[1])),
                       column(2,
@@ -434,7 +430,7 @@ ui <- fluidPage(
              br(),
              conditionalPanel(
               condition= "input['gen.go'] >= 1",
-              column(12,textInput("tab3.chg.enrich.terms", label = ("Enter terms to change in enrichment plots"),
+              fluidRow(column(12,textInput("tab3.chg.enrich.terms", label = ("Enter terms to change in enrichment plots (e.g., Gtpase=GTPase, Hiv=HIV)"),
                         value="")),
                column(12,plotOutput(outputId = "tab3.plot3.1",height="auto")),
          
@@ -443,7 +439,7 @@ ui <- fluidPage(
               br(),
                column(12,plotOutput(outputId = "tab3.plot3.3",height="auto")),
               br(),
-               column(12,plotOutput(outputId = "tab3.plot3.4",height="auto")),
+               column(12,plotOutput(outputId = "tab3.plot3.4",height="auto"))),
               )))), 
              textOutput("tab3.text")
             )
@@ -542,7 +538,7 @@ server <- function(input, output,session) {
    )
    updateTextInput(
     session,
-    paste0("setup.grp", length(setup.inserted.div)+2,"ctrl.name"),
+    paste0("setup.grp", length(setup.inserted.div)+2,".ctrl.name"),
     NULL,
     ""
    )
@@ -586,14 +582,14 @@ server <- function(input, output,session) {
   react.setup.grp.name <- reactive({
   grp.name <- sapply(grep("setup\\.grp\\d+\\.name", x = names(input), value = TRUE),
                      function(x) input[[x]])
-  grp.name=as.vector(grp.name[order(names(grp.name))])
+  grp.name=as.vector(grp.name[mixedorder(names(grp.name))])
   grp.name[grp.name!=""]
  })
  
  react.setup.grp.ctrl.name <- reactive({
   grp.ctrl.name <- sapply(grep("setup\\.grp\\d+\\.ctrl\\.name", x = names(input), value = TRUE),
                           function(x) input[[x]])
-  grp.ctrl.name=as.vector(grp.ctrl.name[order(names(grp.ctrl.name))])
+  grp.ctrl.name=as.vector(grp.ctrl.name[mixedorder(names(grp.ctrl.name))])
   grp.ctrl.name[grp.ctrl.name!=""]
  })
  
@@ -601,7 +597,7 @@ server <- function(input, output,session) {
   grp.rep.name <- sapply(grep("setup\\.grp\\d+\\.rep\\.name", x = names(input), value = TRUE),
                          function(x) input[[x]])
   # need to do order otherwise the new one will be the first in the vector
-  grp.rep.name=as.vector(grp.rep.name[order(names(grp.rep.name))])
+  grp.rep.name=as.vector(grp.rep.name[mixedorder(names(grp.rep.name))])
   grp.rep.name[grp.rep.name!=""]
  })
  
@@ -992,8 +988,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   }
    print(paste0("echo 'cd ",projdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-   #system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
-   #             " &> run_rnaseq_full.out' > /hostpipe"))
+   system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+                " &> run_rnaseq_full.out' > /hostpipe"))
 })
  
  #### log tab #####
@@ -1088,7 +1084,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  })
  
  react.tab3.out.loc <- reactive({
-  shiny::req(dir.exists(data.loc))
+   data.loc <- react.tab3.data.loc()
+   shiny::req(dir.exists(data.loc))
   # create directory for shiny outputs
   dir.create(paste0(data.loc, "shiny_outputs"))
   out.loc=paste0(data.loc,"shiny_outputs/")
@@ -1096,7 +1093,9 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  
  # initialize values for tab
 react.tab3.rdata <- reactive({
- selected_tab <- input$inTabset
+ print("input$tabset")
+ print(input$tabset)
+ req(input$tabset=="Plots")
  projdir <- react.setup.proj.dir()
  data.loc <- react.tab3.data.loc()
  rdata.loc1=paste0(data.loc,"diff_analysis_rslt/RNA-seq_differential_analysis.RData")
@@ -1134,7 +1133,7 @@ react.tab3.rdata <- reactive({
  vals.plot <- reactiveValues(venn.up1=NULL,venn.up2=NULL,venn.dwn1=NULL,
                              venn.dwn2=NULL,hm.up=NULL,hm.dwn=NULL,
                              upset.up=NULL,upset.dwn=NULL,msig.mf=NULL,
-                             msig.bp=NULL,msig.cc=NULL,msig.curate=NULL)
+                             msig.bp=NULL,msig.cc=NULL,msig.curate=NULL,volcano=list())
  
  # adding groups
  value <- reactiveVal(1)
@@ -1210,27 +1209,28 @@ react.tab3.rdata <- reactive({
     NULL,
     NA
    )
+
    updateTextInput(
     session,
-    paste0("tab3.color.grp",length(inserted.col)+1),
+    paste0("tab3.color.grp",length(inserted)+1),
     NULL,
     NA
    )
    updateNumericInput(
     session,
-    paste0("tab3.fdr.grp",length(inserted.fdr)+1),
+    paste0("tab3.fdr.grp",length(inserted)+1),
     NULL,
     NA
    )
    updateNumericInput(
     session,
-    paste0("tab3.fc.grp",length(inserted.fc)+1),
+    paste0("tab3.fc.grp",length(inserted)+1),
     NULL,
     NA
    )
    updateNumericInput(
     session,
-    paste0("tab3.meanDiff.grp",length(inserted.meanDiff)+1),
+    paste0("tab3.meanDiff.grp",length(inserted)+1),
     NULL,
     NA
    )
@@ -1741,37 +1741,37 @@ react.tab3.rdata <- reactive({
  react.tab3.grp.name <- reactive({
   grp.name <- sapply(grep("tab3\\.grp.+\\.name", x = names(input), value = TRUE),
                      function(x) input[[x]])
-  grp.name=as.vector(grp.name[order(names(grp.name))])
+  grp.name=as.vector(grp.name[mixedorder(names(grp.name))])
   grp.name[grp.name!="NA"]
  })
  react.tab3.grp.plot.title <- reactive({
   grp.plot.title <- sapply(grep("tab3\\.grp.+\\.plot\\.title", x = names(input), value = TRUE),
                            function(x) input[[x]])
-  grp.plot.title=as.vector(grp.plot.title[order(names(grp.plot.title))])
+  grp.plot.title=as.vector(grp.plot.title[mixedorder(names(grp.plot.title))])
   grp.plot.title[grp.plot.title!=""]
  })
  react.tab3.color <- reactive({
   colors <- sapply(grep("tab3\\.color.+", x = names(input), value = TRUE),
                    function(x) input[[x]])
-  colors=as.vector(colors[order(names(colors))])
+  colors=as.vector(colors[mixedorder(names(colors))])
   colors[colors!=""]
  })
  react.tab3.fdr.cutoff <- reactive({
   fdr.cutoff <- sapply(grep("tab3\\.fdr.+", x = names(input), value = TRUE),
                        function(x) input[[x]])
-  fdr.cutoff=as.vector(fdr.cutoff[order(names(fdr.cutoff))])
+  fdr.cutoff=as.vector(fdr.cutoff[mixedorder(names(fdr.cutoff))])
   fdr.cutoff[fdr.cutoff!="NA"]
  })  
  react.tab3.fc.cutoff <- reactive({
   fc.cutoff <- sapply(grep("tab3\\.fc.+", x = names(input), value = TRUE),
                       function(x) input[[x]])
-  fc.cutoff=as.vector(fc.cutoff[order(names(fc.cutoff))])
+  fc.cutoff=as.vector(fc.cutoff[mixedorder(names(fc.cutoff))])
   fc.cutoff[fc.cutoff!="NA"]
  })
  react.tab3.meanDiff.cutoff <- reactive({
   meanDiff.cutoff <- sapply(grep("tab3\\.meanDiff.+", x = names(input), value = TRUE),
                             function(x) input[[x]])
-  meanDiff.cutoff=as.vector(meanDiff.cutoff[order(names(meanDiff.cutoff))])
+  meanDiff.cutoff=as.vector(meanDiff.cutoff[mixedorder(names(meanDiff.cutoff))])
   meanDiff.cutoff[meanDiff.cutoff!="NA"]
  }) 
  react.tab3.venn.opts <- reactive({input$tab3.venn.opts})
@@ -1794,8 +1794,6 @@ react.tab3.rdata <- reactive({
   shiny::req(!is.null(tmp))
   terms=sapply(tmp,"[[",2)
   names(terms)=sapply(tmp,"[[",1)
-  print("terms")
-  print(terms)
   dict = c("Mrna" = "mRNA", "Dna" = "DNA", "Rna" = "RNA", 
            "Trna" = "tRNA", "Mirna" = "miRNA", "Rrna" = "rRNA",
            "Atp" = "ATP","Adp" = "ADP","Snorna" = "snoRNA",
@@ -1810,10 +1808,27 @@ react.tab3.rdata <- reactive({
  
  react.tab3.result <- reactive({
   grp.name=react.tab3.grp.name()
+  projdir = react.setup.proj.dir()
+  shiny::req(!grp.name=="")
   grp.plot.title=react.tab3.grp.plot.title()
   out.DESeq2 <- react.tab3.rdata()
   idx=match(grp.name,names(out.DESeq2$results))
   results=out.DESeq2$results[idx]
+  # make sure grp list is generated before proceeding
+  shiny::req(!is.null(rownames(results[[1]])[1]))
+  # set gene symbol as rownames if not already set
+  if(grepl("ENSG",rownames(results[[1]])[1])){
+   in.file=paste0(gsub("_","",grp.name[1]),".complete.txt")
+   df=read.table(paste0(projdir,"outputs/diff_analysis_rslt/tables/",in.file),
+                sep="\t",header=TRUE)
+   gene.symbol=df$geneSymbol
+   gene.symbol[is.na(gene.symbol)]=df$Id[is.na(gene.symbol)]
+   results=lapply(results,function(x) {
+    rownames(x)=gene.symbol 
+    return(x)
+    })
+  }
+  results
  })
  
  react.tab3.normCts <- reactive({
@@ -2096,7 +2111,8 @@ react.tab3.rdata <- reactive({
    table_id <- paste0("table_", tab_name)
    tagList(
     h4(paste("Gene expression for", tab_name)),
-    tableOutput(table_id)
+    tableOutput(table_id),
+    br()
    )
   })
  })
@@ -2169,9 +2185,7 @@ react.tab3.rdata <- reactive({
  })
  
  react.tab3.expr.tbl <- reactive({
-  print("input$inTabSet")
-  print(input$inTabSet)
-  req(input$inTabset=="tab3")
+  shiny::req(input$tabset=="Plots")
   grp.name=react.tab3.grp.name()
   grp.plot.title=react.tab3.grp.plot.title()
   results=react.tab3.result()
@@ -2185,6 +2199,8 @@ react.tab3.rdata <- reactive({
    grps=strsplit(grp.name[i],"_vs_")
    treat.grp=grps[[1]][1]
    ref.grp=grps[[1]][2]
+   print("treat.grp")
+   print(treat.grp)
    treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
    ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
    diff.mean=treat.mean-ref.mean
@@ -2203,7 +2219,8 @@ react.tab3.rdata <- reactive({
                  FDR <= fdr.co[i] & 
                  diff.mean <= -meanDiff.cutoff[i] ~ "Down-regulated",
                 TRUE ~ "NS")
-    )
+    ) %>%
+    arrange(round(FDR,digits=3),desc(abs(logFC)))
    expr.tbl[[i]] <- data
   }
   names(expr.tbl)=grp.plot.title
@@ -2251,13 +2268,15 @@ react.tab3.rdata <- reactive({
                 TRUE ~ "NS")
     )
    # change FDR=0 so it can be graphed correctly
-   data$logFDR=-log(data$FDR+min(c(data$FDR[data$FDR>0],1e-32),na.rm=TRUE),10)
+   # remove FDR=na
+   data=data[!is.na(data$FDR),]
+   data$logFDR=-log(data$FDR+min(c(data$FDR[data$FDR>0],1e-32)),10)
    genes_show = hilite.genes
    genes_show_data <- dplyr::bind_rows(
     data %>%
      filter(Genes %in% genes_show)
    )
-   xlim=c(min(data$logFC)*1.1,max(data$logFC)*1.1)
+   xlim=c(-max(data$logFC)*1.1,max(data$logFC)*1.1)
    ylim=c(0,max(data$logFDR,na.rm=TRUE)*1.1)
    p <- ggplot(data, aes(logFC, logFDR)) +
     geom_hline(yintercept=-log10(fdr.co[my_i]), col="#5d5d5d",linetype="dashed")+
@@ -2272,7 +2291,8 @@ react.tab3.rdata <- reactive({
     theme(panel.grid.major=element_line(color = "#EBEBEB"),
           panel.grid.minor=element_line(color = "#EBEBEB"),
           plot.title=element_text(hjust=0.5))+
-    ggtitle(paste0("Volcano plot for ",grp.plot.title[my_i]))
+    ggtitle(paste0("Volcano plot for ",grp.plot.title[my_i])) +
+    scale_x_continuous(limits=xlim)
    if(fc.cutoff[my_i]>1){
     p <- p + 
      geom_vline(xintercept=c(-log2(fc.cutoff[my_i]), log2(fc.cutoff[my_i])), col="#5d5d5d",linetype="dashed")
@@ -2387,14 +2407,15 @@ react.tab3.rdata <- reactive({
  
  
   output$tab3.plot3.1 <- renderPlot({
-   input$gen.go
+   shiny::req(input$gen.go)
+   isolate({
    withProgress(message="Generating enrichment plots",{
-    enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
-    compare.df <- isolate(tab3.compare.df())
-    grp.plot.title <- isolate(react.tab3.grp.plot.title())
-    chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+    enrich.pval.co <- react.tab3.enrich.pval.co()
+    compare.df <- tab3.compare.df()  
+    grp.plot.title <- react.tab3.grp.plot.title()
+    chg.enrich.terms <- react.tab3.chg.enrich.terms()
     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
-    msigdb.species <- isolate(react.tab3.msigdb.species())
+    msigdb.species <- react.tab3.msigdb.species()
     msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "MF") %>%
      dplyr::select(gs_name, gene_symbol)
     msig.name ="MSigDB GO Molecular Function"
@@ -2414,10 +2435,12 @@ react.tab3.rdata <- reactive({
      scale_color_distiller(palette = 'Blues')
     vals.plot$msig.mf
    })#withProgress
+   }) #isolate
   },height=1000) #renderPlot
  
   output$tab3.plot3.2 <- renderPlot({
-   input$gen.go
+   shiny::req(input$gen.go)
+   shiny::isolate({
    withProgress(message="Generating enrichment plots",{
     enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
     compare.df <- isolate(tab3.compare.df())
@@ -2431,18 +2454,20 @@ react.tab3.rdata <- reactive({
     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
                                   pAdjustMethod="BH")
-    vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
+    vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) +
      facet_grid(~group2) +
-     scale_y_discrete(labels=function(x) 
+     scale_y_discrete(labels=function(x)
       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOBP_","",x)))),chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
      scale_color_distiller(palette = 'Blues')
     vals.plot$msig.bp
    })#withProgress
+   }) #isolate
   },height=1000)
- 
+
   output$tab3.plot3.3 <- renderPlot({
-   input$gen.go
+   shiny::req(input$gen.go)
+   shiny::isolate({
    withProgress(message="Generating enrichment plots",{
     enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
     compare.df <- isolate(tab3.compare.df())
@@ -2456,20 +2481,22 @@ react.tab3.rdata <- reactive({
     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
                                   pAdjustMethod="BH")
-    vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
+    vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) +
      facet_grid(~group2) +
-     scale_y_discrete(labels=function(x) 
+     scale_y_discrete(labels=function(x)
       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOCC_","",x)))),chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
      scale_color_distiller(palette = 'Blues')
     vals.plot$msig.cc
    }) #withProgress
+   }) #isolate
   },height=1000)
- 
- 
+
+
   output$tab3.plot3.4 <- renderPlot({
-   input$gen.go
-   withProgress(message="Generating enrichment plots",{
+   shiny::req(input$gen.go)
+   shiny::isolate({
+    withProgress(message="Generating enrichment plots",{
     enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
     compare.df <- isolate(tab3.compare.df())
     grp.plot.title <- isolate(react.tab3.grp.plot.title())
@@ -2483,12 +2510,13 @@ react.tab3.rdata <- reactive({
                                   TERM2GENE=msig.gene.set,
                                   pvalueCutoff=enrich.pval.co,pAdjustMethod="BH")
     vals.plot$msig.curate <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
-     scale_y_discrete(labels=function(x) 
+     scale_y_discrete(labels=function(x)
             str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
      scale_color_distiller(palette = 'Blues')
     vals.plot$msig.curate
    }) # withProgress
+   }) #isolate
   },height=1000)
  
  ## clicking on the export button will generate a pdf file 
@@ -2502,25 +2530,33 @@ react.tab3.rdata <- reactive({
    file=file.path(out.loc,"plots.pdf")
    if(file.exists(file)) file.remove(file)
    pdf(file, onefile = TRUE,width=input$pdf.width,height=input$pdf.height)
-   gridExtra::grid.arrange(vals.plot$venn.up1,vals.plot$venn.up2,ncol=2,
+   if(!is.null(vals.plot$venn.up1))
+    gridExtra::grid.arrange(vals.plot$venn.up1,vals.plot$venn.up2,ncol=2,
                            padding=unit(pad,"line"),
                            top=textGrob("Up-regulated Genes",gp=gpar(fontsize=20)),
                            vp=viewport(width=0.8, height=0.8))
-   gridExtra::grid.arrange(vals.plot$venn.dwn1,vals.plot$venn.dwn2,ncol=2,
+   if(!is.null(vals.plot$venn.dwn1))
+    gridExtra::grid.arrange(vals.plot$venn.dwn1,vals.plot$venn.dwn2,ncol=2,
                            padding=unit(pad,"line"),
                            top=textGrob("Down-regulated Genes",gp=gpar(fontsize=20)),
                            vp=viewport(width=0.8, height=0.8))
-   gridExtra::grid.arrange(vals.plot$hm.up,vals.plot$hm.dwn,ncol=2,padding=unit(pad,"line"),
+   if(!is.null(vals.plot$hm.up))
+    gridExtra::grid.arrange(vals.plot$hm.up,vals.plot$hm.dwn,
+                                       ncol=2,padding=unit(pad,"line"),
                            top=textGrob("Significance of overlaps",gp=gpar(fontsize=20)),
                            vp=viewport(width=0.8, height=0.8))
-   gridExtra::grid.arrange(vals.plot$upset.up,vp=viewport(width=0.8, height=0.8))
+   if(!is.null(vals.plot$upset.up))
+    gridExtra::grid.arrange(vals.plot$upset.up,vp=viewport(width=0.8, height=0.8))
+   if(!is.null(vals.plot$upset.dwn))
    gridExtra::grid.arrange(vals.plot$upset.dwn,vp=viewport(width=0.8, height=0.8))
-   if(gen.go!=0){
+   if(!is.null(vals.plot$msig.mf))
     gridExtra::grid.arrange(vals.plot$msig.mf,vp=viewport(width=0.8, height=0.8))
+   if(!is.null(vals.plot$msig.bp))
     gridExtra::grid.arrange(vals.plot$msig.bp,vp=viewport(width=0.8, height=0.8))
+   if(!is.null(vals.plot$msig.cc))
     gridExtra::grid.arrange(vals.plot$msig.cc,vp=viewport(width=0.8, height=0.8))
+   if(!is.null(vals.plot$msig.curate))
     gridExtra::grid.arrange(vals.plot$msig.curate,vp=viewport(width=0.8, height=0.8))
-   } #if(gen.go!=0)
    dev.off()
   })#withProgress
  }) # observeEvent

@@ -1,30 +1,21 @@
 library(shiny)
-ui <- pageWithSidebar(
- headerPanel("Click the button"),
- sidebarPanel(
-  sliderInput("obs", "Number of observations:",
-              min = 0, max = 1000, value = 500),
-  actionButton("goButton", "Go!")
- ),
- mainPanel(
-  plotOutput("distPlot")
- )
+
+ui <- fluidPage(
+ plotOutput("plot"),
+ downloadButton("download_plot", "Download Plot as PDF")
 )
+
 server <- function(input, output) {
- react.obs <- reactive({
-  input$obs
+ output$plot <- renderPlot({
+  # Your plot code here
+  plot(1:10, (1:10)^2, type = "l", col = "blue", lwd = 2)
  })
- output$distPlot <- renderPlot({
-  
-  # Take a dependency on input$goButton
-  input$goButton
-  
-  # Use isolate() to avoid dependency on input$obs
-  obs <- isolate(react.obs())
-  dist <- rnorm(obs)
-  hist(dist)
+ 
+ observeEvent(input$download_plot, {
+  pdf("plot.pdf")
+  print(output$plot)
+  dev.off()
  })
 }
-
 
 shinyApp(ui, server)

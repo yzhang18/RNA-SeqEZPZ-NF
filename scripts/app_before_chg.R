@@ -2538,6 +2538,7 @@ react.tab3.rdata <- reactive({
   if(input$export==0) return()
   gen.go <- react.val.gen.go()
   out.loc <- react.tab3.out.loc()
+  grp.name <- react.tab3.grp.name()
   withProgress(message="Saving pdf",{
    pad = react.tab3.venn.pad()
    file=file.path(out.loc,"plots.pdf")
@@ -2562,6 +2563,9 @@ react.tab3.rdata <- reactive({
     gridExtra::grid.arrange(vals.plot$msig.cc,vp=viewport(width=0.8, height=0.8))
     gridExtra::grid.arrange(vals.plot$msig.curate,vp=viewport(width=0.8, height=0.8))
    } #if(gen.go!=0)
+   for(i in 1:length(grp.name)){
+   print(output[[paste0("tab3.volcano.grp",i)]])
+  }
    dev.off()
   })#withProgress
  }) # observeEvent

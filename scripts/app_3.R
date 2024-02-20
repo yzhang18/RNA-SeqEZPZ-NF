@@ -1,21 +1,44 @@
 library(shiny)
 
 ui <- fluidPage(
- plotOutput("plot"),
- downloadButton("download_plot", "Download Plot as PDF")
+ titlePanel("Dynamic ReactiveValues Example"),
+ 
+ sidebarLayout(
+  sidebarPanel(
+   # Input for the value to be stored
+   numericInput("value", "Enter a value", 0),
+   textInput("name", "Enter a name for the value")
+  ),
+  
+  mainPanel(
+   # Output: value stored in reactiveValues
+   textOutput("output")
+  )
+ )
 )
 
-server <- function(input, output) {
- output$plot <- renderPlot({
-  # Your plot code here
-  plot(1:10, (1:10)^2, type = "l", col = "blue", lwd = 2)
+server <- function(input, output, session) {
+ # Initialize an empty reactiveValues
+ values <- reactiveValues()
+ 
+ # Update reactiveValues with dynamic name when input$value and input$name change
+ observeEvent(input$name, {
+  name <- input$name
+  if (name != "") {
+   values[[name]] <- input$value
+  }
  })
  
- observeEvent(input$download_plot, {
-  pdf("plot.pdf")
-  print(output$plot)
-  dev.off()
+ # Render the value stored in reactiveValues
+ output$output <- renderText({
+  name <- input$name
+  if (name != "") {
+   paste("Value stored in reactiveValues under name", name, ":", values[[name]])
+  } else {
+   "Enter a name to store the value"
+  }
  })
 }
 
 shinyApp(ui, server)
+

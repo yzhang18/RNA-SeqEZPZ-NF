@@ -163,7 +163,7 @@ ui <- fluidPage(
  tags$style(HTML("#setup_grp2_r1_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tags$style(HTML("#setup_grp2_r2_filepaths { width: 300px; overflow-x: auto; white-space: pre;}")),
  tabsetPanel(id="tabset",
-  tabPanel("Run Analysis","run_analysis", fluid = TRUE,
+  tabPanel("Run Analysis",id="run_analysis", fluid = TRUE,
            sidebarPanel(width=3,
                         shinyDirButton("setup_proj_dir", 
                                          label = "Select project folder",
@@ -1133,7 +1133,8 @@ react.tab3.rdata <- reactive({
  vals.plot <- reactiveValues(venn.up1=NULL,venn.up2=NULL,venn.dwn1=NULL,
                              venn.dwn2=NULL,hm.up=NULL,hm.dwn=NULL,
                              upset.up=NULL,upset.dwn=NULL,msig.mf=NULL,
-                             msig.bp=NULL,msig.cc=NULL,msig.curate=NULL,volcano=list())
+                             msig.bp=NULL,msig.cc=NULL,msig.curate=NULL)
+ vals.plot.volcano <- reactiveValues()
  
  # adding groups
  value <- reactiveVal(1)
@@ -2297,7 +2298,10 @@ react.tab3.rdata <- reactive({
     p <- p + 
      geom_vline(xintercept=c(-log2(fc.cutoff[my_i]), log2(fc.cutoff[my_i])), col="#5d5d5d",linetype="dashed")
    }
-   p
+   print("tab3.volcano.grp my_i")
+   print(paste0("tab3.volcano.grp",my_i))
+   vals.plot.volcano[[paste0("tab3.volcano.grp",my_i)]] = p
+   vals.plot.volcano[[paste0("tab3.volcano.grp",my_i)]]
  })#renderPlot  
   })#local
   }#for(i in 1:length(grp.name))
@@ -2558,6 +2562,13 @@ react.tab3.rdata <- reactive({
     gridExtra::grid.arrange(vals.plot$msig.cc,vp=viewport(width=0.8, height=0.8))
    if(!is.null(vals.plot$msig.curate))
     gridExtra::grid.arrange(vals.plot$msig.curate,vp=viewport(width=0.8, height=0.8))
+   print("class vals.plot.volcano")
+   print(class(vals.plot.volcano))
+   print("class vals.plot.volcano tab3.volcano.grp1")
+   print(class(vals.plot.volcano[["tab3.volcano.grp1"]]))
+   if(!is.null(vals.plot.volcano))
+    for(i in 1:length(grp.name))
+     gridExtra::grid.arrange(vals.plot.volcano[[paste0("tab3.volcano.grp",i)]],vp=viewport(width=0.8, height=0.8))
     dev.off()
   })#withProgress
  }) # observeEvent

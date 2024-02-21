@@ -909,14 +909,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    rem_empty_path <- function(input.name) {
     filt.path = input[[input.name]]
     filt.path = unlist(strsplit(filt.path,"\n"))
-    print("filt.path")
-    print(filt.path)
     empty.id = which(filt.path=="")
-    print("empty.id")
-    print(empty.id)
     if(length(empty.id)>0) filt.path = filt.path[-empty.id]
-    print("filt.path after rem empty")
-    print(filt.path)
    }
    print("input[[setup_grp1_r1_filepaths)]]")
    print(input[[paste0("setup_grp",1,"_r1_filepaths")]])
@@ -934,8 +928,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                    function(x) paste(paste0(hostfilepath,r1_fastq_lst[[x]]),collapse=","))
    r2_fastq=lapply(1:length(grpname),
                    function(x) paste(paste0(hostfilepath,r2_fastq_lst[[x]]),collapse=","))
-   print("r1_fastq")
-   print(r1_fastq)
    df <- data.frame(
     grpname=grpname,
     ctrlname=ctrlname,
@@ -1093,8 +1085,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  
  # initialize values for tab
 react.tab3.rdata <- reactive({
- print("input$tabset")
- print(input$tabset)
  req(input$tabset=="Plots")
  projdir <- react.setup.proj.dir()
  data.loc <- react.tab3.data.loc()
@@ -2200,8 +2190,6 @@ react.tab3.rdata <- reactive({
    grps=strsplit(grp.name[i],"_vs_")
    treat.grp=grps[[1]][1]
    ref.grp=grps[[1]][2]
-   print("treat.grp")
-   print(treat.grp)
    treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
    ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
    diff.mean=treat.mean-ref.mean
@@ -2298,12 +2286,10 @@ react.tab3.rdata <- reactive({
     p <- p + 
      geom_vline(xintercept=c(-log2(fc.cutoff[my_i]), log2(fc.cutoff[my_i])), col="#5d5d5d",linetype="dashed")
    }
+   vals.plot.volcano[[paste0("tab3.volcano.grp",my_i)]] = p
+   vals.plot.volcano[[paste0("tab3.volcano.grp",my_i)]]
  })#renderPlot  
   })#local
-  print("tab3.volcano.grp i")
-  print(paste0("tab3.volcano.grp",i))
-  vals.plot.volcano[[paste0("tab3.volcano.grp",i)]] = p
-  vals.plot.volcano[[paste0("tab3.volcano.grp",i)]]
   }#for(i in 1:length(grp.name))
  })#observe
 
@@ -2562,10 +2548,9 @@ react.tab3.rdata <- reactive({
     gridExtra::grid.arrange(vals.plot$msig.cc,vp=viewport(width=0.8, height=0.8))
    if(!is.null(vals.plot$msig.curate))
     gridExtra::grid.arrange(vals.plot$msig.curate,vp=viewport(width=0.8, height=0.8))
-   # print("length vals.plot$volcano[[1]]")
-   # print(length(vals.plot$volcano[[1]]))
    if(!is.null(vals.plot.volcano))
-    gridExtra::grid.arrange(vals.plot.volcano,vp=viewport(width=0.8, height=0.8))
+    for(i in 1:length(grp.name))
+     gridExtra::grid.arrange(vals.plot.volcano[[paste0("tab3.volcano.grp",i)]],vp=viewport(width=0.8, height=0.8))
     dev.off()
   })#withProgress
  }) # observeEvent

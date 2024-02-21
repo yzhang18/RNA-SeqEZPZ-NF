@@ -222,8 +222,36 @@ ui <- fluidPage(
                          column(4,textInput(inputId="setup.email", 
                                          label = "Email address",value="" ))),
                      fluidRow(
-                      column(2,tags$label("Group name"),style="padding-left:30px;padding-top:0px"),
-                      column(2,tags$label("Control name")),
+                      column(2,tags$label("Group name",
+                                          bsButton("group-info", label = "", icon = icon("info", lib = "font-awesome"), style = "default", size = "extra-small"))
+                      ,style="padding-left:30px;padding-top:0px"),
+                      bsPopover(
+                       id = "group-info",
+                       title = "More information",
+                       content = HTML(paste0(
+                        "Group name of the samples. Samples with replicates must have the same Group name.",
+                        "This column cannot be empty.")),
+                       placement = "right",
+                       trigger = "hover",
+                       options = list(container = "body")
+                      ),
+                      column(2,tags$label("Control name",
+                       bsButton("control-info", label = "", icon = icon("info", lib = "font-awesome"), style = "default", size = "extra-small"))
+                      ),
+                      bsPopover(
+                       id = "control-info",
+                       title = "More information",
+                       content = HTML(paste0(
+                        "Name of the control/background/reference sample to be compared to group name sample. ",
+                        "During differential analysis,",
+                        "the corresponding sample will be compared to its Control name. ",
+                        "Fold-changes will be calculated with Control name as reference. ",
+                        "Control name cannot be empty. For control/background sample, please put NA"
+                       )),
+                       placement = "right",
+                       trigger = "hover",
+                       options = list(container = "body")
+                      ),
                       column(2,tags$label("Replicate name")),
                       column(3,tags$label("Path to R1 fastq files")),
                       column(3,tags$label("Path to R2 fastq files"))
@@ -909,14 +937,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    rem_empty_path <- function(input.name) {
     filt.path = input[[input.name]]
     filt.path = unlist(strsplit(filt.path,"\n"))
-    print("filt.path")
-    print(filt.path)
     empty.id = which(filt.path=="")
-    print("empty.id")
-    print(empty.id)
     if(length(empty.id)>0) filt.path = filt.path[-empty.id]
-    print("filt.path after rem empty")
-    print(filt.path)
    }
    print("input[[setup_grp1_r1_filepaths)]]")
    print(input[[paste0("setup_grp",1,"_r1_filepaths")]])
@@ -969,6 +991,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
     hostgtf=gsub('/root/','/',gtf.file)
    }
    if(input$setup.genome.name=="other"){
+    print("here")
    options=paste0("genome=",input$setup.genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
    }else{options=paste0("genome=",input$setup.genome)}
     
@@ -986,10 +1009,10 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   }else{ 
    hostprojdir=gsub('/root/','/',projdir)
   }
-   print(paste0("echo 'cd ",projdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+   print(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-   system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
-                " &> run_rnaseq_full.out' > /hostpipe"))
+   #system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+   #             " &> run_rnaseq_full.out' > /hostpipe"))
 })
  
  #### log tab #####
@@ -1093,8 +1116,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  
  # initialize values for tab
 react.tab3.rdata <- reactive({
- print("input$tabset")
- print(input$tabset)
  req(input$tabset=="Plots")
  projdir <- react.setup.proj.dir()
  data.loc <- react.tab3.data.loc()
@@ -1817,12 +1838,17 @@ react.tab3.rdata <- reactive({
   results=out.DESeq2$results[idx]
   # make sure grp list is generated before proceeding
   shiny::req(!is.null(rownames(results[[1]])[1]))
-  # set gene symbol as rownames if not already set
-  if(grepl("ENSG",rownames(results[[1]])[1])){
+  # If rownames is ensebml id, change them to gene symbol
+  if(sum(grepl("ENS",rownames(results[[1]])[1:10]))>2){
    in.file=paste0(gsub("_","",grp.name[1]),".complete.txt")
    df=read.table(paste0(projdir,"outputs/diff_analysis_rslt/tables/",in.file),
                 sep="\t",header=TRUE)
    gene.symbol=df$geneSymbol
+   # for genes with same gene symbol but different id, keep the first duplicate
+   # change the rest to id
+   dup <- duplicated(gene.symbol, fromLast = TRUE)
+   gene.symbol[dup] <- NA
+   # for genes without gene symbol, set id as gene symbol
    gene.symbol[is.na(gene.symbol)]=df$Id[is.na(gene.symbol)]
    results=lapply(results,function(x) {
     rownames(x)=gene.symbol 
@@ -2200,8 +2226,6 @@ react.tab3.rdata <- reactive({
    grps=strsplit(grp.name[i],"_vs_")
    treat.grp=grps[[1]][1]
    ref.grp=grps[[1]][2]
-   print("treat.grp")
-   print(treat.grp)
    treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
    ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
    diff.mean=treat.mean-ref.mean
@@ -2298,8 +2322,6 @@ react.tab3.rdata <- reactive({
     p <- p + 
      geom_vline(xintercept=c(-log2(fc.cutoff[my_i]), log2(fc.cutoff[my_i])), col="#5d5d5d",linetype="dashed")
    }
-   print("tab3.volcano.grp my_i")
-   print(paste0("tab3.volcano.grp",my_i))
    vals.plot.volcano[[paste0("tab3.volcano.grp",my_i)]] = p
    vals.plot.volcano[[paste0("tab3.volcano.grp",my_i)]]
  })#renderPlot  
@@ -2562,10 +2584,6 @@ react.tab3.rdata <- reactive({
     gridExtra::grid.arrange(vals.plot$msig.cc,vp=viewport(width=0.8, height=0.8))
    if(!is.null(vals.plot$msig.curate))
     gridExtra::grid.arrange(vals.plot$msig.curate,vp=viewport(width=0.8, height=0.8))
-   print("class vals.plot.volcano")
-   print(class(vals.plot.volcano))
-   print("class vals.plot.volcano tab3.volcano.grp1")
-   print(class(vals.plot.volcano[["tab3.volcano.grp1"]]))
    if(!is.null(vals.plot.volcano))
     for(i in 1:length(grp.name))
      gridExtra::grid.arrange(vals.plot.volcano[[paste0("tab3.volcano.grp",i)]],vp=viewport(width=0.8, height=0.8))

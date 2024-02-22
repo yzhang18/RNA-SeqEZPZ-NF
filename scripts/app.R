@@ -197,7 +197,7 @@ ui <- fluidPage(
                         textInput(inputId = "setup.time",label="Time limit",
                                   value="7-00:00:00",),
                         
-                        checkboxInput(inputId = "setup.batch.adjust",label="Batch adjustment",
+                        checkboxInput(inputId = "setup.batch.adjust",label="Replicates batch adjustment",
                                       value=TRUE),
                         
                         numericInput(inputId = "setup.ncpus.trim",label="# of CPUs for trimming",
@@ -937,9 +937,15 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    rem_empty_path <- function(input.name) {
     filt.path = input[[input.name]]
     filt.path = unlist(strsplit(filt.path,"\n"))
+    print("filt.path")
+    print(filt.path)
     empty.id = which(filt.path=="")
+    print("empty.id")
+    print(empty.id)
     if(length(empty.id)>0) filt.path = filt.path[-empty.id]
-   }
+    print("filt.path after rem empty")
+    print(filt.path)
+	}
    print("input[[setup_grp1_r1_filepaths)]]")
    print(input[[paste0("setup_grp",1,"_r1_filepaths")]])
    r1_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r1_filepaths")))
@@ -973,28 +979,25 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                append = TRUE)
   #system("echo 'sbatch --help' > /hostpipe")
   # getting genome options
-  if(genome=="hg38") options="genome=hg38"
-  if(genome=="hg19") options="genome=hg19"
   if(genome=="other"){
    shiny::req(genome.fa != "")
    shiny::req(genome.gtf!="")
    shiny::req(genome!="")
-  }
-   fa.file=react.setup.genome.fa() 
-   gtf.file=react.setup.genome.gtf ()
+
    # convert path to hostpath
    if(file.exists("/filepath")){
-    hostfa=gsub('/filepath/',hostfilepath,fa.file)
-    hostgtf=gsub('/filepath/',hostfilepath,gtf.file)
+    hostfa=gsub('/filepath/',hostfilepath,genome.fa)
+    hostgtf=gsub('/filepath/',hostfilepath,genome.gtf)
    }else{ 
-    hostfa=gsub('/root/','/',fa.file)
-    hostgtf=gsub('/root/','/',gtf.file)
+    hostfa=gsub('/root/','/',genome.fa)
+    hostgtf=gsub('/root/','/',genome.gtf)
    }
-   if(input$setup.genome.name=="other"){
-    print("here")
-   options=paste0("genome=",input$setup.genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
-   }else{options=paste0("genome=",input$setup.genome)}
-    
+   options=paste0("genome=",genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
+  }else{
+   options=paste0("genome=",genome)
+   }
+   print("options") 
+   print(options)
   if(input$setup.batch.adjust==TRUE){ batch_adjust="yes"
   }else{ batch_adjust="no"}
    
@@ -1011,8 +1014,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   }
    print(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-   #system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
-   #             " &> run_rnaseq_full.out' > /hostpipe"))
+   system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+                " &> run_rnaseq_full.out' > /hostpipe"))
 })
  
  #### log tab #####

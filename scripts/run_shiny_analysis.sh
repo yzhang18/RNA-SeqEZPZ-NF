@@ -189,7 +189,7 @@ status=$(squeue -j $jid2 -o "%t" -h)
 reason=$(squeue -j $jid2 -o "%r" -h)
 sleep 2
 while [[ $status != "R"* ]];do
-	if [[ $reason == "ReqNodeNotAvail"* ]];then
+	if [[ $reason == *"ReqNodeNotAvail"* || $reason == *"Resources"* ]];then
 		echo -e "Please restart run_shiny_analysis.sh\n"
 		exit 1
 	fi

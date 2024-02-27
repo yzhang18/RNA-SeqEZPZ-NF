@@ -1,44 +1,27 @@
 library(shiny)
+library(shinyBS)
 
 ui <- fluidPage(
- titlePanel("Dynamic ReactiveValues Example"),
- 
  sidebarLayout(
   sidebarPanel(
-   # Input for the value to be stored
-   numericInput("value", "Enter a value", 0),
-   textInput("name", "Enter a name for the value")
+   textInput("my_text", "Enter some text"),
+   bsButton("update_button", "Update Text")
   ),
-  
   mainPanel(
-   # Output: value stored in reactiveValues
-   textOutput("output")
+   verbatimTextOutput("updated_text")
   )
  )
 )
 
 server <- function(input, output, session) {
- # Initialize an empty reactiveValues
- values <- reactiveValues()
- 
- # Update reactiveValues with dynamic name when input$value and input$name change
- observeEvent(input$name, {
-  name <- input$name
-  if (name != "") {
-   values[[name]] <- input$value
-  }
+ observeEvent(input$update_button, {
+  updated_text <- paste("Updated Text:", input$my_text)
+  updateTextInput(session, "my_text", value = updated_text)
  })
  
- # Render the value stored in reactiveValues
- output$output <- renderText({
-  name <- input$name
-  if (name != "") {
-   paste("Value stored in reactiveValues under name", name, ":", values[[name]])
-  } else {
-   "Enter a name to store the value"
-  }
+ output$updated_text <- renderPrint({
+  input$my_text
  })
 }
 
 shinyApp(ui, server)
-

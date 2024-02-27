@@ -168,6 +168,18 @@ ui <- fluidPage(
                         shinyDirButton("setup_proj_dir", 
                                          label = "Select project folder",
                                          title="Please select a folder to run pipeline",multiple=FALSE),
+           bsButton("proj-folder-info", label = "", icon = icon("info", lib = "font-awesome"), style = "default", size = "extra-small"), 
+  bsPopover(
+   id = "proj-folder-info",
+   title = "More information",
+   content = HTML(paste0(
+    "Select a folder which will contain all the files and outputs from the pipeline.",
+    "Avoid space in the path."
+   )),
+   placement = "right",
+   trigger = "hover",
+   options = list(container = "body")
+  ),
                         verbatimTextOutput('setup.proj.dir.filepaths'),
                         br(),
                         #verbatimTextOutput("fileExists"),
@@ -182,50 +194,242 @@ ui <- fluidPage(
                         conditionalPanel(
                          condition= "input['setup.genome'] == 'other'",
                          textInput(inputId="setup.genome.name", 
-                                   label = "Genome name",value=""),
+                                   label = list("Genome name",
+                                                bsButton("setup-genome-name-info", label = "", 
+                                                    icon = icon("info", lib = "font-awesome"), 
+                                                    style = "default", size = "extra-small")),value=""),
+                         bsPopover(
+                          id = "setup-genome-name-info",
+                          title = "More information",
+                          content = HTML(paste0(
+                           "Name of genome assembly, e.g., mm10, danRer11, etc. "
+                          )),
+                          placement = "right",
+                          trigger = "hover",
+                          options = list(container = "body")
+                         ),
+
                          shinyFilesButton("setup_genome_fa", 
                                           label = "Select genome fasta file",
-                                          title="Please select genome fasta file",multiple=FALSE),
+                                           title="Please select genome fasta file",multiple=FALSE),
+                         bsButton("setup-genome-fa-info", label = "", 
+                                  icon = icon("info", lib = "font-awesome"), 
+                                  style = "default", size = "extra-small"), 
+                         bsPopover(
+                          id = "setup-genome-fa-info",
+                          title = "More information",
+                          content = HTML(paste0(
+                           "Path to genome fasta file. Gzipped file is not supported."
+                           )),
+                          placement = "right",
+                          trigger = "hover",
+                          options = list(container = "body")
+                         ),
                          verbatimTextOutput('setup.genome.fa.filepaths'),
                          br(),
                          shinyFilesButton("setup_genome_gtf", 
                                           label = "Select genome GTF file",
                                           title="Please select genome GTF file",multiple=FALSE ),
+                         bsButton("setup-genome-gtf-info", label = "", icon = icon("info", lib = "font-awesome"), style = "default", size = "extra-small"), 
+                         bsPopover(
+                          id = "setup-genome-gtf-info",
+                          title = "More information",
+                          content = HTML(paste0(
+                           "Path to genome annotation GTF file. Gzipped file is not supported.",
+                           "Make sure annotation contains gene symbols. RefSeq annotation is preferred."
+                          )),
+                          placement = "right",
+                          trigger = "hover",
+                          options = list(container = "body")
+                         ),
                          verbatimTextOutput('setup.genome.gtf.filepaths'),
                          br()
                         ),#conditionPanel
-                        textInput(inputId = "setup.time",label="Time limit",
-                                  value="7-00:00:00",),
-                        
-                        checkboxInput(inputId = "setup.batch.adjust",label="Batch adjustment",
+                        textInput(inputId = "setup.time",
+                                  label=list("Time limit",
+                                      bsButton("time-limit-info", label = "", icon = icon("info", lib = "font-awesome"), 
+                                               style = "default", size = "extra-small")), 
+                                                         value="7-00:00:00"),
+  
+  bsPopover(
+   id = "time-limit-info",
+   title = "More information",
+   content = HTML(paste0(
+    "Specify time limit DD-HH:MM:SS (D-days, H-hour, M-minutes, S-seconds)"
+   )),
+   placement = "right",
+   trigger = "hover",
+   options = list(container = "body")
+  ),
+                        checkboxInput(inputId = "setup.batch.adjust",
+                                      label=list("Replicates batch adjustment",
+                                              bsButton("setup-batch-info", label = "", icon = icon("info", 
+                                                 lib = "font-awesome"), style = "default", size = "extra-small")), 
                                       value=TRUE),
-                        
-                        numericInput(inputId = "setup.ncpus.trim",label="# of CPUs for trimming",
+  bsPopover(
+   id = "setup-batch-info",
+   title = "More information",
+   content = HTML(paste0(
+    "Batch correction to account for unwanted variation across different replicates."
+   )),
+   placement = "right",
+   trigger = "hover",
+   options = list(container = "body")
+  ),
+                        numericInput(inputId = "setup.ncpus.trim",
+                                     label=list("# of CPUs for trimming",
+                                                bsButton("setup-ncpus-trim-info", label = "", 
+                                                icon = icon("info", lib = "font-awesome"), 
+                                                style = "default", size = "extra-small")),
                                      value=4,min=1),
-                        
-                        numericInput(inputId = "setup.ncpus.star",label="# of CPUs for STAR alignment",
+  bsPopover(
+   id = "setup-ncpus-trim-info",
+   title = "More information",
+   content = HTML(paste0(
+    "Number of CPUs to use for trimming fastq files."
+   )),
+   placement = "right",
+   trigger = "hover",
+   options = list(container = "body")
+  ),
+                        numericInput(inputId = "setup.ncpus.star",
+                                     label=list("# of CPUs for STAR alignment",
+                                                bsButton("setup-ncpus-star-info", label = "", 
+                                                         icon = icon("info", lib = "font-awesome"), 
+                                                         style = "default", size = "extra-small")), 
                                      value=20,min=1),
-                        checkboxInput(inputId = "setup.debug",label="Run debug",
+  bsPopover(
+   id = "setup-ncpus-star-info",
+   title = "More information",
+   content = HTML(paste0(
+    "Number of CPUs to use for STAR alignment."
+   )),
+   placement = "right",
+   trigger = "hover",
+   options = list(container = "body")
+  ),
+                        checkboxInput(inputId = "setup.debug",
+                                      label=list("Run debug",
+                                                 bsButton("setup-debug-info", label = "", 
+                                                                      icon = icon("info", lib = "font-awesome"), 
+                                                                      style = "default", size = "extra-small")),
                                       value=FALSE),
+  bsPopover(
+   id = "setup-debug-info",
+   title = "More information",
+   content = HTML(paste0(
+    "Run with more messages printed to help with debugging errors."
+   )),
+   placement = "right",
+   trigger = "hover",
+   options = list(container = "body")
+  ),
                         conditionalPanel(condition = "input.setup.proj.dir == ''",
                         textOutput('err_msg')),
                         #conditionalPanel(condition = "input.setup.genome == 'other' && (input.setup.genome.name == '' || input.setup_genome_fa == '' || input.setup_genome_gtf == '')",
                                          textOutput('err_msg_genome'),
-                        actionButton(inputId="setup.run.analysis",label="Run full analysis",
-                        )
+                        actionButton(inputId="setup.run.analysis",
+                                     label=list("Run full analysis"),
+                        ),
+  bsButton("setup-run-analysis-info", label = "", icon = icon("info", lib = "font-awesome"), 
+           style = "default", size = "extra-small"), 
+  
+  bsPopover(
+   id = "setup-run-analysis-info",
+   title = "More information",
+   content = HTML(paste0(
+    "Run full RNA-seq analysis: QC, trimming, alignment, tracks creation, reads counting, and differential gene analysis."
+   )),
+   placement = "right",
+   trigger = "hover",
+   options = list(container = "body")
+  ),
            ),#sidebarPanel
            mainPanel(
             # adding horizontal scrolling
             style = "overflow-x: auto;", # Apply CSS styles
             width = 9,
+                        fluidRow(
+                         column(4, 
+                          textInput(inputId="setup.email", 
+                                  label = list("Email address",
+                                               bsButton("setup-email-info",label="",icon = icon("info", lib = "font-awesome"),
+                                                        style = "default", size = "extra-small")), value=""),
+                                  )
+                                         ,
+                         bsPopover(
+                          id = "setup-email-info",
+                          title = "More information",
+                          content = HTML(paste0(
+                           "Enter your email address to get emails for completed or failed jobs.")),
+                          placement = "right",
+                          trigger = "hover",
+                          options = list(container = "body")
+                         )
+                         ),
                      fluidRow(
-                         column(4,textInput(inputId="setup.email", 
-                                         label = "Email address",value="" ))),
-                     fluidRow(
-                      column(2,tags$label("Group name"),style="padding-left:30px;padding-top:0px"),
-                      column(2,tags$label("Control name")),
-                      column(2,tags$label("Replicate name")),
-                      column(3,tags$label("Path to R1 fastq files")),
+                      column(2,tags$label("Group name",
+                                          bsButton("setup-group-info", label = "", icon = icon("info", lib = "font-awesome"), 
+                                                   style = "default", size = "extra-small"))
+                      ,style="padding-left:30px;padding-top:0px"),
+                      bsPopover(
+                       id = "setup-group-info",
+                       title = "More information",
+                       content = HTML(paste0(
+                        "Group name of the samples. Samples with replicates must have the same Group name.",
+                        "This column cannot be empty.")),
+                       placement = "right",
+                       trigger = "hover",
+                       options = list(container = "body")
+                      ),
+                      column(2,tags$label("Control name",
+                       bsButton("setup-control-info", label = "", icon = icon("info", lib = "font-awesome"), style = "default", size = "extra-small"))
+                      ),
+                      bsPopover(
+                       id = "setup-control-info",
+                       title = "More information",
+                       content = HTML(paste0(
+                        "Name of the control/background/reference sample to be compared to group name sample. ",
+                        "During differential analysis,",
+                        "the corresponding sample will be compared to its Control name. ",
+                        "Fold-changes will be calculated with Control name as reference. ",
+                        "Control name cannot be empty. For control/background sample, please put NA"
+                       )),
+                       placement = "right",
+                       trigger = "hover",
+                       options = list(container = "body")
+                      ),
+                      column(2,tags$label("Replicate name",
+                           bsButton("setup-rep-info", label = "", icon = icon("info", lib = "font-awesome"), style = "default", size = "extra-small"))
+                      ),
+                      bsPopover(
+                       id = "setup-rep-info",
+                       title = "More information",
+                       content = HTML(paste0(
+                        "Name of the replicates.",
+                        "Avoid naming rep1 as R1 as that is reserved as read pair 1.",
+                        "Group name, followed by rep name will be your output filenames."
+                       )),
+                       placement = "right",
+                       trigger = "hover",
+                       options = list(container = "body")
+                      ),
+                      column(3,tags$label("Path to R1 fastq files",
+                                          bsButton("setup-r1-path-info", label = "", icon = icon("info", lib = "font-awesome"), style = "default", size = "extra-small"))
+                      ),
+                      bsPopover(
+                       id = "setup-r1-path-info",
+                       title = "More information",
+                       content = HTML(paste0(
+                        "Select the fastq file for read pair 1. ",
+                        "To select multiple files, hold ctrl button in windows. ",
+                        "Click the second time to select additional files. ",
+                        "You can also change the path manually below or copy paste paths."
+                       )),
+                       placement = "right",
+                       trigger = "hover",
+                       options = list(container = "body")
+                      ),
                       column(3,tags$label("Path to R2 fastq files"))
                      ),
                      hr(style="border-color:black;margin-top:0px;margin-bottom:0px"),
@@ -422,6 +626,23 @@ ui <- fluidPage(
              # gene set enrichment pvalue numeric input
              numericInput("tab3.enrich.pval.co", label = ("FDR for enrichment"), 
                           value = 0.05,min=0,step=0.01),
+             # max # of categories for pathway
+             numericInput("tab3.enrich.ncat", 
+                          label = list("# of categories",
+                                       bsButton("tab3-enrich-ncat-info", label = "", 
+                                                icon = icon("info", lib = "font-awesome"), 
+                                                style = "default", size = "extra-small")), 
+                          value = 10,min=1,step=1),
+             bsPopover(
+              id = "tab3-enrich-ncat-info",
+              title = "More information",
+              content = HTML(paste0(
+               "Number of categories to show in Pathways. Note: the number of categories to show also depends on FDR."
+              )),
+              placement = "right",
+              trigger = "hover",
+              options = list(container = "body")
+             ),
              actionButton(
               inputId = "gen.go",
               label = "Generate Enrichment plots"
@@ -909,9 +1130,15 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    rem_empty_path <- function(input.name) {
     filt.path = input[[input.name]]
     filt.path = unlist(strsplit(filt.path,"\n"))
+    print("filt.path")
+    print(filt.path)
     empty.id = which(filt.path=="")
+    print("empty.id")
+    print(empty.id)
     if(length(empty.id)>0) filt.path = filt.path[-empty.id]
-   }
+    print("filt.path after rem empty")
+    print(filt.path)
+	}
    print("input[[setup_grp1_r1_filepaths)]]")
    print(input[[paste0("setup_grp",1,"_r1_filepaths")]])
    r1_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r1_filepaths")))
@@ -928,6 +1155,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                    function(x) paste(paste0(hostfilepath,r1_fastq_lst[[x]]),collapse=","))
    r2_fastq=lapply(1:length(grpname),
                    function(x) paste(paste0(hostfilepath,r2_fastq_lst[[x]]),collapse=","))
+   print("r1_fastq")
+   print(r1_fastq)
    df <- data.frame(
     grpname=grpname,
     ctrlname=ctrlname,
@@ -943,27 +1172,25 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                append = TRUE)
   #system("echo 'sbatch --help' > /hostpipe")
   # getting genome options
-  if(genome=="hg38") options="genome=hg38"
-  if(genome=="hg19") options="genome=hg19"
   if(genome=="other"){
    shiny::req(genome.fa != "")
    shiny::req(genome.gtf!="")
    shiny::req(genome!="")
-  }
-   fa.file=react.setup.genome.fa() 
-   gtf.file=react.setup.genome.gtf ()
+
    # convert path to hostpath
    if(file.exists("/filepath")){
-    hostfa=gsub('/filepath/',hostfilepath,fa.file)
-    hostgtf=gsub('/filepath/',hostfilepath,gtf.file)
+    hostfa=gsub('/filepath/',hostfilepath,genome.fa)
+    hostgtf=gsub('/filepath/',hostfilepath,genome.gtf)
    }else{ 
-    hostfa=gsub('/root/','/',fa.file)
-    hostgtf=gsub('/root/','/',gtf.file)
+    hostfa=gsub('/root/','/',genome.fa)
+    hostgtf=gsub('/root/','/',genome.gtf)
    }
-   if(input$setup.genome.name=="other"){
-   options=paste0("genome=",input$setup.genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
-   }else{options=paste0("genome=",input$setup.genome)}
-    
+   options=paste0("genome=",genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
+  }else{
+   options=paste0("genome=",genome)
+   }
+   print("options") 
+   print(options)
   if(input$setup.batch.adjust==TRUE){ batch_adjust="yes"
   }else{ batch_adjust="no"}
    
@@ -978,7 +1205,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   }else{ 
    hostprojdir=gsub('/root/','/',projdir)
   }
-   print(paste0("echo 'cd ",projdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+   print(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
    system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
@@ -1797,6 +2024,10 @@ react.tab3.rdata <- reactive({
   dict
   })
  
+ react.tab3.enrich.ncat <- reactive({
+  input$tab3.enrich.ncat
+ })
+ 
  react.tab3.result <- reactive({
   grp.name=react.tab3.grp.name()
   projdir = react.setup.proj.dir()
@@ -1807,12 +2038,17 @@ react.tab3.rdata <- reactive({
   results=out.DESeq2$results[idx]
   # make sure grp list is generated before proceeding
   shiny::req(!is.null(rownames(results[[1]])[1]))
-  # set gene symbol as rownames if not already set
-  if(grepl("ENSG",rownames(results[[1]])[1])){
+  # If rownames is ensebml id, change them to gene symbol
+  if(sum(grepl("ENS",rownames(results[[1]])[1:10]))>2){
    in.file=paste0(gsub("_","",grp.name[1]),".complete.txt")
    df=read.table(paste0(projdir,"outputs/diff_analysis_rslt/tables/",in.file),
                 sep="\t",header=TRUE)
    gene.symbol=df$geneSymbol
+   # for genes with same gene symbol but different id, keep the first duplicate
+   # change the rest to id
+   dup <- duplicated(gene.symbol, fromLast = TRUE)
+   gene.symbol[dup] <- NA
+   # for genes without gene symbol, set id as gene symbol
    gene.symbol[is.na(gene.symbol)]=df$Id[is.na(gene.symbol)]
    results=lapply(results,function(x) {
     rownames(x)=gene.symbol 
@@ -2404,6 +2640,7 @@ react.tab3.rdata <- reactive({
     compare.df <- tab3.compare.df()  
     grp.plot.title <- react.tab3.grp.plot.title()
     chg.enrich.terms <- react.tab3.chg.enrich.terms()
+    enrich.ncat <- react.tab3.enrich.ncat()
     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
     msigdb.species <- react.tab3.msigdb.species()
     msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "MF") %>%
@@ -2416,13 +2653,16 @@ react.tab3.rdata <- reactive({
 
     # re-arrange datasets using factor
     # and do pathway analysis using up- and down-regulated genes separately
-    vals.plot$msig.mf <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + 
+    vals.plot$msig.mf <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name,
+                                 showCategory = enrich.ncat) + 
      facet_grid(~group2) +
      scale_y_discrete(labels=function(x) 
-      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOMF_","",x)))),chg.enrich.terms), width=40)) +
+      str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOMF_","",x)))),
+                               chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) 
       str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues')
+     scale_color_distiller(palette = 'Blues') +
+     theme(strip.text=element_text(size=14))
     vals.plot$msig.mf
    })#withProgress
    }) #isolate
@@ -2441,15 +2681,18 @@ react.tab3.rdata <- reactive({
      dplyr::select(gs_name, gene_symbol)
     msig.name ="MSigDB GO Biological Process"
     chg.enrich.terms <- react.tab3.chg.enrich.terms()
+    enrich.ncat <- react.tab3.enrich.ncat()
     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
                                   pAdjustMethod="BH")
-    vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) +
+    vals.plot$msig.bp <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name,
+                                 showCategory = enrich.ncat) +
      facet_grid(~group2) +
      scale_y_discrete(labels=function(x)
       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOBP_","",x)))),chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues')
+     scale_color_distiller(palette = 'Blues') +
+     theme(strip.text=element_text(size=14))
     vals.plot$msig.bp
    })#withProgress
    }) #isolate
@@ -2463,6 +2706,7 @@ react.tab3.rdata <- reactive({
     compare.df <- isolate(tab3.compare.df())
     grp.plot.title <- isolate(react.tab3.grp.plot.title())
     chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+    enrich.ncat <- react.tab3.enrich.ncat()
     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
     msigdb.species <- isolate(react.tab3.msigdb.species())
     msig.gene.set <- msigdbr(species = msigdb.species, category = "C5",subcategory = "CC") %>%
@@ -2471,12 +2715,14 @@ react.tab3.rdata <- reactive({
     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,pvalueCutoff=enrich.pval.co,
                                   pAdjustMethod="BH")
-    vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) +
+    vals.plot$msig.cc <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name,
+                                showCategory=enrich.ncat) +
      facet_grid(~group2) +
      scale_y_discrete(labels=function(x)
       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOCC_","",x)))),chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues')
+     scale_color_distiller(palette = 'Blues') +
+     theme(strip.text=element_text(size=14))
     vals.plot$msig.cc
    }) #withProgress
    }) #isolate
@@ -2491,6 +2737,7 @@ react.tab3.rdata <- reactive({
     compare.df <- isolate(tab3.compare.df())
     grp.plot.title <- isolate(react.tab3.grp.plot.title())
     chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+    enrich.ncat <- react.tab3.enrich.ncat()
     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
     msigdb.species <- isolate(react.tab3.msigdb.species())
     msig.gene.set <- msigdbr(species = msigdb.species, category = "C2") %>%
@@ -2499,11 +2746,13 @@ react.tab3.rdata <- reactive({
     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
                                   TERM2GENE=msig.gene.set,
                                   pvalueCutoff=enrich.pval.co,pAdjustMethod="BH")
-    vals.plot$msig.curate <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name) + facet_grid(~group2) +
+    vals.plot$msig.curate <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name,
+                                     showCategory=enrich.ncat) + facet_grid(~group2) +
      scale_y_discrete(labels=function(x)
             str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues')
+     scale_color_distiller(palette = 'Blues') +
+     theme(strip.text=element_text(size=14))
     vals.plot$msig.curate
    }) # withProgress
    }) #isolate

@@ -79,6 +79,8 @@ log.fail.lst=""
  pval.names=c("< 2.2e-16","< 0.05","< 0.5","> 0.5")
  # ad-hoc maximum plot. 
  max_plots=5
+ # color pallette for pathways p-values
+ pal <- colorRampPalette(c(tab3.colors[1],tab3.colors[2]))
 
 # arbitrary variables to prevent errors
 # groups.lst=c("a","b","c")
@@ -2662,7 +2664,9 @@ react.tab3.rdata <- reactive({
                                chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) 
       str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues') +
+     #scale_color_distiller(palette = 'Blues') +
+     scale_color_gradientn(colors=rev(pal(10)),
+                           limits=c(0,enrich.pval.co))+
      theme(strip.text=element_text(size=14))
     vals.plot$msig.mf
    })#withProgress
@@ -2692,7 +2696,8 @@ react.tab3.rdata <- reactive({
      scale_y_discrete(labels=function(x)
       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOBP_","",x)))),chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues') +
+     scale_color_gradientn(colors=rev(pal(10)),
+                           limits=c(0,enrich.pval.co))+
      theme(strip.text=element_text(size=14))
     vals.plot$msig.bp
    })#withProgress
@@ -2722,7 +2727,8 @@ react.tab3.rdata <- reactive({
      scale_y_discrete(labels=function(x)
       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOCC_","",x)))),chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues') +
+     scale_color_gradientn(colors=rev(pal(10)),
+                           limits=c(0,enrich.pval.co))+
      theme(strip.text=element_text(size=14))
     vals.plot$msig.cc
    }) #withProgress
@@ -2752,7 +2758,8 @@ react.tab3.rdata <- reactive({
      scale_y_discrete(labels=function(x)
             str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
-     scale_color_distiller(palette = 'Blues') +
+     scale_color_gradientn(colors=rev(pal(10)),
+                           limits=c(0,enrich.pval.co))+
      theme(strip.text=element_text(size=14))
     vals.plot$msig.curate
    }) # withProgress

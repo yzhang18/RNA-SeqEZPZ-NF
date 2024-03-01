@@ -893,7 +893,11 @@ server <- function(input, output,session) {
     # combine new.path and paths in textarea
     setup.grp.r1.file.lst[[paste0('grp',i)]] <- sort(unique(c(new.path,text.path)))
     path.display=gsub('^/filepath/','',setup.grp.r1.file.lst[[paste0('grp',i)]])
+    print("path.display")
+    print(path.display)
     path.display=gsub('^/root/','',path.display)
+    print("path.display")
+    print(path.display)
     # remove empty path
     if(sum(path.display=="")>0){
          rem.id=which(path.display=="")
@@ -990,10 +994,18 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    setup.id.r2.filepath <- paste0("setup_grp",i,"_r2_filepaths")
    # formatting path read from table
    # remove hostfilepath 
-   setup.df.path.display.r1=gsub(hostfilepath,'',df[i,6])
-   setup.df.path.display.r1 <- gsub(",","\n",setup.df.path.display.r1)
-   setup.df.path.display.r2=gsub(hostfilepath,'',df[i,7])
-   setup.df.path.display.r2 <- gsub(",","\n",setup.df.path.display.r2)
+   if(hostfilepath!="/"){
+    setup.df.path.display.r1=gsub(hostfilepath,'',df[i,6])
+    setup.df.path.display.r1 <- gsub(",","\n",setup.df.path.display.r1)
+    setup.df.path.display.r2=gsub(hostfilepath,'',df[i,7])
+    setup.df.path.display.r2 <- gsub(",","\n",setup.df.path.display.r2)
+   }
+   if(hostfilepath=="/"){
+    setup.df.path.display.r1=gsub("^/",'',df[i,6])
+    setup.df.path.display.r1 <- gsub(",/","\n",setup.df.path.display.r1)
+    setup.df.path.display.r2 <- gsub("^/","",df[i,7])
+    setup.df.path.display.r2 <- gsub(",/","\n",setup.df.path.display.r2)
+   }
    # add new rows if needed
   if(i > (dim(df)[1]-add.row)){
    # update the reactiveVal

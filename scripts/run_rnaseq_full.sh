@@ -312,8 +312,10 @@ fi
 
 ### aligning reads and creating tracks
 cd $proj_dir
+#. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
+#	ncpus_star=$ncpus_star 2>&1 | tee run_align_create_tracks_rna.out $log_dir/run_align_create_tracks_rna.out
 . $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
-	ncpus_star=$ncpus_star 2>&1 | tee run_align_create_tracks_rna.out $log_dir/run_align_create_tracks_rna.out
+        ncpus_star=$ncpus_star &> run_align_create_tracks_rna.out
 cp $proj_dir/run_align_create_tracks_rna.out $log_dir/
 
 message="Done alignment and create tracks for visualization.\n"

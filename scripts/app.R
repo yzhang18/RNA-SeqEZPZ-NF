@@ -663,9 +663,10 @@ ui <- fluidPage(
               br(),
                column(12,plotOutput(outputId = "tab3.plot3.3",height="auto")),
               br(),
-               column(12,plotOutput(outputId = "tab3.plot3.4",height="auto"))),
-              )))), 
-             textOutput("tab3.text")
+               column(12,plotOutput(outputId = "tab3.plot3.4",height="auto")),
+              br(),
+              column(12,plotOutput(outputId = "tab3.plot3.5",height="auto"))),
+              ))))
             )
            )
   )		
@@ -2778,6 +2779,36 @@ react.tab3.rdata <- reactive({
    }) #isolate
   },height=1000)
  
+  output$tab3.plot3.5 <- renderPlot({
+   shiny::req(input$gen.go)
+   shiny::isolate({
+    withProgress(message="Generating enrichment plots",{
+     enrich.pval.co <- isolate(react.tab3.enrich.pval.co())
+     compare.df <- isolate(tab3.compare.df())
+     grp.plot.title <- isolate(react.tab3.grp.plot.title())
+     chg.enrich.terms <- isolate(react.tab3.chg.enrich.terms())
+     enrich.ncat <- react.tab3.enrich.ncat()
+     # Using clusterProfiler to perform hypergeometric test on msigdb signatures
+     msigdb.species <- isolate(react.tab3.msigdb.species())
+     msig.gene.set <- msigdbr(species = msigdb.species, category = "H") %>%
+      dplyr::select(gs_name, gene_symbol)
+     msig.name ="MSigDB Hallmark Gene Sets"
+     formula_res <- compareCluster(SYMBOL~group1+group2, data=compare.df, fun="enricher",
+                                   TERM2GENE=msig.gene.set,
+                                   pvalueCutoff=enrich.pval.co,pAdjustMethod="BH")
+     vals.plot$msig.h <- dotplot(formula_res,x=~factor(group1),font.size=14,title=msig.name,
+                                      showCategory=enrich.ncat) + facet_grid(~group2) +
+      scale_y_discrete(labels=function(x)
+       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
+      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+      scale_color_gradientn(colors=rev(pal(10)),
+                            limits=c(0,enrich.pval.co))+
+      theme(strip.text=element_text(size=14))
+     vals.plot$msig.h
+    }) # withProgress
+   }) #isolate
+  },height=1000)
+ 
  ## clicking on the export button will generate a pdf file 
  ## containing all plots
  observeEvent( input$export,{
@@ -2817,6 +2848,8 @@ react.tab3.rdata <- reactive({
     gridExtra::grid.arrange(vals.plot$msig.cc,vp=viewport(width=0.8, height=0.8))
    if(!is.null(vals.plot$msig.curate))
     gridExtra::grid.arrange(vals.plot$msig.curate,vp=viewport(width=0.8, height=0.8))
+   if(!is.null(vals.plot$msig.h))
+    gridExtra::grid.arrange(vals.plot$msig.h,vp=viewport(width=0.8, height=0.8))
    if(!is.null(vals.plot.volcano))
     for(i in 1:length(grp.name))
      gridExtra::grid.arrange(vals.plot.volcano[[paste0("tab3.volcano.grp",i)]],vp=viewport(width=0.8, height=0.8))

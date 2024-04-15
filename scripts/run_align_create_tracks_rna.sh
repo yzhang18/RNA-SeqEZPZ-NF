@@ -121,6 +121,7 @@ echo time="$time"
 echo genome="$ref_ver"
 echo ""
 
+
 # project directory
 proj_dir=$(pwd)
 cd $proj_dir
@@ -157,6 +158,10 @@ img_name=rnaseq-pipe-container.sif
 # reference to run analysis are in $img_dir/ref
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
+
+# getting SLURM configuration
+source $img_dir/scripts/slurm_config_var.sh
+echo $high_mem_partition
 
 # copying scripts ran for records
 if [[ ! -d $log_dir/scripts ]];then
@@ -253,7 +258,7 @@ for i in "${!groupname_array[@]}"; do
 		SINGULARITYENV_ref_ver=$ref_ver \
 		$run sbatch --output=$log_dir/star_pass1_${prefix}.out \
 			--cpus-per-task $ncpus_star \
-			--partition=himem \
+			--partition=$high_mem_partition \
 			--mail-type=FAIL \
 			--mail-user=$email \
 			--job-name=star_pass1 \
@@ -348,12 +353,12 @@ for i in "${!groupname_array[@]}"; do
 		SINGULARITYENV_readlength=$readlength \
 			$run sbatch --output=$log_dir/star_pass2_${prefix}.out \
 				--cpus-per-task $ncpus_star \
-				--partition=himem \
+				--partition=$high_mem_partition \
 				--mail-type=FAIL \
 				--dependency=afterok:$tmp \
 				--mail-user=$email \
 				--job-name=star_pass2 \
-				--mem=128G \
+				--mem=$high_mem \
 				--time=$time \
 				--wrap "singularity exec \
 					--bind $proj_dir:/mnt \
@@ -430,7 +435,7 @@ if [[ n_rep -gt 1 ]]; then
 				$run sbatch --output=$log_dir/combinebw_${groupname}.out \
 					--dependency=afterok:$tmp \
 					--cpus-per-task $ncpus_star \
-					--partition=himem \
+					--partition=$high_mem_partition \
 					--mail-type=FAIL \
 					--mail-user=$email \
 					--job-name=combinebw \

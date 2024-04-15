@@ -129,6 +129,9 @@ img_name=rnaseq-pipe-container.sif
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
+# getting SLURM configuration
+source slurm_config_var.sh
+
 # copying scripts ran for records
 if [[ ! -d $log_dir/scripts ]];then
 	mkdir -p $log_dir/scripts
@@ -204,7 +207,6 @@ for (( idx =0; idx <= len_row-1; idx++ ));do
 			SINGULARITYENV_ncpus_trim=$ncpus_trim \
 				$run sbatch --output=$log_dir/trim_fastqc_${prefix}.out \
 					--job-name=trim_fastqc \
-					--partition=general \
 					--time=$time \
 					--mail-type=FAIL \
 					--mail-user=$email \
@@ -234,7 +236,6 @@ jid2=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_input_dir=/mnt/outputs/fastqc_rslt \
 	$run sbatch --output=$log_dir/multiqc.out \
 		--job-name=multiqc \
-		--partition=general \
 		--mail-type=FAIL \
 		--mail-user=$email \
 		--time=$time \

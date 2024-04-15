@@ -206,6 +206,9 @@ echo "all other logs will be stored in $log_dir"
 echo "log files contain all the commands run"
 echo ""
 
+# getting SLURM configuration
+source $img_dir/scripts/slurm_config_var.sh
+
 # copying scripts ran for records
 if [[ ! -d $log_dir/scripts ]];then
 	mkdir -p $log_dir/scripts
@@ -259,7 +262,7 @@ jid0=$(SINGULARITYENV_PYTHONPATH= \
 		SINGULARITYENV_target_gtf_name=$target_gtf_name \
 		$run sbatch --output=$log_dir/star_index.out \
 			--cpus-per-task $ncpus_star \
-			--partition=himem \
+			--partition=$high_mem_partition \
 			--mail-type=FAIL \
 			--mail-user=$email \
 			--job-name=star_index \

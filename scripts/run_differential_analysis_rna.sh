@@ -163,6 +163,9 @@ img_name=rnaseq-pipe-container.sif
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
+# getting SLURM configuration
+source $img_dir/scripts/slurm_config_var.sh
+
 # copying scripts ran for records
 if [[ ! -d $log_dir/scripts ]];then
 	mkdir -p $log_dir/scripts
@@ -241,12 +244,12 @@ for i in "${!groupname_array[@]}"; do
 		SINGULARITYENV_gtf_file=$gtf_file \
 		$run sbatch --output=$log_dir/featureCounts_${prefix}.out \
 			--cpus-per-task $ncpus \
-			--partition=himem \
+			--partition=$high_mem_partition \
 			--mail-type=FAIL \
 			--mail-user=$email \
 			--job-name=featureCounts \
 			--time=$time \
-			--mem=32G \
+			--mem=$med_mem \
 			--wrap "singularity exec \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
@@ -268,7 +271,7 @@ cd $proj_dir
 # Running DESeq2 analysis via SARTools
 # request memory
 req_mem=$((${#groupname_array[@]}*50))
-if [ "$req_mem" -gt 500 ]; then
+if [ "$req_mem" -gt $very_high_mem ]; then
 	req_mem=500
 fi
 req_mem=${req_mem}G
@@ -282,7 +285,7 @@ jid6=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_batch_adjust=$batch_adjust \
 	$run sbatch --output=$log_dir/run_sartools.out \
 		--job-name=run_sartools \
-		--partition=himem \
+		--partition=$high_mem_partition \
 		--mail-type=FAIL \
 		--mail-user=$email \
 		--mem=$req_mem \
@@ -319,7 +322,6 @@ jid7=$(SINGULARITYENV_PYTHONPATH= \
 		SINGULARITYENV_input_dir=/mnt/outputs \
 		$run sbatch --output=$log_dir/multiqc.out \
 		--job-name=multiqc \
-		--partition=general \
 		--mail-type=FAIL \
 		--mail-user=$email \
 		--time=$time \

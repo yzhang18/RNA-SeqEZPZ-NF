@@ -189,14 +189,17 @@ status=$(squeue -j $jid2 -o "%t" -h)
 reason=$(squeue -j $jid2 -o "%r" -h)
 sleep 2
 while [[ $status != "R"* ]];do
+	echo reason=$reason
 	if [[ $reason == *"ReqNodeNotAvail"* || $reason == *"Resources"* ]];then
 		echo -e "Please restart run_shiny_analysis.sh\n"
+		scancel $jid1 $jid2
 		exit 1
 	fi
 	echo -e "Please wait finding available node and setting up pipe ....\n"
         sleep 10
         status=$(squeue -j $jid2 -o "%t" -h)
         node=$(squeue -j $jid2 -o "%R" -h)
+	reason=$(squeue -j $jid2 -o "%r" -h)
 done
 
 #cd $proj_dir

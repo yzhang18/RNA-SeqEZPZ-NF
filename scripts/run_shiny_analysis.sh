@@ -180,7 +180,7 @@ done
 cd $proj_dir
 jid2=$(sbatch --nodelist=$node \
 	--time=$time \
-	--output=listen_to_shiny.out \
+	--output=listen_to_shiny_%j.out \
 	--export=proj_dir=$proj_dir \
 	--wrap 'set -x;cd $proj_dir; eval "$(cat mypipe)"'| cut -f4 -d' ')
 

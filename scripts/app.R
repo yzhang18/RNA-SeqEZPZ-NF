@@ -175,7 +175,7 @@ ui <- fluidPage(
    id = "proj-folder-info",
    title = "More information",
    content = HTML(paste0(
-    "Select a folder which will contain all the files and outputs from the pipeline.",
+    "Select a folder which will contain all the files and outputs from the pipeline. ",
     "Avoid space in the path."
    )),
    placement = "right",
@@ -379,7 +379,7 @@ ui <- fluidPage(
                        id = "setup-group-info",
                        title = "More information",
                        content = HTML(paste0(
-                        "Group name of the samples. Samples with replicates must have the same Group name.",
+                        "Group name of the samples. Samples with replicates must have the same Group name. ",
                         "This column cannot be empty.")),
                        placement = "right",
                        trigger = "hover",
@@ -393,7 +393,7 @@ ui <- fluidPage(
                        title = "More information",
                        content = HTML(paste0(
                         "Name of the control/background/reference sample to be compared to group name sample. ",
-                        "During differential analysis,",
+                        "During differential analysis, ",
                         "the corresponding sample will be compared to its Control name. ",
                         "Fold-changes will be calculated with Control name as reference. ",
                         "Control name cannot be empty. For control/background sample, please put NA"
@@ -403,14 +403,15 @@ ui <- fluidPage(
                        options = list(container = "body")
                       ),
                       column(2,tags$label("Replicate name",
-                           bsButton("setup-rep-info", label = "", icon = icon("info", lib = "font-awesome"), style = "default", size = "extra-small"))
+                           bsButton("setup-rep-info", label = "", icon = icon("info", lib = "font-awesome"), 
+                                    style = "default", size = "extra-small"))
                       ),
                       bsPopover(
                        id = "setup-rep-info",
                        title = "More information",
                        content = HTML(paste0(
                         "Name of the replicates.",
-                        "Avoid naming rep1 as R1 as that is reserved as read pair 1.",
+                        "Avoid naming rep1 as R1 as that is reserved as read pair 1. ",
                         "Group name, followed by rep name will be your output filenames."
                        )),
                        placement = "right",
@@ -418,7 +419,9 @@ ui <- fluidPage(
                        options = list(container = "body")
                       ),
                       column(3,tags$label("Path to R1 fastq files",
-                                          bsButton("setup-r1-path-info", label = "", icon = icon("info", lib = "font-awesome"), style = "default", size = "extra-small"))
+                                          bsButton("setup-r1-path-info", 
+                                                   label = "", icon = icon("info", lib = "font-awesome"), 
+                                                   style = "default", size = "extra-small"))
                       ),
                       bsPopover(
                        id = "setup-r1-path-info",
@@ -426,15 +429,33 @@ ui <- fluidPage(
                        content = HTML(paste0(
                         "Select the fastq file for read pair 1. ",
                         "To select multiple files, hold ctrl button in windows. ",
-                        "Click the second time to select additional files. ",
-                        "You can also change the path manually below or copy paste paths."
+                        "Click the second time to select additional files in different path. ",
+                        "You can also change the path manually below or copy paste paths. ",
+                        "Do not use path with white spaces."
                        )),
                        placement = "right",
                        trigger = "hover",
                        options = list(container = "body")
                       ),
-                      column(3,tags$label("Path to R2 fastq files"))
+                      column(3,tags$label("Path to R2 fastq files",
+                                          bsButton("setup-r2-path-info", 
+                                                   label = "", icon = icon("info", lib = "font-awesome"), 
+                                                   style = "default", size = "extra-small"))
                      ),
+                     bsPopover(
+                      id = "setup-r2-path-info",
+                      title = "More information",
+                      content = HTML(paste0(
+                       "Select the fastq file for read pair 2. ",
+                       "To select multiple files, hold ctrl button in windows. ",
+                       "Click the second time to select additional files in different path. ",
+                       "You can also change the path manually below or copy paste paths. ",
+                       "Do not use path with white spaces."
+                      )),
+                      placement = "right",
+                      trigger = "hover",
+                      options = list(container = "body")
+                     )),
                      hr(style="border-color:black;margin-top:0px;margin-bottom:0px"),
                      fluidRow(style = "background-color:#f9f9f9",
                               column(2,
@@ -1111,7 +1132,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   nsamples=setup.value()
  shiny::validate(
   shiny::need(projdir != '', 'You must select a project folder'),
-  shiny::need(length(grpname) == nsamples, 'You must enter group name'),
+  shiny::need(!grepl("\\s",projdir), 'Project folder name cannot have spaces'),
+  shiny::need(file.access(projdir,2) !=0, 'Please select a different project folder where you have write access'),
   shiny::need(length(ctrlname) == nsamples, 'You must enter control name'),
   shiny::need(length(repname)==nsamples,'You must enter replicate name')
  )
@@ -2684,7 +2706,7 @@ react.tab3.rdata <- reactive({
     vals.plot$msig.mf
    })#withProgress
    }) #isolate
-  },height=1000) #renderPlot
+  },height=function(){100*react.tab3.enrich.ncat()}) #renderPlot
  
   output$tab3.plot3.2 <- renderPlot({
    shiny::req(input$gen.go)
@@ -2715,7 +2737,7 @@ react.tab3.rdata <- reactive({
     vals.plot$msig.bp
    })#withProgress
    }) #isolate
-  },height=1000)
+  },height=function(){100*react.tab3.enrich.ncat()})
 
   output$tab3.plot3.3 <- renderPlot({
    shiny::req(input$gen.go)
@@ -2746,7 +2768,7 @@ react.tab3.rdata <- reactive({
     vals.plot$msig.cc
    }) #withProgress
    }) #isolate
-  },height=1000)
+  },height=function(){100*react.tab3.enrich.ncat()})
 
 
   output$tab3.plot3.4 <- renderPlot({
@@ -2777,7 +2799,7 @@ react.tab3.rdata <- reactive({
     vals.plot$msig.curate
    }) # withProgress
    }) #isolate
-  },height=1000)
+  },height=function(){100*react.tab3.enrich.ncat()})
  
   output$tab3.plot3.5 <- renderPlot({
    shiny::req(input$gen.go)
@@ -2807,7 +2829,7 @@ react.tab3.rdata <- reactive({
      vals.plot$msig.h
     }) # withProgress
    }) #isolate
-  },height=1000)
+  },height=function(){100*react.tab3.enrich.ncat()})
  
  ## clicking on the export button will generate a pdf file 
  ## containing all plots

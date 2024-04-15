@@ -510,6 +510,10 @@ Tracks for each replicate and combined replicates are \"*norm.bw\" and \"comb.bw
 in $work_dir\n\
 Aligned bam files are in $work_dir/STAR_2pass/Pass2\n\n"
 
+# remove STAR pass1 directory
+rm -r $work_dir/STAR_2pass/Pass1
+rm -r $work_dir/STAR_2pass/GenomeForPass2
+
 tmp=$($run sbatch --dependency=afterok:$jid4c \
 		--output=$log_dir/dummy.txt \
 		--mail-type=END \

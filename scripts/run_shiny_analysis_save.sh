@@ -136,11 +136,18 @@ fi
 #awk 'NR > 1' |  awk '!/r1pl-hpcf-g0/ {split($2,a,"/"); if(a[1] > 1) {print $1;exit}}')
 
 # Activate environment where shiny is installed and go to "app.R" directory
-export port_num filepath max_nsamples img_dir proj_dir img_name bind_filepath
-jid=$(sbatch --time=$time \
-	--export=port_num,filepath,max_nsamples,img_dir,proj_dir,img_name,bind_filepath \
+jid=$(SINGULARITYENV_port_num=$port_num \
+	SINGULARITYENV_hostfilepath=$filepath \
+        SINGULARITYENV_max_nsamples=$max_nsamples \
+	SINGULARITYENV_img_dir=$img_dir \
+	sbatch --time=$time \
 	--output=run_shiny_analysis.out \
-	--wrap "/bin/sh $img_dir/scripts/run_listen_app.sh"| cut -f 4 -d' ')
+	--wrap "singularity exec \
+	--bind $proj_dir:/mnt \
+	--bind $img_dir/scripts:/scripts -B ~/.Xauthority \
+	$bind_filepath \
+	--bind $proj_dir/mypipe:/hostpipe \
+	$img_dir/$img_name /bin/sh /scripts/app_simg.sbatch"| cut -f 4 -d' ')
 
 echo -e "\n\nYou need to have x11 display server such as Xming running.\n"
 
@@ -167,6 +174,37 @@ while true; do
 	sleep 5
 done
 
+
+
+#creating a job that listen to shiny app
+cd $proj_dir
+jid2=$(sbatch --nodelist=$node \
+	--time=$time \
+	--output=listen_to_shiny_%j.out \
+	--export=proj_dir=$proj_dir \
+	--wrap 'set -x;cd $proj_dir; eval "$(cat mypipe)"'| cut -f4 -d' ')
+
+# waiting for the listening job to be run
+status=$(squeue -j $jid2 -o "%t" -h)
+reason=$(squeue -j $jid2 -o "%r" -h)
+sleep 2
+while [[ $status != "R"* ]];do
+	echo reason=$reason
+	if [[ $reason == *"ReqNodeNotAvail"* || $reason == *"Resources"* ]];then
+		echo -e "Please restart run_shiny_analysis.sh\n"
+		scancel $jid1 $jid2
+		exit 1
+	fi
+	echo -e "Please wait finding available node and setting up pipe ....\n"
+        sleep 10
+        status=$(squeue -j $jid2 -o "%t" -h)
+        node=$(squeue -j $jid2 -o "%R" -h)
+	reason=$(squeue -j $jid2 -o "%r" -h)
+done
+
+#cd $proj_dir
+#eval "$(cat mypipe)" &
+
 # adding configuration to send signal every four minutes (240 secs)
 echo -e "Host *\n ServerAliveInterval 240" >> ~/.ssh/config
 
@@ -192,3 +230,4 @@ ssh -tX "$node" 'export port_num='"'$port_num'"';
 
 ## this should not be run until firefox is closed
 scancel $jid
+scancel $jid2

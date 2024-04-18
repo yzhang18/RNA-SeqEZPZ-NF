@@ -137,35 +137,39 @@ fi
 
 # Activate environment where shiny is installed and go to "app.R" directory
 export port_num filepath max_nsamples img_dir proj_dir img_name bind_filepath
-jid=$(sbatch --time=$time \
+jid=$(SINGULARITYENV_port_num=$port_num \
+        SINGULARITYENV_hostfilepath=$filepath \
+        SINGULARITYENV_max_nsamples=$max_nsamples \
+        SINGULARITYENV_img_dir=$img_dir \
+        sbatch --time=$time \
+        --output=run_shiny_analysis.out \
 	--export=port_num,filepath,max_nsamples,img_dir,proj_dir,img_name,bind_filepath \
-	--output=run_shiny_analysis.out \
-	--wrap "/bin/sh $img_dir/scripts/run_listen_app.sh"| cut -f 4 -d' ')
+        --wrap "set -x;
+		singularity instance start \
+        		--bind $proj_dir:/mnt \
+        		--bind $img_dir/scripts:/scripts -B ~/.Xauthority \
+        		$bind_filepath \
+        		--bind $proj_dir/mypipe:/hostpipe \
+			$img_dir/$img_name instance1; \
+		singularity exec instance://instance1 \
+        	 	/bin/sh /scripts/app_simg.sbatch & \
+		echo test > test.txt"| cut -f 4 -d' ')
 
 echo -e "\n\nYou need to have x11 display server such as Xming running.\n"
 
-status=$(squeue -j $jid -o "%t" -h)
-node=$(squeue -j $jid -o "%R" -h)
-while [[ $status != "R"* ]];do
+#if [[ -n "$jid" ]];then
+#status=$(squeue -j $jid -o "%t" -h)
+#node=$(squeue -j $jid -o "%R" -h)
+#while [[ $status != "R"* ]];do
 	echo -e "Please wait finding available node and setting up shiny app ....\n"
 	sleep 10
 	status=$(squeue -j $jid -o "%t" -h)
 	node=$(squeue -j $jid -o "%R" -h)
 done
-
-# Extra check to make sure shiny app is already at listening point
-# Put this in because sometimes it takes time to load libraries
-while true; do 
-	# get the last line of run_shiny_analysis.out
-	last_line=$(tail -n 1 run_shiny_analysis.out)
-	# exit if shiny fail to load
-	if grep -q "Execution halted" "run_shiny_analysis.out"; then exit 1; fi
-	# check if it contains listening
-	if [[ $last_line == *"Listening"* ]]; then
-		break
-	fi
-	sleep 5
-done
+else
+	echo "Loading shiny app failed"
+	exit 1;
+fi
 
 # adding configuration to send signal every four minutes (240 secs)
 echo -e "Host *\n ServerAliveInterval 240" >> ~/.ssh/config
@@ -192,3 +196,5 @@ ssh -tX "$node" 'export port_num='"'$port_num'"';
 
 ## this should not be run until firefox is closed
 scancel $jid
+# stop singularity instance
+singularity instance stop instance1

@@ -1,1 +1,0 @@
-#Groupname	Controlname	Replicatename	spikename	email	path_to_r1_fastq	path_to_r2_fastq

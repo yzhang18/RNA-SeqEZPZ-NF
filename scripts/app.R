@@ -1133,7 +1133,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  shiny::validate(
   shiny::need(projdir != '', 'You must select a project folder'),
   shiny::need(!grepl("\\s",projdir), 'Project folder name cannot have spaces'),
-  shiny::need(file.access(projdir,2) !=0, 'Please select a different project folder where you have write access'),
+  shiny::need(file.access(projdir,2) ==0, 'Please select a different project folder where you have write access'),
   shiny::need(length(ctrlname) == nsamples, 'You must enter control name'),
   shiny::need(length(repname)==nsamples,'You must enter replicate name')
  )

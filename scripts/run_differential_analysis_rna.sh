@@ -226,6 +226,9 @@ fi
 # ln -s /home1/gdlessnicklab/lab/data/mm10 .
 # the path should be the path that is returned by 'readlink -f'
 
+# copy run_differential_analysis_rna.out to log_dir
+cp $proj_dir/run_differential_analysis_rna.out $log_dir/
+
 #### feature counts ####
 # counting number of reads in each feature using subread package featureCounts
 # initialize job ids
@@ -249,7 +252,7 @@ for i in "${!groupname_array[@]}"; do
 			--mail-user=$email \
 			--job-name=featureCounts \
 			--time=$time \
-			--mem=$med_mem \
+			--mem=${med_mem}G \
 			--wrap "singularity exec \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
@@ -259,6 +262,9 @@ for i in "${!groupname_array[@]}"; do
 	echo "Counting number of reads in each feature for $prefix job id: $tmp_jid"
 	echo "See log in $log_dir/featureCounts_${prefix}.out"
 	echo ""
+	# copy run_differential_analysis_rna.out to log_dir
+	cp $proj_dir/run_differential_analysis_rna.out $log_dir/
+
 	if [ -z "$jid5" ]; then
 		jid5=$tmp_jid
 	else
@@ -272,12 +278,15 @@ cd $proj_dir
 # request memory
 req_mem=$((${#groupname_array[@]}*50))
 if [ "$req_mem" -gt $very_high_mem ]; then
-	req_mem=500
+	req_mem=$very_high_mem
 fi
 req_mem=${req_mem}G
 echo "Running differential genes analysis using DESeq2 and SARTools...."
 echo "See log is in $log_dir/run_sartools.out"
 echo ""
+# copy run_differential_analysis_rna.out to log_dir
+cp $proj_dir/run_differential_analysis_rna.out $log_dir/
+
 jid6=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_run=$run \
 	SINGULARITYENV_padj=$padj \
@@ -312,6 +321,8 @@ state=$(sacct -j $jid6 --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 	scancel $jid6
 	echo -e "Feature counts failed. Please check featureCounts_* files in $log_dir\n"
+	# copy run_differential_analysis_rna.out to log_dir
+	cp $proj_dir/run_differential_analysis_rna.out $log_dir/
 	exit
 fi
 
@@ -347,6 +358,8 @@ state=$(sacct -j $jid7 --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 	scancel $jid7
 	echo -e "SARTools run failed. Please check run_sartools.out in $log_dir\n"
+	# copy run_differential_analysis_rna.out to log_dir
+	cp $proj_dir/run_differential_analysis_rna.out $log_dir/
 	exit
 fi
 
@@ -369,4 +382,6 @@ jid8=$($run sbatch --dependency=afterok:$jid7 \
 		--job-name=run_differential_analysis_rna \
 		--export message="$message",proj_dir=$proj_dir \
 		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_differential_analysis_rna.out"| cut -f 4 -d' ')
+# copy run_differential_analysis_rna.out to log_dir
+cp $proj_dir/run_differential_analysis_rna.out $log_dir/
 

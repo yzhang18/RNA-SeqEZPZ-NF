@@ -130,7 +130,7 @@ img_name=rnaseq-pipe-container.sif
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
 # getting SLURM configuration
-source slurm_config_var.sh
+source $img_dir/scripts/slurm_config_var.sh
 
 # copying scripts ran for records
 if [[ ! -d $log_dir/scripts ]];then

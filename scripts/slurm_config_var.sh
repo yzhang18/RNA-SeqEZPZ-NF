@@ -3,7 +3,11 @@
 high_mem_partition=himem
 # name of  partition for general use
 general_partition=general
-# memory for jobs that require high memory
-high_mem=128G
+# memory in GB for jobs that require high memory like STAR
+high_mem=128
+# memory in GB for jobs that require medium memory like feature counts
+med_mem=32
+# memory in GB for jobs that require very high memory like DESeq2 and SARTools
+very_high_mem=500
 
 

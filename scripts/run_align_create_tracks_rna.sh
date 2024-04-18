@@ -161,7 +161,6 @@ echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
 # getting SLURM configuration
 source $img_dir/scripts/slurm_config_var.sh
-echo $high_mem_partition
 
 # copying scripts ran for records
 if [[ ! -d $log_dir/scripts ]];then
@@ -358,7 +357,7 @@ for i in "${!groupname_array[@]}"; do
 				--dependency=afterok:$tmp \
 				--mail-user=$email \
 				--job-name=star_pass2 \
-				--mem=$high_mem \
+				--mem=${high_mem}G \
 				--time=$time \
 				--wrap "singularity exec \
 					--bind $proj_dir:/mnt \

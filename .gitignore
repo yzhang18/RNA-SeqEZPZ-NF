@@ -5,3 +5,5 @@ ref
 fastq
 **/*.out
 *\.Rhistory
+**/project_ex??
+**/project_ex?

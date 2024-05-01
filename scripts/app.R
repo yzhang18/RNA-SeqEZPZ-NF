@@ -327,6 +327,10 @@ ui <- fluidPage(
    trigger = "hover",
    options = list(container = "body")
   ),
+  actionButton(inputId="setup.save.samples","Save samples.txt"),
+  actionButton(inputId="setup.view.samples","View samples.txt"),
+  br(),
+  br(),
                         conditionalPanel(condition = "input.setup.proj.dir == ''",
                         textOutput('err_msg')),
                         #conditionalPanel(condition = "input.setup.genome == 'other' && (input.setup.genome.name == '' || input.setup_genome_fa == '' || input.setup_genome_gtf == '')",
@@ -353,6 +357,9 @@ ui <- fluidPage(
             style = "overflow-x: auto;", # Apply CSS styles
             width = 9,
                         fluidRow(
+                         h3("Creating a samples.txt"),
+                         br(),
+                         br(),
                          column(4, 
                           textInput(inputId="setup.email", 
                                   label = list("Email address",
@@ -1137,6 +1144,94 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   shiny::need(length(ctrlname) == nsamples, 'You must enter control name'),
   shiny::need(length(repname)==nsamples,'You must enter replicate name')
  )
+ })
+ 
+ observeEvent(input$setup.view.samples,{
+  projdir=react.setup.proj.dir()
+  req(paste0(projdir,"/samples.txt"))
+  samplesContent <- readLines(paste0(projdir,"/samples.txt"))
+  showModal(modalDialog(
+   title="Samples.txt",
+   verbatimTextOutput("samplesContent"),
+   footer = actionButton("closeModal", "Close")
+  ))
+  output$samplesContent <- renderPrint({
+   samplesContent
+  })
+  observeEvent(input$closeModal, {
+    removeModal()
+  })
+ })
+ 
+ observeEvent(input$setup.save.samples,{
+  # create samples.txt
+  projdir=react.setup.proj.dir()
+  grpname=react.setup.grp.name()
+  ctrlname=react.setup.grp.ctrl.name()
+  repname=react.setup.grp.rep.name()
+  spikename=rep("NA",length(grpname))
+  email=react.setup.email()
+  nsamples=setup.value()
+  genome=react.setup.genome()
+  genome.name = react.setup.genome.name()
+  genome.fa=react.setup.genome.fa()
+  genome.gtf=react.setup.genome.gtf()
+  if(email==""){
+   email=rep("NA",length(grpname))
+  }else{
+   email=rep(email,length(grpname))
+  }
+  shiny::req(projdir!='')
+  shiny::req(length(grpname)==nsamples)
+  shiny::req(length(ctrlname)==nsamples)
+  shiny::req(length(repname)==nsamples)
+  
+  # getting the r1 and r2 fastq for all groups
+  
+  # function to remove empty paths
+  rem_empty_path <- function(input.name) {
+   filt.path = input[[input.name]]
+   filt.path = unlist(strsplit(filt.path,"\n"))
+   print("filt.path")
+   print(filt.path)
+   empty.id = which(filt.path=="")
+   print("empty.id")
+   print(empty.id)
+   if(length(empty.id)>0) filt.path = filt.path[-empty.id]
+   print("filt.path after rem empty")
+   print(filt.path)
+  }
+  print("input[[setup_grp1_r1_filepaths)]]")
+  print(input[[paste0("setup_grp",1,"_r1_filepaths")]])
+  r1_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r1_filepaths")))
+  r2_fastq_lst=lapply(1:length(grpname),function(x) rem_empty_path(paste0("setup_grp",x,"_r2_filepaths")))
+  print("r1_fastq_lst")
+  print(r1_fastq_lst)
+  # sort and unique to make sure the correct pairing of r1 and r2
+  r1_fastq_lst=lapply(1:length(grpname),
+                      function(x) sort(unique(r1_fastq_lst[[x]])))
+  r2_fastq_lst=lapply(1:length(grpname),
+                      function(x) sort(unique(r2_fastq_lst[[x]])))
+  # changing to hostpath
+  r1_fastq=lapply(1:length(grpname),
+                  function(x) paste(paste0(hostfilepath,r1_fastq_lst[[x]]),collapse=","))
+  r2_fastq=lapply(1:length(grpname),
+                  function(x) paste(paste0(hostfilepath,r2_fastq_lst[[x]]),collapse=","))
+  print("r1_fastq")
+  print(r1_fastq)
+  df <- data.frame(
+   grpname=grpname,
+   ctrlname=ctrlname,
+   repname=repname,
+   spikename=spikename,
+   email=email,
+   path_to_r1_fastq=unlist(r1_fastq),
+   path_to_r2_fastq=unlist(r2_fastq))
+  write.table(paste0("#Groupname\tControlname\tReplicatename\tspikename\temail",
+                     "\tpath_to_r1_fastq\tpath_to_r2_fastq"),
+              file=file.path(projdir,"samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE)
+  write.table(df,file=file.path(projdir,"samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE,
+              append = TRUE)
  })
  
  observeEvent(input$setup.run.analysis,{

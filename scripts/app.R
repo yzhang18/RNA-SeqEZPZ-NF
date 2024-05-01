@@ -358,8 +358,6 @@ ui <- fluidPage(
             width = 9,
                         fluidRow(
                          h3("Creating a samples.txt"),
-                         br(),
-                         br(),
                          column(4, 
                           textInput(inputId="setup.email", 
                                   label = list("Email address",
@@ -568,10 +566,36 @@ ui <- fluidPage(
                            value = 11),
               numericInput("pdf.height", label = HTML("PDF <br/> height (in)"), 
                            value = 8)),
-             actionButton(inputId='export', label="Save plots.pdf"),
+             actionButton(inputId='export', label=list("Save plots.pdf"),),
+             bsButton("export-info", label = "", 
+                      icon = icon("info", lib = "font-awesome"), 
+                      style = "default", size = "extra-small"),
+             bsPopover(
+              id = "export-info",
+              title = "More information",
+              content = HTML(paste0(
+               "Plots are saved in your &ltproject folder&gt/outputs/shiny_outputs."
+              )),
+              placement = "right",
+              trigger = "hover",
+              options = list(container = "body")
+             ), 
              br(),
              br(),
-             actionButton(inputId='exportGene', label="Export filtered gene lists")
+             actionButton(inputId='exportGene', label=list("Export filtered gene list"),),
+                                  bsButton("exportGene-info", label = "", 
+                                  icon = icon("info", lib = "font-awesome"), 
+                                  style = "default", size = "extra-small"),
+             bsPopover(
+              id = "exportGene-info",
+              title = "More information",
+              content = HTML(paste0(
+               "Filtered gene list is saved in your &ltproject folder&gt/outputs/shiny_outputs."
+              )),
+              placement = "right",
+              trigger = "hover",
+              options = list(container = "body")
+             ) 
             ),
             mainPanel(
              fluidRow(style = "background-color:#F5F5F5",

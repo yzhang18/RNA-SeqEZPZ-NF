@@ -265,14 +265,16 @@ ui <- fluidPage(
   ),
                         checkboxInput(inputId = "setup.batch.adjust",
                                       label=list("Replicates batch adjustment",
-                                              bsButton("setup-batch-info", label = "", icon = icon("info", 
-                                                 lib = "font-awesome"), style = "default", size = "extra-small")), 
+                                              bsButton("setup-batch-info", label = "", 
+                                              icon = icon("info",lib = "font-awesome"),
+                                              style = "default", size = "extra-small")), 
                                       value=TRUE),
   bsPopover(
    id = "setup-batch-info",
    title = "More information",
    content = HTML(paste0(
-    "Batch correction to account for unwanted variation across different replicates."
+    "Batch correction to account for unwanted variation across different replicates.<br>",
+    "Uncheck if number of replicates is not the same across groups."
    )),
    placement = "right",
    trigger = "hover",
@@ -345,12 +347,14 @@ ui <- fluidPage(
    id = "setup-run-analysis-info",
    title = "More information",
    content = HTML(paste0(
-    "Run full RNA-seq analysis: QC, trimming, alignment, tracks creation, reads counting, and differential gene analysis."
+    "Run full RNA-seq analysis: QC, trimming, alignment, tracks creation, reads counting, and differential gene analysis.<br>",
+    "Once clicked, you must restart from the command line to perform a new analysis."
    )),
    placement = "right",
    trigger = "hover",
    options = list(container = "body")
   ),
+  shinyjs::hidden(p(id="text1","Processing..."))
            ),#sidebarPanel
            mainPanel(
             # adding horizontal scrolling
@@ -528,18 +532,21 @@ ui <- fluidPage(
                         br(),
                         selectInput("logtab.log.path", "Choose a log file to view:",
                                     choices = log.lst,selected="run_rnaseq_full.out"),
-                        br(),
-                        # Input: Choose a failed log file to view
-                        selectInput("logtab.fail.log.path", "Choose a failed log file to view:",
-                                    choices = log.fail.lst,selected="")
+                        # commenting this out since I can't find FAILED word in other slurm settings
+                        #br(),
+                        ## Input: Choose a failed log file to view
+                        #selectInput("logtab.fail.log.path", "Choose a failed log file to view:",
+                        #            choices = log.fail.lst,selected="")
                         ),
            mainPanel(width=9,
                      tags$div(
                       h5("Log file content:"),
                       tags$style(type="text/css", ".shiny-text-output {word-wrap: break-word;}"),
                      verbatimTextOutput("logtab.log.content"),
-                      h5("Failed log content:"),
-                     verbatimTextOutput("logtab.fail.log.content")))
+                     # commenting this out since I can't find FAILED word in other slurm settings
+                      #h5("Failed log content:"),
+                     #verbatimTextOutput("logtab.fail.log.content")
+                     ))
                      
   ),# tabPanel Log
   tabPanel("QCs",id="qctab",fluid=TRUE,
@@ -1259,6 +1266,9 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  })
  
  observeEvent(input$setup.run.analysis,{
+  # disable the run analysis button after it's clicked
+  shinyjs::disable("setup.run.analysis")
+  shinyjs::show("text1")
   # create samples.txt
    projdir=react.setup.proj.dir()
    grpname=react.setup.grp.name()

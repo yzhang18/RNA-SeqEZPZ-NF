@@ -209,6 +209,7 @@ $(cp $img_dir/scripts/run_rnaseq_full.sh $log_dir/scripts/)
 echo ""
 echo Check and generate STAR index if genome has not been indexed yet....
 echo ""
+cp run_rnaseq_full.out $log_dir/
 
 . $img_dir/scripts/run_star_index.sh run=$run_debug time=$time genome=$ref_ver ref_fa=$fasta_file \
 	ref_gtf=$gtf_file ncpus_star=$ncpus_star \
@@ -253,15 +254,20 @@ echo ""
 date
 echo "Checking whether trimming already ran to completion"
 cp $proj_dir/run_rnaseq_full.out $log_dir/
-trim_logs=$(ls ${proj_dir}/outputs/logs/trim_fastqc_*.out)
-nfastq=$(ls ${proj_dir}/outputs/merged_fastq/*.gz | wc -l)
-if [[ ${#trim_logs[@]} -gt 0 ]]; then
+# check if trim_fastqc file exist
+# enable nullglob for check_trim
+shopt -s nullglob
+check_trim=(${proj_dir}/outputs/logs/trim_fastqc_*.out)
+# disable nullglob
+shopt -u nullglob
+if [[ ${#check_trim[@]} -gt 0 ]]; then
+	nfastq=$(ls ${proj_dir}/outputs/merged_fastq/*.gz | wc -l)
         # check whether any fail
-        ncomplete=$(grep "Analysis complete" $proj_dir/outputs/logs/trim_fastqc*.out | wc -l)
+        ncomplete=$(grep "Analysis complete" ${proj_dir}/outputs/logs/trim_fastqc*.out | wc -l)
         if [[ $ncomplete -eq $nfastq ]];then
         echo "Skip trimming since it's already done."
         else
-            	echo Trimming and QC.....see progress in ${proj_dir}/run_trim_qc.out
+            	echo Trimming and QC.....see progress in $proj_dir/run_trim_qc.out
                 echo ""
 		cp $proj_dir/run_rnaseq_full.out $log_dir/
                 export run time

@@ -517,6 +517,10 @@ Aligned bam files are in $work_dir/STAR_2pass/Pass2\n\n"
 # remove STAR pass1 directory
 rm -r $work_dir/STAR_2pass/Pass1
 rm -r $work_dir/STAR_2pass/GenomeForPass2
+# remove custom STAR index
+if [[ -d "${proj_dir}/ref/${ref_ver}/STAR_index" ]]; then
+	rm -r "${proj_dir}/ref/${ref_ver}/STAR_index"
+fi
 
 tmp=$($run sbatch --dependency=afterok:$jid4c \
 		--output=$log_dir/dummy.txt \

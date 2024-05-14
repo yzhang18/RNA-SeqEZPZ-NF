@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PS4='+${LINENO}:${BASH_SOURCE}: '
+
 # script connecting all the individual scripts to do full rnaseq analysis
 # How to run
 # cd <project_dir>
@@ -251,10 +253,12 @@ echo ""
 date
 echo "Checking whether trimming already ran to completion"
 cp $proj_dir/run_rnaseq_full.out $log_dir/
-if compgen -G "${proj_dir}/outputs/logs/trim_fastqc_*.out" > /dev/null; then
+trim_logs=$(ls ${proj_dir}/outputs/logs/trim_fastqc_*.out)
+nfastq=$(ls ${proj_dir}/outputs/merged_fastq/*.gz | wc -l)
+if [[ ${#trim_logs[@]} -gt 0 ]]; then
         # check whether any fail
-        n_failed=$(grep FAILED $proj_dir/outputs/logs/trim_fastqc*.out | wc -l)
-        if [[ $n_failed -eq 0 ]];then
+        ncomplete=$(grep "Analysis complete" $proj_dir/outputs/logs/trim_fastqc*.out | wc -l)
+        if [[ $ncomplete -eq $nfastq ]];then
         echo "Skip trimming since it's already done."
         else
             	echo Trimming and QC.....see progress in ${proj_dir}/run_trim_qc.out
@@ -262,7 +266,7 @@ if compgen -G "${proj_dir}/outputs/logs/trim_fastqc_*.out" > /dev/null; then
 		cp $proj_dir/run_rnaseq_full.out $log_dir/
                 export run time
                 . $img_dir/scripts/run_trim_qc.sh run=$run time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
-				cp run_trim_qc.out $log_dir/
+		cp run_trim_qc.out $log_dir/
                 echo "Done running trim and QC."
                 echo "Read run_trim_qc.out log in ${log_dir} and see whether all steps ran to completion"
                 echo ""

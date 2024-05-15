@@ -1,30 +1,30 @@
 #!/bin/bash
 
+# print linenumber when set -x is set
 export PS4='+${LINENO}:${BASH_SOURCE}: '
 
 # script connecting all the individual scripts to do full rnaseq analysis
 # How to run
 # cd <project_dir>
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
+# bash scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
 # Examples:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
+# bash scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
 # to run with specific time limit:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh \
+# bash scripts/run_rnaseq_full.sh \
 #        	time=DD-HH:MM:SS &> run_rnaseq_full.out &
-# 
+#
 # by default, alignment is done to human reference genome hg19 unless specified using 'genome=hg38':
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh genome=hg38 &> run_rnaseq_full.out &
-# 
+# bash scripts/run_rnaseq_full.sh genome=hg38 &> run_rnaseq_full.out &
+#
 # or to do nothing but echo all commands:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh run=echo &> run_rnaseq_full.out &
-# 
+# bash scripts/run_rnaseq_full.sh run=echo &> run_rnaseq_full.out &
+#
 # or to change a bunch of parameters at once:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh run=echo \
-#     padj=1 time=DD-HH:MM:SS \
+# bash scripts/run_rnaseq_full.sh run=echo padj=1 time=DD-HH:MM:SS \
 # &> run_rnaseq_full.out &
-# 
+#
 # or to run and printing all trace commands (i.e. set -x):
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh run=debug &> run_rnaseq_full.out &
+# bash scripts/run_rnaseq_full.sh run=debug &> run_rnaseq_full.out &
 
 
 #set -x

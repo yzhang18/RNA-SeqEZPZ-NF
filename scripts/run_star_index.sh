@@ -3,25 +3,22 @@
 # script to create genome STAR index
 # How to run:
 # cd <my_project_dir>
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh &> run_star_index.out &
+# bash scripts/run_star_index.sh &> run_star_index.out &
 # Examples:
 # cd ~/project1
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh &> run_star_index.out &
+# bash scripts/run_star_index.sh &> run_star_index.out &
 #
 # or to run with specific time limit:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh time=DD-HH:MM:SS  &> run_star_index.out &
+# bash scripts/run_star_index.sh time=DD-HH:MM:SS  &> run_star_index.out &
 #
 # by default, alignment is done to human reference genome hg19 unless specified genome=hg38:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh genome=hg38 &> run_align.out &
+# bash scripts/run_star_index.sh genome=hg38 &> run_align.out &
 # available genome hg19 or hg38
 # if using other genome, genome file (.fasta or fa) and gtf file need to be in <my_project_dir>/ref/<genome.name> dir
 # and set as follows: genome=<genome_name> ref_fa=<path_to_genome_fasta_file> ref_gtf=<path_to_genome_gtf_file>
 #
-# or to do nothing but echo all commands:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh run=echo &> run_star_index.out &
-#
 # or to run and printing all trace commands (i.e. set -x):
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh run=debug &> run_star_index.out &
+# bash scripts/run_star_index.sh run=debug &> run_star_index.out &
 
 # set -x
 set -e
@@ -56,7 +53,7 @@ while [[ "$#" -gt 0 ]]; do
         fi
         if [[ $1 == "help" ]];then
 		echo ""
-                echo 'usage:  /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_star_index.sh [OPTION] &> run_star_index.out & '
+                echo 'usage: scripts/run_star_index.sh [OPTION] &> run_star_index.out & '
                 echo ''
                 echo DESCRIPTION
                 echo -e '\tcreating genome index using STAR'

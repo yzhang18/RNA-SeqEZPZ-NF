@@ -354,7 +354,7 @@ ui <- fluidPage(
    trigger = "hover",
    options = list(container = "body")
   ),
-  shinyjs::hidden(p(id="text1","Processing..."))
+  shinyjs::hidden(p(id="text1","Running full analysis. See Log tab for more info."))
            ),#sidebarPanel
            mainPanel(
             # adding horizontal scrolling
@@ -636,8 +636,13 @@ ui <- fluidPage(
               tabPanel("Table(s)",
              # Table of diff genes
              fluidRow(style = "background-color:#F5F5F5",
+              br(),
+              p("Table of gene expression treatment_vs_reference. 
+                 Up-regulated means the expression is higher in treatment compared to reference.
+                 NS means not significant.",style="font-size:18px"),
               textInput("tab3.search.term", "Search by gene names separated by commas:"),
               numericInput("currentPage","Current Page",value=1,min=1),
+              
               uiOutput("tables")
              )),
              
@@ -645,6 +650,7 @@ ui <- fluidPage(
  
              tabPanel("Volcano Plot(s)",
              fluidRow(
+              br(),
               # genes to highlight in volcano plot
               column(5,textInput("tab3.hilite.genes",
                                  label = "Enter official gene names separated by comma:",value="")),
@@ -652,6 +658,7 @@ ui <- fluidPage(
                column(12,uiOutput("tab3.volcano.plots"))
               )),
               tabPanel("Overlaps",
+                       br(),
                        column(2,
                               checkboxGroupInput("tab3.venn.opts", label = ("Display on Venns"),
                                                  choices = venn.opts.lst,
@@ -667,6 +674,7 @@ ui <- fluidPage(
                column(12,uiOutput("tab3.venn.plots"))
               ),
              tabPanel("Upset Plot(s)",
+                      br(),
                              # upset plot number of intersection
                              numericInput("tab3.nintersects.upset", label = ("Upset plot max intersections"),
                                           value = 40,min=1,step=1),
@@ -679,6 +687,7 @@ ui <- fluidPage(
               ),
              tabPanel("Pathway",
                       fluidRow(
+                       br(),
              # species for msigdb
              selectInput(
               inputId="tab3.msigdb.species",
@@ -1216,6 +1225,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   shiny::req(length(grpname)==nsamples)
   shiny::req(length(ctrlname)==nsamples)
   shiny::req(length(repname)==nsamples)
+  shiny::req(file.access(projdir,2) ==0)
   
   # getting the r1 and r2 fastq for all groups
   
@@ -1266,9 +1276,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  })
  
  observeEvent(input$setup.run.analysis,{
-  # disable the run analysis button after it's clicked
-  shinyjs::disable("setup.run.analysis")
-  shinyjs::show("text1")
   # create samples.txt
    projdir=react.setup.proj.dir()
    grpname=react.setup.grp.name()
@@ -1290,9 +1297,13 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    shiny::req(length(grpname)==nsamples)
    shiny::req(length(ctrlname)==nsamples)
    shiny::req(length(repname)==nsamples)
+   shiny::req(file.access(projdir,2) ==0)
+   
+   # disable the run analysis button after it's clicked
+   shinyjs::disable("setup.run.analysis")
+   shinyjs::show("text1")
    
    # getting the r1 and r2 fastq for all groups
-   
    # function to remove empty paths
    rem_empty_path <- function(input.name) {
     filt.path = input[[input.name]]

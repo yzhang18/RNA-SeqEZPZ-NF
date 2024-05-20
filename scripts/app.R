@@ -1394,6 +1394,9 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  observeEvent(input$logtab.refresh.log.path,{
   # list of files in log directory from most recent
   projdir <- react.setup.proj.dir()
+  # copy log (i.e. *.out) files to log folder to view
+  files.to.copy <- list.files(projdir,pattern="\\.out$",full.names=TRUE)
+  file.copy.msg=file.copy(files.to.copy,paste0(projdir,"outputs/logs"),overwrite=TRUE)
   files=list.files(paste0(projdir,"outputs/logs"),pattern = "\\.txt$|\\.out$",full.names = TRUE)
   # Sort files, placing filenames starting with "run_" at the top
   sorted_files <- c(sort(files[startsWith(files, "run_")]), sort(files[!startsWith(files, "run_")]))

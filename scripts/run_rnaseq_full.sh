@@ -7,6 +7,7 @@ export PS4='+${LINENO}:${BASH_SOURCE}: '
 # How to run
 # cd <project_dir>
 # bash scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
+# DO NOT change the name or location of run_rnaseq_full.out
 # Examples:
 # bash scripts/run_rnaseq_full.sh &> run_rnaseq_full.out &
 # to run with specific time limit:
@@ -73,7 +74,7 @@ while [[ "$#" -gt 0 ]]; do
         fi
 	if [[ $1 == "help" ]];then
 		echo ""
-		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
+		echo 'usage: bash scripts/run_rnaseq_full.sh [OPTION] &> run_rnaseq_full.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun full RNA-seq analysis: Quality Control, alignment, and differential analysis'
@@ -262,7 +263,7 @@ check_trim=(${proj_dir}/outputs/logs/trim_fastqc_*.out)
 shopt -u nullglob
 if [[ ${#check_trim[@]} -gt 0 ]]; then
 	nfastq=$(ls ${proj_dir}/outputs/merged_fastq/*.gz | wc -l)
-        # check whether any fail
+        # check to make sure all trimming were run to completion
         ncomplete=$(grep "Analysis complete" ${proj_dir}/outputs/logs/trim_fastqc*.out | wc -l)
         if [[ $ncomplete -eq $nfastq ]];then
         echo "Skip trimming since it's already done."
@@ -325,8 +326,8 @@ cd $proj_dir
 #. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
 #	ncpus_star=$ncpus_star 2>&1 | tee run_align_create_tracks_rna.out $log_dir/run_align_create_tracks_rna.out
 . $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
-        ncpus_star=$ncpus_star &> $log_dir/run_align_create_tracks_rna.out
-cp $log_dir/run_align_create_tracks_rna.out $proj_dir/
+        ncpus_star=$ncpus_star &> run_align_create_tracks_rna.out
+cp run_align_create_tracks_rna.out $log_dir/
 
 message="Done alignment and create tracks for visualization.\n"
 message=${message}"See log run_align_create_tracks_rna.out.\n\n\n"

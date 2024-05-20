@@ -4,6 +4,7 @@
 # How to run:
 # cd <my_project_dir>
 # bash scripts/run_star_index.sh &> run_star_index.out &
+# DO NOT change the name or location of run_star_index.out
 # Examples:
 # cd ~/project1
 # bash scripts/run_star_index.sh &> run_star_index.out &
@@ -138,6 +139,8 @@ echo -e "Options used to run:"
 echo time="$time"
 echo genome="$ref_ver"
 echo ""
+
+
 
 skip_run_star_index=0
 ### specify reference genome

@@ -4,17 +4,17 @@
 # script to run shiny app in the beginning
 # How to run
 # cd <project_dir>
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh
+# bash scripts/run_shiny_analysis.sh
 # Examples:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh
+# bash scripts/run_shiny_analysis.sh
 # <project_dir> is where the fastq and outputs directory are
 # project directory where the fastq and outputs directory are
 #
 # to run with all commands printed
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh run=debug
+# bash scripts/run_shiny_analysis.sh run=debug
 #
 # Default time limit is 1 day to change to 1 day, 2 hours, 20 minutes and 30 sec
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh time=1-2:20:30
+# bash scripts/run_shiny_analysis.sh time=1-2:20:30
 
 # clear python path to prevent mixed up of python packages
 unset PYTHONPATH
@@ -39,7 +39,7 @@ while [[ "$#" -gt 0 ]]; do
 
         if [[ $1 == "help" ]];then
 		echo ""
-                echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_shiny_analysis.sh [OPTION]'
+                echo 'usage: bash scripts/run_shiny_analysis.sh [OPTION]'
                 echo ''
                 echo DESCRIPTION
                 echo -e '\trun shiny app to run full RNA-seq analysis'
@@ -128,13 +128,6 @@ else
 	bind_filepath="--bind $filepath:/filepath"
 fi
 
-# find available node with at least 2 cpus
-# to avoid being stuck when the app is hosted on a full node
-#node_avail=$(sinfo -o "%20n %20C %T" --partition=general,himem --states=IDLE,MIXED | awk '/mixed/ || /idle/ {split($2,a,"/"); if(a[1] > 1) {print $1;exit}}')
-# temporary to also avoid gpu nodes
-#node_avail=$(sinfo -o "%20n %20C %T" --partition=general,himem --states=IDLE,MIXED | \
-#awk 'NR > 1' |  awk '!/r1pl-hpcf-g0/ {split($2,a,"/"); if(a[1] > 1) {print $1;exit}}')
-
 # Activate environment where shiny is installed and go to "app.R" directory
 export port_num filepath max_nsamples img_dir proj_dir img_name bind_filepath
 jid=$(sbatch --time=$time \
@@ -172,12 +165,11 @@ echo -e "Host *\n ServerAliveInterval 240" >> ~/.ssh/config
 
 echo Please ignore \"Failed to open connection..\" message.
 echo ""
-echo If you received \"connection to $node closed by remote host\",
-echo please re-run run_overlap.sh.
+echo If you received \"connection to $node closed\",
+echo "please re-run the command line (i.e. run_shiny_analysis.sh)".
 echo ""
 echo -e "After typing in your password, please wait until firefox appears ....\n"
 echo -e "It may take some time for firefox to be responsive as it tries to load all the data\n"
-echo -e "If a pop-up window appears, click on \"Create New Profile\"\n"
 sleep 5
 ssh -tX "$node" 'export port_num='"'$port_num'"'; 
         export img_dir='"'$img_dir'"'; \
@@ -185,10 +177,6 @@ ssh -tX "$node" 'export port_num='"'$port_num'"';
 	export proj_dir='"'$proj_dir'"'; \
 	export run=$run; \
         bash $img_dir/scripts/run_firefox.sh'
-
-#salloc -w $node --x11
-#srun -w $node singularity exec $img_dir/$img_name bash -c "source activate firefox_env; \
-#	firefox --no-remote --new-window -P \"default\" http://127.0.0.1:$port_num"
 
 ## this should not be run until firefox is closed
 scancel $jid

@@ -2,22 +2,19 @@
 
 # How to run
 # cd <project_dir>
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+# bash scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+# DO NOT change the name or location of run_differential_analysis_rna.out
 # Examples:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
+# bash scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
 #
 # by default, alignment is done to human reference genome hg19 (genome=hg19) unless specified genome=hg38:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh genome=hg38 &> run_differential_analysis_rna.out &
+# bash scripts/run_differential_analysis_rna.sh genome=hg38 &> run_differential_analysis_rna.out &
 #
-# or to do nothing but echo all commands:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh run=echo &> run_differential_analysis_rna.out &
-#
-# or to change FDR of differential analysis:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh padj=1 \
-# &> run_differential_analysis_rna.out &
+# or to change FDR (padj) of differential analysis:
+# bash scripts/run_differential_analysis_rna.sh padj=1 &> run_differential_analysis_rna.out &
 #
 # or to run and printing all trace commands (i.e. set -x):
-# bash ~/Steve/virtual_server/cut-n-tag-singularity/scripts/run_create_tracks.sh run=debug &> run_create_tracks.out &
+# bash scripts/run_create_tracks.sh run=debug &> run_create_tracks.out &
 
 #set -x
 set -e
@@ -57,7 +54,7 @@ while [[ "$#" -gt 0 ]]; do
 	fi
 	if [[ $1 == "help" ]];then
 		echo ""
-		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
+		echo 'usage: bash scripts/run_differential_analysis_rna.sh [OPTION] &> run_differential_analysis_rna.out'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun differential RNA-seq analysis'
@@ -189,6 +186,7 @@ if [[ -f $ref_gtf ]];then
 else
     	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
 fi
+
 # this is where star index will be stored. Create if directory doesn't exist yet.
 if [[ ! -d $genome_dir ]];then
         star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
@@ -367,6 +365,8 @@ fi
 rm -r $proj_dir/outputs/STAR_2pass/Pass1 2> /dev/null || true
 rm -r $proj_dir/outputs/STAR_2pass/GenomeForPass2 2> /dev/null || true
 rm $proj_dir/outputs/STAR_2pass/Pass2/*Aligned.out.bam 2> /dev/null || true
+# delete STAR index
+rm -r $star_index_dir 2> /dev/null || true
 
 message="Differential analysis has been completed\n\
 Output files are in $work_dir/diff_analysis_rslt\n\

@@ -3,19 +3,17 @@
 # script to trim fastq files and run quality control
 # How to run:
 # cd <project_dir>
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh &> run_trim_qc.out &
+# bash scripts/run_trim_qc.sh &> run_trim_qc.out &
+# DO NOT change the name or location of run_trim_qc.out
 # Examples:
 # cd project1
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh &> run_trim_qc.out &
+# bash scripts/run_trim_qc.sh &> run_trim_qc.out &
 #
 # or to run with specific time limit:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh time=DD-HH:MM:SS  &> run_trim_qc.out &
-#
-# or to do nothing but echo all commands:
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh run=echo &> run_trim_qc.out &
+# bash scripts/run_trim_qc.sh time=DD-HH:MM:SS  &> run_trim_qc.out &
 #
 # or to run and printing all trace commands (i.e. set -x):
-# bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh run=debug &> run_trim_qc.out &
+# bash scripts/run_trim_qc.sh run=debug &> run_trim_qc.out &
 #
 
 
@@ -41,7 +39,7 @@ while [[ "$#" -gt 0 ]]; do
 
 	if [[ $1 == "help" ]];then
 		echo ''
-		echo 'usage: bash /export/export/apps/opt/rnaseq-pipeline/2.2/scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out &'
+		echo 'usage: bash scripts/run_trim_qc.sh [OPTION] &> run_trim_qc.out &'
 		echo ''
 		echo DESCRIPTION
 		echo -e '\trun trim and qc for RNA-seq samples'
@@ -172,6 +170,9 @@ cd $proj_dir
 target_link=$(readlink -f fastq)
 
 # merge fastq files
+echo "Merging fastq files"
+echo ""
+
 if [[ ! -d $work_dir/merged_fastq ]];then
 	mkdir -p $work_dir/merged_fastq
 fi

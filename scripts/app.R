@@ -97,9 +97,11 @@ heatmap_sigf_overlap <- function(data,title=""){
   # setting high and low color and color key name
   scale_fill_manual(values=col.pval,na.value = "transparent",drop=FALSE)+
   # draw nice square
-  coord_equal() +
+  # coord_equal() +
   # remove x and y labels
   labs(x=NULL, y=NULL,fill="p-values") +
+  
+  scale_x_discrete(labels = function(x) str_wrap(gsub("_"," ",x), width = 10)) +
   # removes a lot of chart junks including space around heatmap
   # from ggthemes package
   theme_tufte(base_family="Helvetica") +
@@ -108,7 +110,7 @@ heatmap_sigf_overlap <- function(data,title=""){
   # make text bigger
   theme(axis.text = element_text(size=14)) +
   # rotate x axis text
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  #theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   # make legend on top left
   theme(legend.position="top") +
   #theme(legend.justification = c(-1,0)) +
@@ -604,13 +606,17 @@ ui <- fluidPage(
               options = list(container = "body")
              ) 
             ),
-            mainPanel(
+            mainPanel(width=10,
              fluidRow(style = "background-color:#F5F5F5",
                       column(2,selectInput(
                        inputId="tab3.grp1.name",
                        label = ("Group 1"),
-                       choices = NULL)),
-                      column(2,textInput(inputId="tab3.grp1.plot.title", 
+                       choices = NULL),
+                       tags$style(    type = 'text/css',
+                                      ".selectize-input { word-wrap : break-word;}
+                         .selectize-dropdown {word-wrap : break-word;} "
+                       )),
+                      column(2,textAreaInput(inputId="tab3.grp1.plot.title", 
                                 label = ("Group 1 label"), 
                                 value = "")),
                      column(2,
@@ -714,6 +720,26 @@ ui <- fluidPage(
               trigger = "hover",
               options = list(container = "body")
              ),
+             textInput("tab3.chg.enrich.terms", label = ("Enter terms to change in enrichment plots (e.g., Gtpase=GTPase, Hiv=HIV)"),
+                                 value=""),
+             # Adjust pathways plot vertical size
+             numericInput("tab3.enrich.plot.size", 
+                          label = list("Plot vertical size",
+                                       bsButton("tab3-enrich-plot-size-info", label = "", 
+                                                icon = icon("info", lib = "font-awesome"), 
+                                                style = "default", size = "extra-small")), 
+                          value = 10,min=1,step=1),
+             bsPopover(
+              id = "tab3-enrich-plot-size-info",
+              title = "More information",
+              content = HTML(paste0(
+               "Increase the number to increase vertical space in plots\n.",
+               "Decrease to make it smaller."
+              )),
+              placement = "right",
+              trigger = "hover",
+              options = list(container = "body")
+             ),
              actionButton(
               inputId = "gen.go",
               label = "Generate Enrichment plots"
@@ -722,8 +748,7 @@ ui <- fluidPage(
              br(),
              conditionalPanel(
               condition= "input['gen.go'] >= 1",
-              fluidRow(column(12,textInput("tab3.chg.enrich.terms", label = ("Enter terms to change in enrichment plots (e.g., Gtpase=GTPase, Hiv=HIV)"),
-                        value="")),
+              fluidRow(
                column(12,plotOutput(outputId = "tab3.plot3.1",height="auto")),
          
               br(),
@@ -1182,7 +1207,15 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   shiny::need(!grepl("\\s",projdir), 'Project folder name cannot have spaces'),
   shiny::need(file.access(projdir,2) ==0, 'Please select a different project folder where you have write access'),
   shiny::need(length(ctrlname) == nsamples, 'You must enter control name'),
-  shiny::need(length(repname)==nsamples,'You must enter replicate name')
+  shiny::need(length(repname)==nsamples,'You must enter replicate name'),
+  shiny::need(sum(grepl("^[0-9]",repname))==0,
+              'You must NOT use a digit as your first character in replicate name'),
+  shiny::need(sum(grepl("^[0-9]",ctrlname))==0,
+              'You must NOT use a digit as your first character in control name'),
+  shiny::need(sum(grepl("^[0-9]",grpname))==0,
+              'You must NOT use a digit as your first character in group name'),
+  shiny::need(sum(grepl("na",ctrlname))==0,
+              'You must use uppercase NA not lowercase na in ctrl name')
  )
  })
  
@@ -1221,6 +1254,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   }else{
    email=rep(email,length(grpname))
   }
+  print("projdir")
+  print(projdir)
   shiny::req(projdir!='')
   shiny::req(length(grpname)==nsamples)
   shiny::req(length(ctrlname)==nsamples)
@@ -1228,7 +1263,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   shiny::req(file.access(projdir,2) ==0)
   
   # getting the r1 and r2 fastq for all groups
-  
+  print("here")
   # function to remove empty paths
   rem_empty_path <- function(input.name) {
    filt.path = input[[input.name]]
@@ -1268,6 +1303,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    email=email,
    path_to_r1_fastq=unlist(r1_fastq),
    path_to_r2_fastq=unlist(r2_fastq))
+  print("file.path(projdir,samples.txt)")
+  print(file.path(projdir,"samples.txt"))
   write.table(paste0("#Groupname\tControlname\tReplicatename\tspikename\temail",
                      "\tpath_to_r1_fastq\tpath_to_r2_fastq"),
               file=file.path(projdir,"samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE)
@@ -1385,8 +1422,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   }
    print(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-   system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
-                " &> run_rnaseq_full.out' > /hostpipe"))
+   #system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+   #             " &> run_rnaseq_full.out' > /hostpipe"))
 })
  
  #### log tab #####
@@ -1524,9 +1561,9 @@ react.tab3.rdata <- reactive({
  observe({
   groups.lst <- react.tab3.groups.lst()
   updateSelectInput(session, "tab3.grp1.name",choices=groups.lst)
-  updateTextInput(session, "tab3.grp1.plot.title",value=groups.lst[[1]])
+  updateTextAreaInput(session, "tab3.grp1.plot.title",value=groups.lst[[1]])
  })
-
+ 
  # vals will contain all plots and table grobs
  vals.plot <- reactiveValues(venn.up1=NULL,venn.up2=NULL,venn.dwn1=NULL,
                              venn.dwn2=NULL,hm.up=NULL,hm.dwn=NULL,
@@ -1564,8 +1601,12 @@ react.tab3.rdata <- reactive({
     selectInput(inputId=paste0("tab3.grp",btn,".name"),
                 label=(paste0("Group ",btn)), 
                 selected=groups.lst[btn],
-                choices=groups.lst)),
-    column(2,textInput(inputId=paste0("tab3.grp",btn,".plot.title"),
+                choices=groups.lst),
+    tags$style(    type = 'text/css',
+                   ".selectize-input { word-wrap : break-word;}
+                         .selectize-dropdown {word-wrap : break-word;} "
+    )),
+    column(2,textAreaInput(inputId=paste0("tab3.grp",btn,".plot.title"),
               label=(paste0("Group ",btn," label")), 
               value = groups.lst[btn])),
     column(2,textInput(inputId=paste0("tab3.color.grp",btn), 
@@ -2209,6 +2250,10 @@ react.tab3.rdata <- reactive({
   input$tab3.enrich.ncat
  })
  
+ react.tab3.enrich.plot.size <- reactive({
+ input$tab3.enrich.plot.size
+ })
+ 
  react.tab3.result <- reactive({
   grp.name=react.tab3.grp.name()
   projdir = react.setup.proj.dir()
@@ -2724,10 +2769,14 @@ react.tab3.rdata <- reactive({
   vals.plot$venn.up2<-plot_euler(s4=s4,colors=colors,cex=cex,
                                  venn.opts=venn.opts,title="")
   # remove label if requested
-  if(!'Labels' %in% venn.opts )
+  if(!'Labels' %in% venn.opts ){
    names(s4)=rep(" ",length(s4))
+   ilabels=NULL
+  }else{
+   ilabels="counts"
+  }
   vals.plot$venn.up1<-venn(s4,zcolor=colors,opacity=.8,box=FALSE,
-                           ilcs = 0.8, sncs = 1,ggplot=TRUE)
+                           ilcs = 0.8, sncs = 1,ggplot=TRUE,ilabels=ilabels)
   grid.arrange(vals.plot$venn.up1,vals.plot$venn.up2,ncol=2,
                padding=unit(pad,"line"),
                top=textGrob("Up-regulated Genes",gp=gpar(fontsize=20)))
@@ -2746,11 +2795,16 @@ react.tab3.rdata <- reactive({
   shiny::req(nonzero_s4>0)
   vals.plot$venn.dwn2<-plot_euler(s4=s4,colors=colors,cex=cex,
                                   venn.opts=venn.opts,title="")
+
   # remove label if requested
-  if(!'Labels' %in% venn.opts )
+  if(!'Labels' %in% venn.opts ){
    names(s4)=rep(" ",length(s4))
+   ilabels=NULL
+  }else{
+   ilabels="counts"
+  }
   vals.plot$venn.dwn1 <- venn(s4,zcolor=colors,opacity=.8,box=FALSE,ilcs = 0.8,
-                              sncs = 1,ggplot=TRUE)
+                              sncs = 1,ggplot=TRUE,ilabels=ilabels)
   grid.arrange(vals.plot$venn.dwn1,vals.plot$venn.dwn2,ncol=2,
                padding=unit(pad,"line"),
                top=textGrob("Down-regulated Genes",gp=gpar(fontsize=20)))
@@ -2841,7 +2895,7 @@ react.tab3.rdata <- reactive({
       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOMF_","",x)))),
                                chg.enrich.terms), width=40)) +
      scale_x_discrete(labels=function(x) 
-      str_wrap(x,width=10)) +
+      str_wrap(gsub("_"," ",x),width=10)) +
      #scale_color_distiller(palette = 'Blues') +
      scale_color_gradientn(colors=rev(pal(10)),
                            limits=c(0,enrich.pval.co))+
@@ -2849,7 +2903,7 @@ react.tab3.rdata <- reactive({
     vals.plot$msig.mf
    })#withProgress
    }) #isolate
-  },height=function(){100*react.tab3.enrich.ncat()}) #renderPlot
+  },height=function(){100*react.tab3.enrich.plot.size()}) #renderPlot
  
   output$tab3.plot3.2 <- renderPlot({
    shiny::req(input$gen.go)
@@ -2873,14 +2927,14 @@ react.tab3.rdata <- reactive({
      facet_grid(~group2) +
      scale_y_discrete(labels=function(x)
       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOBP_","",x)))),chg.enrich.terms), width=40)) +
-     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+     scale_x_discrete(labels=function(x) str_wrap(gsub("_"," ",x),width=10)) +
      scale_color_gradientn(colors=rev(pal(10)),
                            limits=c(0,enrich.pval.co))+
      theme(strip.text=element_text(size=14))
     vals.plot$msig.bp
    })#withProgress
    }) #isolate
-  },height=function(){100*react.tab3.enrich.ncat()})
+  },height=function(){100*react.tab3.enrich.plot.size()})
 
   output$tab3.plot3.3 <- renderPlot({
    shiny::req(input$gen.go)
@@ -2904,14 +2958,14 @@ react.tab3.rdata <- reactive({
      facet_grid(~group2) +
      scale_y_discrete(labels=function(x)
       str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",gsub("GOCC_","",x)))),chg.enrich.terms), width=40)) +
-     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+     scale_x_discrete(labels=function(x) str_wrap(gsub("_"," ",x),width=10)) +
      scale_color_gradientn(colors=rev(pal(10)),
                            limits=c(0,enrich.pval.co))+
      theme(strip.text=element_text(size=14))
     vals.plot$msig.cc
    }) #withProgress
    }) #isolate
-  },height=function(){100*react.tab3.enrich.ncat()})
+  },height=function(){100*react.tab3.enrich.plot.size()})
 
 
   output$tab3.plot3.4 <- renderPlot({
@@ -2935,14 +2989,14 @@ react.tab3.rdata <- reactive({
                                      showCategory=enrich.ncat) + facet_grid(~group2) +
      scale_y_discrete(labels=function(x)
             str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
-     scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+     scale_x_discrete(labels=function(x) str_wrap(gsub("_"," ",x),width=10)) +
      scale_color_gradientn(colors=rev(pal(10)),
                            limits=c(0,enrich.pval.co))+
      theme(strip.text=element_text(size=14))
     vals.plot$msig.curate
    }) # withProgress
    }) #isolate
-  },height=function(){100*react.tab3.enrich.ncat()})
+  },height=function(){100*react.tab3.enrich.plot.size()})
  
   output$tab3.plot3.5 <- renderPlot({
    shiny::req(input$gen.go)
@@ -2965,14 +3019,14 @@ react.tab3.rdata <- reactive({
                                       showCategory=enrich.ncat) + facet_grid(~group2) +
       scale_y_discrete(labels=function(x)
        str_wrap(str_replace_all(str_to_title(tolower(gsub("_"," ",x))),chg.enrich.terms), width=40)) +
-      scale_x_discrete(labels=function(x) str_wrap(x,width=10)) +
+      scale_x_discrete(labels=function(x) str_wrap(gsub("_"," ",x),width=10)) +
       scale_color_gradientn(colors=rev(pal(10)),
                             limits=c(0,enrich.pval.co))+
       theme(strip.text=element_text(size=14))
      vals.plot$msig.h
     }) # withProgress
    }) #isolate
-  },height=function(){100*react.tab3.enrich.ncat()})
+  },height=function(){100*react.tab3.enrich.plot.size()})
  
  ## clicking on the export button will generate a pdf file 
  ## containing all plots

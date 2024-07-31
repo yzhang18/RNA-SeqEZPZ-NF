@@ -1422,8 +1422,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   }
    print(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
-   #system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
-   #             " &> run_rnaseq_full.out' > /hostpipe"))
+   system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
+                " &> run_rnaseq_full.out' > /hostpipe"))
 })
  
  #### log tab #####
@@ -1564,6 +1564,13 @@ react.tab3.rdata <- reactive({
   updateTextAreaInput(session, "tab3.grp1.plot.title",value=groups.lst[[1]])
  })
  
+ observe({
+  grp.name <- react.tab3.grp.name()
+  for (i in 1:length(grp.name)){
+   updateTextAreaInput(session, paste0("tab3.grp",i,".plot.title"),value=grp.name[i])
+   }# for
+ })#observe
+ 
  # vals will contain all plots and table grobs
  vals.plot <- reactiveValues(venn.up1=NULL,venn.up2=NULL,venn.dwn1=NULL,
                              venn.dwn2=NULL,hm.up=NULL,hm.dwn=NULL,
@@ -1588,6 +1595,9 @@ react.tab3.rdata <- reactive({
  
  observeEvent(input$insert_set, {
   groups.lst <- react.tab3.groups.lst()
+  grpname <-react.tab3.grp.name()
+  # remove selected choices (grpname) from list of choices (groups.lst)
+  groups.lst <- setdiff(groups.lst,grpname)
   btn <- value() +1
   value(btn)
   if(btn %% 2 == 0) row.color="#FFFFFF"
@@ -1643,7 +1653,7 @@ react.tab3.rdata <- reactive({
     NULL,
     NA
    )
-   updateTextInput(
+   updateTextAreaInput(
     session,
     paste0("tab3.grp", length(inserted)+1,".plot.title"),
     NULL,
@@ -2184,12 +2194,14 @@ react.tab3.rdata <- reactive({
   grp.name=as.vector(grp.name[mixedorder(names(grp.name))])
   grp.name[grp.name!="NA"]
  })
+ 
  react.tab3.grp.plot.title <- reactive({
   grp.plot.title <- sapply(grep("tab3\\.grp.+\\.plot\\.title", x = names(input), value = TRUE),
                            function(x) input[[x]])
   grp.plot.title=as.vector(grp.plot.title[mixedorder(names(grp.plot.title))])
   grp.plot.title[grp.plot.title!=""]
  })
+ 
  react.tab3.color <- reactive({
   colors <- sapply(grep("tab3\\.color.+", x = names(input), value = TRUE),
                    function(x) input[[x]])

@@ -1,1 +1,1 @@
-run with shiny app with fastq in the same folder
+creating a "local" dataset to quickly run test dataset on RNA-SeqEZPZ

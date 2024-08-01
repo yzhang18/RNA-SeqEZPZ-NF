@@ -1210,10 +1210,10 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   shiny::need(length(repname)==nsamples,'You must enter replicate name'),
   shiny::need(sum(grepl("^[0-9]",repname))==0,
               'You must NOT use a digit as your first character in replicate name'),
-  shiny::need(sum(grepl("^[0-9]",ctrlname))==0,
-              'You must NOT use a digit as your first character in control name'),
-  shiny::need(sum(grepl("^[0-9]",grpname))==0,
-              'You must NOT use a digit as your first character in group name'),
+  #shiny::need(sum(grepl("^[0-9]",ctrlname))==0,
+  #            'You must NOT use a digit as your first character in control name'),
+  #shiny::need(sum(grepl("^[0-9]",grpname))==0,
+  #            'You must NOT use a digit as your first character in group name'),
   shiny::need(sum(grepl("na",ctrlname))==0,
               'You must use uppercase NA not lowercase na in ctrl name')
  )

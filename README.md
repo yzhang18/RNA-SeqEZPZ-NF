@@ -46,7 +46,7 @@ The following step-by-step is for a system with SLURM scheduler and it will run 
 
 2. In order to run the test dataset, first you will need to select project folder. 
    In this case, you would click on ```Select project folder```, a window will appear.
-   Please click on ```root``` (make sure it is highlighted with blue background as pictured below and click on ```Select``` button.
+   Please click on ```root``` (make sure it is highlighted with blue background as pictured below) and click on ```Select``` button.
    ![run_example_0](assets/run_example_0.png)
 
    **Note**: If you selected the ```project folder``` successfully, under ```Select project folder``` you should see ```Click to load existing samples.txt``` button.

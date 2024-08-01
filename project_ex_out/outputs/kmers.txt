@@ -1,0 +1,15 @@
+
+|| This is the script unique-kmers.py in khmer.
+|| You are running khmer version 2.1.2
+|| You are also using screed version 1.0.4
+||
+|| If you use this script in a publication, please cite EACH of the following:
+||
+||   * MR Crusoe et al., 2015. http://dx.doi.org/10.12688/f1000research.6924.1
+||   * A. Döring et al. http://dx.doi.org:80/10.1186/1471-2105-9-11
+||   * Irber and Brown. http://dx.doi.org/10.1101/056846
+||
+|| Please see http://khmer.readthedocs.io/en/latest/citations.html for details.
+
+Estimated number of unique 137-mers in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/ref/hg19/human_g1k_v37_decoy.fasta: 2618140109
+Total estimated number of unique 137-mers: 2618140109

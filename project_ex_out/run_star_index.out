@@ -1,0 +1,14 @@
+Wed Jul 31 12:20:42 EDT 2024
+
+
+Using singularity image and scripts in: /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity 
+
+Generating STAR genome index and get chromosome sizes file.
+
+Options used to run:
+time=7-00:00:00
+genome=hg19
+
+all outputs will be stored in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/ref/hg19/STAR_index
+run_star_index.sh was not run since genome index already exist.
+

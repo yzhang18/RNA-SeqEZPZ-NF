@@ -1,0 +1,45 @@
+Wed Jul 31 12:31:47 EDT 2024
+
+Running differential analysis with hg19 as reference. 
+
+Options used to run:
+padj=0.05
+time=7-00:00:00
+genome=hg19
+batch_adjust=yes
+
+all outputs will be stored in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs
+See /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/run_differential_analysis_rna.out to check the analysis progress
+All other logs and scripts ran will be stored in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/logs
+
+
+Using singularity image and scripts in: /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity 
+
+Counting number of reads in each feature for iEF_EF_rep1 job id: 5749654
+See log in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/logs/featureCounts_iEF_EF_rep1.out
+
+Counting number of reads in each feature for iEF_EF_rep2 job id: 5749655
+See log in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/logs/featureCounts_iEF_EF_rep2.out
+
+Counting number of reads in each feature for iEF_EE4_rep1 job id: 5749656
+See log in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/logs/featureCounts_iEF_EE4_rep1.out
+
+Counting number of reads in each feature for iEF_EE4_rep2 job id: 5749657
+See log in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/logs/featureCounts_iEF_EE4_rep2.out
+
+Counting number of reads in each feature for iEF_empty_rep1 job id: 5749658
+See log in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/logs/featureCounts_iEF_empty_rep1.out
+
+Counting number of reads in each feature for iEF_empty_rep2 job id: 5749659
+See log in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/logs/featureCounts_iEF_empty_rep2.out
+
+Running differential genes analysis using DESeq2 and SARTools....
+See log is in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/logs/run_sartools.out
+
+Differential analysis has been completed
+Output files are in /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/diff_analysis_rslt
+see /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/diff_analysis_rslt/RNA-seq differential analysis_report.html
+for full documentation of differential analysis
+see /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/outputs/fastqc_rslt for more quality control report
+
+Wed Jul 31 12:33:30 EDT 2024

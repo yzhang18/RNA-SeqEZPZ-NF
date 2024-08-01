@@ -1,0 +1,1 @@
+Id	geneSymbol	iEF_emptyrep1	iEF_emptyrep2	iEF_EFrep1	iEF_EFrep2	iEF_EE4rep1	iEF_EE4rep2	norm.iEF_emptyrep1	norm.iEF_emptyrep2	norm.iEF_EFrep1	norm.iEF_EFrep2	norm.iEF_EE4rep1	norm.iEF_EE4rep2	baseMean	iEF_empty	iEF_EF	iEF_EE4	FoldChange	log2FoldChange	pvalue	padj	dispGeneEst	dispFit	dispMAP	dispersion	betaConv	maxCooks

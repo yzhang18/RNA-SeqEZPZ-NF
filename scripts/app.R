@@ -133,18 +133,13 @@ heatmap_sigf_overlap <- function(data,title=""){
  # hm + annotation_custom(grob)
 }
 
-plot_euler <- function(s4,colors,cex,venn.opts,title){
+plot_euler <- function(s4,colors,cex,venn.opts,title,labels){
  quantities=list(cex=cex);
  legend=FALSE
  if('Numbers' %in% venn.opts) quantities$type=c(quantities$type,"counts")
  if('Percentages' %in% venn.opts) quantities$type=c(quantities$type,"percent")
  if('Legend' %in% venn.opts) legend=list(side="bottom")
  
- if('Labels' %in% venn.opts ){ 
-  labels=list(names(s4),cex=cex)
- }else {
-  labels=""
- }
  if(is.null(venn.opts) | 
     sum(c('Numbers','Percentages') %in% venn.opts)==0) quantities=FALSE
  
@@ -2778,17 +2773,33 @@ react.tab3.rdata <- reactive({
   # if all lists contains 0 genes then do not proceeds
   nonzero_s4=sum(sapply(s4,function(x) length(x)!=0))
   shiny::req(nonzero_s4>0)
-  vals.plot$venn.up2<-plot_euler(s4=s4,colors=colors,cex=cex,
-                                 venn.opts=venn.opts,title="")
+  
   # remove label if requested
-  if(!'Labels' %in% venn.opts ){
-   names(s4)=rep(" ",length(s4))
-   ilabels=NULL
-  }else{
+  # set names of s4 for venn library
+  # note: snames is ignored when s4 has names
+  save_s4_names=names(s4)
+    if('Labels' %in% venn.opts){
+     names(s4)=str_wrap(gsub("_"," ",names(s4)),10)
+     ilabels="counts"
+     labels=list(names(s4),cex=cex)
+  }
+  else{
+   labels=""
+   names(s4)=sapply(1:length(s4),function(x) strrep(" ",x))
    ilabels="counts"
   }
+  if(!'Numbers' %in% venn.opts) ilabels=NULL
+  
   vals.plot$venn.up1<-venn(s4,zcolor=colors,opacity=.8,box=FALSE,
                            ilcs = 0.8, sncs = 1,ggplot=TRUE,ilabels=ilabels)
+  # only for euler
+  if(!'Labels' %in% venn.opts && 'Legend' %in% venn.opts){
+   names(s4)=save_s4_names
+   labels=""
+  }
+  vals.plot$venn.up2<-plot_euler(s4=s4,colors=colors,cex=cex,
+                                 venn.opts=venn.opts,title="",labels=labels)
+
   grid.arrange(vals.plot$venn.up1,vals.plot$venn.up2,ncol=2,
                padding=unit(pad,"line"),
                top=textGrob("Up-regulated Genes",gp=gpar(fontsize=20)))
@@ -2805,18 +2816,33 @@ react.tab3.rdata <- reactive({
   # if all lists contains 0 genes then do not proceeds
   nonzero_s4=sum(sapply(s4,function(x) length(x)!=0))
   shiny::req(nonzero_s4>0)
-  vals.plot$venn.dwn2<-plot_euler(s4=s4,colors=colors,cex=cex,
-                                  venn.opts=venn.opts,title="")
-
   # remove label if requested
-  if(!'Labels' %in% venn.opts ){
-   names(s4)=rep(" ",length(s4))
-   ilabels=NULL
-  }else{
+  # set names of s4 for venn library
+  # note: snames is ignored when s4 has names
+  save_s4_names=names(s4)
+  if('Labels' %in% venn.opts){
+   names(s4)=str_wrap(gsub("_"," ",names(s4)),10)
+   ilabels="counts"
+   labels=list(names(s4),cex=cex)
+  }
+  else{
+   labels=""
+   names(s4)=sapply(1:length(s4),function(x) strrep(" ",x))
    ilabels="counts"
   }
+  if(!'Numbers' %in% venn.opts) ilabels=NULL
   vals.plot$venn.dwn1 <- venn(s4,zcolor=colors,opacity=.8,box=FALSE,ilcs = 0.8,
                               sncs = 1,ggplot=TRUE,ilabels=ilabels)
+  # only for euler
+  if(!'Labels' %in% venn.opts && 'Legend' %in% venn.opts){
+   names(s4)=save_s4_names
+   labels=""
+  }
+  vals.plot$venn.dwn2<-plot_euler(s4=s4,colors=colors,cex=cex,
+                                  venn.opts=venn.opts,title="",labels=labels)
+
+
+
   grid.arrange(vals.plot$venn.dwn1,vals.plot$venn.dwn2,ncol=2,
                padding=unit(pad,"line"),
                top=textGrob("Down-regulated Genes",gp=gpar(fontsize=20)))

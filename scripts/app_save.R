@@ -539,16 +539,17 @@ ui <- fluidPage(
                      fluidPage(
                       tags$div(
                       h5("Log file content:"),
+                      #tags$style(type="text/css", ".shiny-text-output {word-wrap: break-word;}"),
                       tags$head(
                        tags$style(HTML(
-                       "#logtab_log_content{ /* id of verbatimTextOutput CAN'T have dot */
-                        height: 80vh;  /* Set height to 70% of the viewport height */
+                       "#logtab.log.content{
+                        height: 400px;  /* Set height to limit the vertical size */
                         overflow-y: auto;  /* Enable vertical scrolling */
-                        overflow-x: auto;  /* Enable vertical scrolling */
+                        white-space: pre-wrap;  /* Preserve whitespace */
                        }"
                        ))
                        ),
-                      verbatimTextOutput("logtab_log_content"),
+                      verbatimTextOutput("logtab.log.content"),
                      )#fluidPage
                      # commenting this out since I can't find FAILED word in other slurm settings
                       #h5("Failed log content:"),
@@ -1449,9 +1450,9 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    updateSelectInput(session,"logtab.log.path",choices=log.lst,selected="")
   }
      # display file content in UI
-   output$logtab_log_content <- renderPrint({ 
+   output$logtab.log.content <- renderPrint({ 
     shiny::req(input$logtab.log.path!="")
-    cat(react.logtab_log_content(),sep="\n")
+    cat(react.logtab.log.content(),sep="\n")
    })
   # list only failed *.out file
   files=list.files(paste0(projdir,"outputs/logs"),pattern = "\\.out$",full.names = TRUE)
@@ -1475,7 +1476,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  
   })#observEvent refresh
  
- react.logtab_log_content <- reactive({
+ react.logtab.log.content <- reactive({
     projdir <- react.setup.proj.dir()
     path <- paste0(projdir,"outputs/logs/",input$logtab.log.path)
   content <- readLines(path)

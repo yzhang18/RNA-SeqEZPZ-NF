@@ -136,7 +136,8 @@ if [[ ! -d $log_dir/scripts ]];then
 fi
 $(cp $img_dir/scripts/run_trim_qc.sh $log_dir/scripts)
 $(cp $img_dir/scripts/trim_fastqc_simg.sbatch $log_dir/scripts/)
-cp $proj_dir/run_trim_qc.out $log_dir/
+$(cp $proj_dir/run_trim_qc.out $log_dir/)
+$(cp $img_dir/scripts/multiqc_simg.sbatch $log_dir/scripts)
 
 # getting samples info from samples.txt
 $(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)
@@ -178,7 +179,13 @@ if [[ ! -d $work_dir/merged_fastq ]];then
 fi
 len_row=${#path_to_r1_fastq[@]}
 for  (( row = 0; row <= len_row-1; row++ ));do
+	echo Merging ${path_to_r1_fastq[$row]//,/ }
+	echo and save them as ${work_dir}/merged_fastq/${groupname_array[$row]}_${repname_array[$row]}_r1_fastq.gz
+	echo ""
 	cat ${path_to_r1_fastq[$row]//,/ } > ${work_dir}/merged_fastq/${groupname_array[$row]}_${repname_array[$row]}_r1_fastq.gz
+        echo Merging ${path_to_r2_fastq[$row]//,/ } 
+        echo and save them as ${work_dir}/merged_fastq/${groupname_array[$row]}_${repname_array[$row]}_r2_fastq.gz
+        echo ""
 	cat ${path_to_r2_fastq[$row]//,/ } > ${work_dir}/merged_fastq/${groupname_array[$row]}_${repname_array[$row]}_r2_fastq.gz
 done
 
@@ -219,7 +226,7 @@ for (( idx =0; idx <= len_row-1; idx++ ));do
 					--bind $path_r2 \
 					$img_dir/$img_name \
 					/bin/sh /scripts/trim_fastqc_simg.sbatch" | cut -f 4 -d' ')
-			echo "Processing $path_r1 $path_r2 Job id: $tmp_jid"
+			echo "Trimming and QCing $path_r1 $path_r2 Job id: $tmp_jid"
 			echo "" 
 			cp $proj_dir/run_trim_qc.out $log_dir/
 			if [ -z "$jid" ]; then
@@ -256,7 +263,7 @@ do
         sleep 10
         state=($(squeue -j $check_jid -h))
 done
-				
+
 reason=$(squeue -j $jid2 -o "%R" -h)
 state=$(sacct -j $jid2 --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
@@ -293,7 +300,7 @@ do
         sleep 10
         state=($(squeue -j $check_jid2 -h))
 done
-				
+
 reason=$(squeue -j $tmp -o "%R" -h)
 state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then

@@ -177,21 +177,34 @@ if [[ -f $ref_fa ]];then
 else
     	fasta_file=${genome_dir}/$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 fi
+# set genome_dir and star_index_dir accordingly
+genome_dir=$(dirname $fasta_file)
+star_index_dir=$genome_dir/STAR_index
+
 # set gtf file to ref_gtf if exist
 if [[ -f $ref_gtf ]];then
         gtf_file=$ref_gtf
 else
     	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
 fi
-# this is where star index will be stored. Create if directory doesn't exist yet.
-if [[ ! -d $genome_dir ]];then
-        star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
-        genome_dir=$proj_dir/ref/$ref_ver
-else
-    	star_index_dir=$genome_dir/STAR_index
+# throws an error if gtf_file or fasta_file doesn't exist
+if [[ ! -f $gtf_file || ! -f $fasta_file ]];then
+        echo "Please check your genome. Either fasta file or gtf file is not found\n"
+	exit 1
 fi
-if [[ ! -d $star_index_dir ]]; then
-        mkdir -p $star_index_dir
+
+# if genome_dir or star_index_dir doesn't exist
+# STAR_index must be in project dir. Set to proj_dir
+if [[ ! -d $genome_dir ]] || [[ ! -d $star_index_dir ]] ; then
+	genome_dir=$proj_dir/ref/$ref_ver
+	star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
+fi
+
+# if star_index_dir doesn't exist
+# Throws an error
+if [[ ! -d $genome_dir ]] || [[ ! -d $star_index_dir ]] ; then
+	echo "Please check your genome directory or your STAR index directory\n"
+	exit 1
 fi
 
 #echo $genome_dir
@@ -229,15 +242,21 @@ for i in "${!groupname_array[@]}"; do
 	# get the files for the same groupname and replicate
 	# (i.e from multiple lanes)
 	cd $work_dir/trim
-	file=($(ls *val_1.fq.gz | \
-		awk -v groupname=$groupname -v repname=$repname \
-		'$1 ~ groupname && $1 ~ repname {print $1}'))
+	# Since we don't need to search for filenames anymore
+	# I need to change this so I don't require groupname to NOT be a substring of other groups!!!
+	#file=($(ls *val_1.fq.gz | \
+	#	awk -v groupname=$groupname -v repname=$repname \
+	#	'$1 ~ groupname && $1 ~ repname {print $1}'))
+	file=${prefix}_val_1.fq.gz
 	# combining files from different lanes
 	read1=$(printf ",%s" "${file[@]}")
 	read1=${read1:1}
-	file=($(ls *val_2.fq.gz | \
-		awk -v groupname=$groupname -v repname=$repname \
-		'$1 ~ groupname && $1 ~ repname {print $1}'))
+	# Since we don't need to search for filenames anymore
+        # I need to change this so I don't require groupname to NOT be a substring of other groups!!!
+	#file=($(ls *val_2.fq.gz | \
+	#	awk -v groupname=$groupname -v repname=$repname \
+	#	'$1 ~ groupname && $1 ~ repname {print $1}'))
+	file=${prefix}_val_2.fq.gz
 	read2=$(printf ",%s" "${file[@]}")
 	read2=${read2:1}
 	cd $proj_dir
@@ -252,7 +271,7 @@ for i in "${!groupname_array[@]}"; do
 		SINGULARITYENV_ncpus=$ncpus_star \
 		SINGULARITYENV_prefix=$prefix \
 		SINGULARITYENV_ref_ver=$ref_ver \
-		$run sbatch --output=$log_dir/star_pass1_${prefix}.out \
+			$run sbatch --output=$log_dir/star_pass1_${prefix}.out \
 			--cpus-per-task $ncpus_star \
 			--partition=$high_mem_partition \
 			--mail-type=FAIL \
@@ -262,7 +281,7 @@ for i in "${!groupname_array[@]}"; do
 			--wrap "singularity exec \
 				--bind $proj_dir:/mnt \
 				--bind $img_dir/scripts:/scripts \
-				--bind $genome_dir:/ref \
+				--bind $star_index_dir:/star_index_dir \
 				$img_dir/$img_name \
 				/bin/bash /scripts/star_pass1_simg.sbatch"| cut -f 4 -d' ')
 	echo "Running STAR first pass for $prefix job id: $tmp_jid"
@@ -299,7 +318,7 @@ state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 	scancel $tmp
 	echo -e "STAR 1st pass run failed. Please check star_pass1_* files in $log_dir\n"
-	exit
+	exit 1
 fi
 
 # STAR second pass
@@ -322,14 +341,20 @@ for i in "${!groupname_array[@]}"; do
 	# get the files for the same groupname and replicate
 	# (i.e from multiple lanes)
 	cd $work_dir/trim
-	file=($(ls *val_1.fq.gz | \
-		awk -v groupname=$groupname -v repname=$repname \
-		'$1 ~ groupname && $1 ~ repname {print $1}'))
+	# Since we don't need to search for filenames anymore
+        # I need to change this so I don't require groupname to NOT be a substring of other groups!!!
+	#file=($(ls *val_1.fq.gz | \
+	#	awk -v groupname=$groupname -v repname=$repname \
+	#	'$1 ~ groupname && $1 ~ repname {print $1}'))
+	file=${prefix}_val_1.fq.gz
 	read1=$(printf ",%s" "${file[@]}")
 	read1=${read1:1}
-	file=($(ls *val_2.fq.gz | \
-		awk -v groupname=$groupname -v repname=$repname \
-		'$1 ~ groupname && $1 ~ repname {print $1}'))
+	# Since we don't need to search for filenames anymore
+        # I need to change this so I don't require groupname to NOT be a substring of other groups!!!
+	#file=($(ls *val_2.fq.gz | \
+	#	awk -v groupname=$groupname -v repname=$repname \
+	#	'$1 ~ groupname && $1 ~ repname {print $1}'))
+	file=${prefix}_val_2.fq.gz
 	read2=$(printf ",%s" "${file[@]}")
 	read2=${read2:1}
 	cd $proj_dir
@@ -359,7 +384,7 @@ for i in "${!groupname_array[@]}"; do
 				--wrap "singularity exec \
 					--bind $proj_dir:/mnt \
 					--bind $img_dir/scripts:/scripts \
-					--bind $genome_dir:/ref \
+					--bind $star_index_dir:/star_index_dir \
 					--bind $fasta_file \
 					$img_dir/$img_name \
 					/bin/bash /scripts/star_pass2_simg.sbatch"| cut -f 4 -d' ')

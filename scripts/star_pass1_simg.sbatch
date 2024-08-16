@@ -7,11 +7,12 @@ cd /mnt/outputs/trim
 source activate rna_env
 echo "STAR version " $(STAR --version)
 set -x
-genomeDir=/ref/STAR_index
+# binding /star_index_dir instead
+#genomeDir=/ref/STAR_index
 mkdir -p ../STAR_2pass/Pass1
 runDir=../STAR_2pass/Pass1
 export OMP_NUM_THREADS=$ncpus
-$run STAR --genomeDir $genomeDir \
+$run STAR --genomeDir /star_index_dir \
 	--readFilesIn $read1 $read2 \
 	--runThreadN $ncpus \
 	--readFilesCommand zcat \

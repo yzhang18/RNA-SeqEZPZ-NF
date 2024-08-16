@@ -144,11 +144,12 @@ echo ""
 
 skip_run_star_index=0
 ### specify reference genome
-# if ref genome is not in $img_dir/ref, set genome_dir to  project dir
 genome_dir=$img_dir/ref/$ref_ver
 # set fasta file to ref_fa if exist
 if [[ -f $ref_fa ]];then
 	fasta_file=$ref_fa
+	genome_dir=$(dirname $ref_fa)
+	star_index_dir=$genome_dir/STAR_index
 else
 	fasta_file=${genome_dir}/$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 fi
@@ -159,19 +160,24 @@ else
 	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
 fi
 # throws an error if gtf_file or fasta_file doesn't exist
-if [[ ! -f $ref_gtf || ! -f $fasta_file ]];then
+if [[ ! -f $gtf_file || ! -f $fasta_file ]];then
 	echo "Please check your genome. Either fasta file or gtf file is not found\n"
+	exit 1
 fi
-# this is where star index will be stored. Create if not exist yet.
-if [[ ! -d $genome_dir ]];then
-	star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
+# if genome_dir doesn't exist
+# set genome_dir to  project dir
+if [[ ! -d $genome_dir ]] || [[ ! -d $star_index_dir ]] ; then
 	genome_dir=$proj_dir/ref/$ref_ver
-else
-	star_index_dir=$genome_dir/STAR_index
+	mkdir -p $genome_dir
 fi
-if [[ ! -d $star_index_dir ]]; then
+
+# if star_index_dir doesn't exist
+# create in proj_dir
+if [[ ! -d $star_index_dir ]] ; then
+	star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
 	mkdir -p $star_index_dir
 fi
+
 work_dir=$star_index_dir
 echo "all outputs will be stored in $work_dir"
 ## check whether STAR_index, chrom size and fasta index exist
@@ -280,7 +286,7 @@ echo ""
 
 # check to make sure jobs are completed. Print messages if not.
 msg_ok="run_star_index.sh completed successfully.\n"
-msg_ok="${msg_ok}STAR index files are in ${genome_dir}/STAR_index.\n"
+msg_ok="${msg_ok}STAR index files are in ${genome_dir}/${ref_ver}/STAR_index.\n"
 msg_fail="One of the steps in run_star_index.sh failed\n"
 jid_to_check=$jid0
 check_run_star_index_jid=$($run sbatch \

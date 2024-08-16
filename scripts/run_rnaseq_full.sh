@@ -244,7 +244,7 @@ if [[ $skip_run_star_index == 0 ]];then
 	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
         	scancel $tmp0
         	echo -e "Checking and/or generating STAR index failed. Please check run_star_index.out\n"
-        	exit
+        	exit 1
 	fi
 fi
 echo Done checking and generating STAR index as needed.
@@ -258,9 +258,12 @@ cp $proj_dir/run_rnaseq_full.out $log_dir/
 # check if trim_fastqc file exist
 # enable nullglob for check_trim
 shopt -s nullglob
+# need to do this instead of $(ls ${proj_dir}/outputs/logs/trim_fastqc_*.out | wc -l)
+# to avoid error when files not there
 check_trim=(${proj_dir}/outputs/logs/trim_fastqc_*.out)
 # disable nullglob
 shopt -u nullglob
+#echo ${#check_trim[@]}
 if [[ ${#check_trim[@]} -gt 0 ]]; then
 	nfastq=$(ls ${proj_dir}/outputs/merged_fastq/*.gz | wc -l)
         # check to make sure all trimming were run to completion
@@ -316,17 +319,22 @@ else
 	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 		scancel $tmp1
 		echo -e "Trimming and/or QC failed. Please check run_trim_qc.out\n"
-	exit
+		cp $proj_dir/run_rnaseq_full.out $log_dir/
+	exit 1
 	fi
 fi
 
+
+echo -e "Aligning reads and creating tracks for visualization.\n"
+echo -e "See progress in run_align_create_tracks_rna.out.\n"
+cp $proj_dir/run_rnaseq_full.out $log_dir/
 
 ### aligning reads and creating tracks
 cd $proj_dir
 #. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
 #	ncpus_star=$ncpus_star 2>&1 | tee run_align_create_tracks_rna.out $log_dir/run_align_create_tracks_rna.out
 . $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
-        ncpus_star=$ncpus_star &> run_align_create_tracks_rna.out
+        ref_fa=$fasta_file ref_gtf=$gtf_file ncpus_star=$ncpus_star &> run_align_create_tracks_rna.out
 
 message="Done alignment and create tracks for visualization.\n"
 message=${message}"See log run_align_create_tracks_rna.out.\n\n\n"
@@ -356,11 +364,15 @@ state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
 if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
 	scancel $tmp
 	echo -e "Alignment and/or track creation failed. Please check run_align_create_tracks_rna.out\n"
-	exit
+	exit 1
 fi
 cp $proj_dir/run_rnaseq_full.out $log_dir/
 
 ### Running differential genes analysis
+echo -e "Running differential genes analysis.\n"
+echo -e "Please check run_differential_analysis_rna.out for progress.\n"
+cp $proj_dir/run_differential_analysis_rna.out $log_dir/
+
 cd $proj_dir
 . $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time genome=$ref_ver batch_adjust=$batch_adjust &> run_differential_analysis_rna.out
 cp $proj_dir/run_differential_analysis_rna.out $log_dir/

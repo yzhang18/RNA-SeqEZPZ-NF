@@ -150,6 +150,26 @@ plot_euler <- function(s4,colors,cex,venn.opts,title,labels){
       adjust_labels = TRUE,legend=legend)
 }
 
+# Function to calculate directory size and return in human-readable format
+get_dir_size <- function(path) {
+ if (dir.exists(path)) {
+  size <- sum(file.info(list.files(path, full.names = TRUE, recursive = TRUE))$size)
+  # Convert size to human-readable format
+  if (size < 1024) {
+   size_str <- paste(size, "bytes")
+  } else if (size < 1024^2) {
+   size_str <- paste(round(size / 1024, 2), "KB")
+  } else if (size < 1024^3) {
+   size_str <- paste(round(size / 1024^2, 2), "MB")
+  } else {
+   size_str <- paste(round(size / 1024^3, 2), "GB")
+  }
+  return(size_str)
+ } else {
+  return("Directory does not exist.")
+ }
+}
+
 ui <- fluidPage(
  title = "Run full RNA-Seq analysis",
  shinyjs::useShinyjs(),
@@ -470,11 +490,11 @@ ui <- fluidPage(
                                             style = "padding-right: 0px;padding-left:0px"),
                                      column(10,
                                  
-                                           textInput(inputId="setup.grp1.name", 
+                                           textAreaInput(inputId="setup.grp1.name", 
                                                          label = "",value=""),
                                            style ="padding-right:0px;padding-left:0px")
                               ),
-                              column(2,textInput(inputId="setup.grp1.ctrl.name", 
+                              column(2,textAreaInput(inputId="setup.grp1.ctrl.name", 
                                                  label = "",value="" )),
                               column(2,textInput(inputId="setup.grp1.rep.name", 
                                                  label = "",value="" )),
@@ -492,11 +512,11 @@ ui <- fluidPage(
                       column(2,column(2, 
                                       tags$label("2.", style = "padding-top: 30px;"),
                                       style = "padding-right: 0px;padding-left:0px"),
-                             column(10,textInput(inputId="setup.grp2.name", 
+                             column(10,textAreaInput(inputId="setup.grp2.name", 
                                                  label = "",value="" ),
                                     style ="padding-right:0px;padding-left:0px")
                       ),
-                      column(2,textInput(inputId="setup.grp2.ctrl.name", 
+                      column(2,textAreaInput(inputId="setup.grp2.ctrl.name", 
                                          label = "",value="" )),
                       column(2,textInput(inputId="setup.grp2.rep.name", 
                                          label = "",value="" )),
@@ -539,17 +559,16 @@ ui <- fluidPage(
                      fluidPage(
                       tags$div(
                       h5("Log file content:"),
-                      #tags$style(type="text/css", ".shiny-text-output {word-wrap: break-word;}"),
                       tags$head(
                        tags$style(HTML(
-                       "#logtab.log.content{
-                        height: 400px;  /* Set height to limit the vertical size */
+                       "#logtab_log_content{ /* id of verbatimTextOutput CAN'T have dot */
+                        height: 80vh;  /* Set height to 70% of the viewport height */
                         overflow-y: auto;  /* Enable vertical scrolling */
-                        white-space: pre-wrap;  /* Preserve whitespace */
+                        overflow-x: auto;  /* Enable vertical scrolling */
                        }"
                        ))
                        ),
-                      verbatimTextOutput("logtab.log.content"),
+                      verbatimTextOutput("logtab_log_content"),
                      )#fluidPage
                      # commenting this out since I can't find FAILED word in other slurm settings
                       #h5("Failed log content:"),
@@ -560,7 +579,7 @@ ui <- fluidPage(
   tabPanel("QCs",id="qctab",fluid=TRUE,
             #uiOutput("multiqc")
            htmlOutput("multiqc")
-  ), #tabPanel Outputs
+  ), #tabPanel QCs
   tabPanel("Outputs",id="outputtab",fluid=TRUE,
             htmlOutput("diff_report")
            ), #tabPanel Outputs
@@ -768,7 +787,24 @@ ui <- fluidPage(
               ))))
             )
            )
-  )		
+  ), #tabPanel	plots
+  tabPanel("Clean up", id="cleanuptab",fluid = TRUE,
+           fluidPage(
+            br(),
+            shinyDirButton("del_folder", "Select project folder to clean up", "Please select a folder"),
+            textOutput("selected_folder"),  # Display the selected folder path
+            br(),
+          
+             p("Use Delete project folder to delete the entire folder"),
+             actionButton("delete", "Delete project folder"),
+             textOutput("status")
+            ,
+            br(),
+            p("Use delete all files except samples.txt to delete all files inside
+                      the project directory but keep samples.txt"),
+            actionButton("delete_keep_samples", "Delete all files except samples.txt"),
+            textOutput("delete_keep_samples_status")
+           ))
   ,selected="Run Analysis")#tabsetpanel
 )#fluidpage
 
@@ -818,11 +854,11 @@ server <- function(input, output,session) {
                     column(2,
                            tags$label(paste0(setup.btn,"."), style = "padding-top: 30px;"),
                            style = "padding-right: 0px;padding-left:0px"),
-                    column(10,textInput(inputId=setup.id.grp.name,
+                    column(10,textAreaInput(inputId=setup.id.grp.name,
                                         label = "",value=""),
                                         style = "padding-right: 0px;padding-left:0px")
              ),
-             column(2,textInput(inputId=setup.id.ctrl.name,
+             column(2,textAreaInput(inputId=setup.id.ctrl.name,
                                 label = "",value="" )),
              column(2,textInput(inputId=setup.id.rep.name,
                                 label = "",value="" )),
@@ -854,13 +890,13 @@ server <- function(input, output,session) {
     selector = paste0("#",setup.inserted.div[length(setup.inserted.div)])
    )
    # remove the last values
-   updateTextInput(
+   updateTextAreaInput(
     session,
     paste0("setup.grp", length(setup.inserted.div)+2,".name"),
     NULL,
     ""
    )
-   updateTextInput(
+   updateTextAreaInput(
     session,
     paste0("setup.grp", length(setup.inserted.div)+2,".ctrl.name"),
     NULL,
@@ -872,25 +908,25 @@ server <- function(input, output,session) {
     NULL,
     ""
    )
-   updateTextInput(
+   updateTextAreaInput(
     session,
     paste0("setup_grp", length(setup.inserted.div)+2,"_r1_files"),
     NULL,
     ""
    )
-   updateTextInput(
+   updateTextAreaInput(
     session,
     paste0("setup_grp", length(setup.inserted.div)+2,"_r2_files"),
     NULL,
     ""
    )
-   updateTextInput(
+   updateTextAreaInput(
     session,
     paste0("setup.grp", length(setup.inserted.div)+2,".r1.filepath"),
     NULL,
     ""
    )
-   updateTextInput(
+   updateTextAreaInput(
     session,
     paste0("setup.grp", length(setup.inserted.div)+2,".r2.filepath"),
     NULL,
@@ -1054,7 +1090,7 @@ server <- function(input, output,session) {
    
  # select project directory
  shinyDirChoose(input, "setup_proj_dir", root=volumes)
- 
+
 react.setup.proj.dir <- reactive({
   proj.dir = input$setup_proj_dir
   proj.path=parseDirPath(roots = volumes,proj.dir)
@@ -1125,11 +1161,11 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                     column(2,
                            tags$label(paste0(i,"."), style = "padding-top: 30px;"),
                            style = "padding-right: 0px;padding-left:0px"),
-                    column(10,textInput(inputId=setup.id.grp.name,
+                    column(10,textAreaInput(inputId=setup.id.grp.name,
                                         label = "",value=df[i,1]),
                            style = "padding-right: 0px;padding-left:0px")
              ),
-             column(2,textInput(inputId=setup.id.ctrl.name,
+             column(2,textAreaInput(inputId=setup.id.ctrl.name,
                                 label = "",value=df[i,2] )),
              column(2,textInput(inputId=setup.id.rep.name,
                                 label = "",value=df[i,3] )),
@@ -1154,8 +1190,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   setup.inserted.div <<- c(setup.inserted.div, setup.div.id)
   } # if(i > (dim(df)[1]-add.row))
    # fill out rows
-   updateTextInput(session,setup.id.grp.name,value = df[i,1])
-   updateTextInput(session,setup.id.ctrl.name,value = df[i,2])
+   updateTextAreaInput(session,setup.id.grp.name,value = df[i,1])
+   updateTextAreaInput(session,setup.id.ctrl.name,value = df[i,2])
    updateTextInput(session,setup.id.rep.name,value = df[i,3])
    updateTextAreaInput(session,setup.id.r1.filepath,value = setup.df.path.display.r1)
    updateTextAreaInput(session,setup.id.r2.filepath,value = setup.df.path.display.r2)
@@ -1214,8 +1250,12 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   shiny::need(file.access(projdir,2) ==0, 'Please select a different project folder where you have write access'),
   shiny::need(length(ctrlname) == nsamples, 'You must enter control name'),
   shiny::need(length(repname)==nsamples,'You must enter replicate name'),
-  shiny::need(sum(grepl("^[0-9]",repname))==0,
-              'You must NOT use a digit as your first character in replicate name'),
+  shiny::need(nchar(repname)> 2,
+              'You must use at least 3 characters for replicate name'),
+  shiny::need(nchar(ctrlname)> 2,
+              'You must use at least 3 characters for control name'),
+  shiny::need(nchar(grpname)> 2,
+              'You must use at least 3 characters for control name'),
   #shiny::need(sum(grepl("^[0-9]",ctrlname))==0,
   #            'You must NOT use a digit as your first character in control name'),
   #shiny::need(sum(grepl("^[0-9]",grpname))==0,
@@ -1450,9 +1490,9 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    updateSelectInput(session,"logtab.log.path",choices=log.lst,selected="")
   }
      # display file content in UI
-   output$logtab.log.content <- renderPrint({ 
+   output$logtab_log_content <- renderPrint({ 
     shiny::req(input$logtab.log.path!="")
-    cat(react.logtab.log.content(),sep="\n")
+    cat(react.logtab_log_content(),sep="\n")
    })
   # list only failed *.out file
   files=list.files(paste0(projdir,"outputs/logs"),pattern = "\\.out$",full.names = TRUE)
@@ -1476,7 +1516,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  
   })#observEvent refresh
  
- react.logtab.log.content <- reactive({
+ react.logtab_log_content <- reactive({
     projdir <- react.setup.proj.dir()
     path <- paste0(projdir,"outputs/logs/",input$logtab.log.path)
   content <- readLines(path)
@@ -2458,8 +2498,9 @@ react.tab3.rdata <- reactive({
   tmp <- tmp
   data$jaccard=tmp$value
   # categorizing pvalues
-  data$pval.cat=ifelse(data$pval==0,pval.names[1],ifelse(data$pval<=0.05,pval.names[2],
-                                                         ifelse(data$pval<0.5,pval.names[3],pval.names[4])))
+  data$pval.cat=ifelse(data$pval==0,pval.names[1],
+               ifelse(data$pval<=0.05,pval.names[2],
+                       ifelse(data$pval<0.5,pval.names[3],pval.names[4])))
   data$pval.cat=factor(data$pval.cat,levels=pval.names)
   data
  })
@@ -3163,6 +3204,107 @@ react.tab3.rdata <- reactive({
  }) # observeEvent
  
  output$tab3.text <- renderPrint({ grp.up = tab3.grp.up(); length(grp.up)})
+ 
+ # Set up the root directory for folder selection
+ shinyDirChoose(input, "del_folder", root  = volumes)
+ 
+ # Observe the folder selection and display the selected path
+ observe({
+  req(input$del_folder)
+  
+  # Get the selected folder path
+  folder_path <- parseDirPath(volumes, input$del_folder)
+  
+  # Display the folder path
+  output$selected_folder <- renderText({
+   paste("Selected folder:", folder_path)
+  })
+ })
+ 
+ # Observe the delete button click
+ observeEvent(input$delete, {
+  # Show a modal dialog asking for confirmation
+  showModal(modalDialog(
+   title = "Confirm Deletion",
+   "Are you sure you want to delete this folder?",
+   easyClose = FALSE,
+   footer = tagList(
+    modalButton("Cancel"),
+    actionButton("confirm_delete", "Yes, Delete")
+   )
+  ))
+ })
+ 
+ # Handle the actual deletion when the user confirms
+ observeEvent(input$confirm_delete, {
+  # Close the modal dialog
+  removeModal()
+  req(input$del_folder)
+
+  # Get the selected folder path
+  folder_path <- parseDirPath(volumes, input$del_folder)
+  
+  if (dir.exists(folder_path)) {
+   # Attempt to delete the folder
+   unlink(folder_path, recursive = TRUE)
+   
+   if (!dir.exists(folder_path)) {
+    output$status <- renderText("Folder deleted successfully.")
+   } else {
+    output$status <- renderText("Failed to delete the folder.")
+   }
+  } else {
+   output$status <- renderText("Folder does not exist.")
+  }
+ })
+ 
+ # Observe the delete button click for delete all files except samples.txt
+ observeEvent(input$delete_keep_samples, {
+  # Show a modal dialog asking for confirmation
+  showModal(modalDialog(
+   title = "Confirm Deletion",
+   "Are you sure you want to delete every files in this folder except samples.txt?",
+   easyClose = FALSE,
+   footer = tagList(
+    modalButton("Cancel"),
+    actionButton("confirm_delete_except_samples", "Yes, Delete")
+   )
+  ))
+ })
+ 
+ # Handle the actual deletion when the user confirms
+ observeEvent(input$confirm_delete_except_samples, {
+  # Close the modal dialog
+  removeModal()
+  req(input$del_folder)
+  
+  # Get the selected folder path
+  folder_path <- parseDirPath(volumes, input$del_folder)
+  
+  if (dir.exists(folder_path)) {
+   # Specify the filename you want to keep
+   file_to_keep <- "samples.txt"
+   
+   # Get a list of all files and directories in the specified folder
+   all_files <- list.files(folder_path, full.names = TRUE)
+   
+   # Exclude the file you want to keep
+   files_to_delete <- setdiff(all_files, file.path(folder_path, file_to_keep))
+   
+   # Attempt to delete the folder
+   unlink(files_to_delete, recursive = TRUE)
+   
+   if (length(list.files(folder_path))==1) {
+    output$delete_keep_samples_status <- renderText("All files except samples.txt deleted successfully.")
+   } else {
+    output$delete_keep_samples_status <- renderText("Failed to delete files.")
+   }
+  } else {
+   output$delete_keep_samples_status <- renderText("Folder does not exist.")
+  }
+ })
+ 
 }
+
 # app
 shinyApp(ui = ui, server = server)

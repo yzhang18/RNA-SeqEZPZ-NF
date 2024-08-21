@@ -1,3 +1,4 @@
+# returns diffTable containing top two most up-/down-regulated genes based on log2FC
 getDiffTop <- function (complete, alpha = 0.05) 
 {
   diff.table <- list();

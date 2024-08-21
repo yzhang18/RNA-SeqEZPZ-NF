@@ -794,18 +794,44 @@ ui <- fluidPage(
             shinyDirButton("del_folder", "Select project folder to clean up", "Please select a folder"),
             textOutput("selected_folder"),  # Display the selected folder path
             br(),
-            div(style = "border-style: solid; border:1px solid rgba(0,0,0,0.15);
+            div(
+             style = "border-style: solid; border:1px solid rgba(0,0,0,0.15);
                 padding:9.5px",
-             p("Use Delete project folder to delete the entire folder"),
+             p("Use \"Delete project folder\" to delete the entire folder"),
              actionButton("delete", "Delete project folder"),
+             br(),
              textOutput("status")
             ),
             br(),
-            p("Use delete all files except samples.txt to delete all files inside
+            div(
+             style = "border-style: solid; border:1px solid rgba(0,0,0,0.15);
+                padding:9.5px",
+             p("Use \"Delete all files except samples.txt\" to delete all files inside
                       the project directory but keep samples.txt"),
-            actionButton("delete_keep_samples", "Delete all files except samples.txt"),
-            textOutput("delete_keep_samples_status")
-           ))
+             actionButton("delete_keep_samples", "Delete all files except samples.txt"),
+             br(),
+             textOutput("delete_keep_samples_status")
+            ),#div
+            br(),
+            div(
+             style = "border-style: solid; border:1px solid rgba(0,0,0,0.15);
+                padding:9.5px",
+             uiOutput("dir_size_merged_fastq"),
+             p(HTML(paste(
+               "Merged and trimmed fastq files were only used to re-run the same samples.<br>",
+               "Typically, there is no need to save merged and trimmed fastq files unless you",
+               "need to re-run the same exact analysis.<br>",
+               "You should delete merged and trimmed fastq files once you're done 
+                with the analysis.<br>"))
+               ),
+             p("Use \"Delete merged and/or trimmed fastq files\" to delete merged and trimmed fastq files inside
+                      the project directory. All other files will not be deleted"),
+             actionButton("delete_merged_fastq", "Delete merged and/or trimmed fastq files"),
+             br(),
+             textOutput("delete_merged_fastq_status")
+            )#div
+           )#fluidpage
+           )#tabpanel
   ,selected="Run Analysis")#tabsetpanel
 )#fluidpage
 
@@ -1257,10 +1283,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
               'You must use at least 3 characters for control name'),
   shiny::need(nchar(grpname)> 2,
               'You must use at least 3 characters for control name'),
-  #shiny::need(sum(grepl("^[0-9]",ctrlname))==0,
-  #            'You must NOT use a digit as your first character in control name'),
-  #shiny::need(sum(grepl("^[0-9]",grpname))==0,
-  #            'You must NOT use a digit as your first character in group name'),
   shiny::need(sum(grepl("na",ctrlname))==0,
               'You must use uppercase NA not lowercase na in ctrl name')
  )
@@ -2363,6 +2385,11 @@ react.tab3.rdata <- reactive({
   fdr.co <- react.tab3.fdr.cutoff()
   fc.cutoff <- react.tab3.fc.cutoff()
   meanDiff.cutoff <- react.tab3.meanDiff.cutoff()
+  out.DESeq2=react.tab3.rdata()
+  
+  # needed to correctly differentiate sample names
+  # i.e. iEF vs iEFempty
+  rep.name=levels(colData(out.DESeq2$dds)$rep)
   
   # up-regulated genes
   grp.up=list()
@@ -2372,8 +2399,13 @@ react.tab3.rdata <- reactive({
    grps=strsplit(grp.name[i],"_vs_")
    treat.grp=grps[[1]][1]
    ref.grp=grps[[1]][2]
-   treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
-   ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   # fixed bug: below code will get both UASVN2_1055A and 1055A samples while
+   # grepping only 1055A 
+   #treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
+   #ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   # adding rep.name so it will get the correct samples.
+   treat.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(treat.grp,rep.name))])
+   ref.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(ref.grp,rep.name))])
    diff.mean=treat.mean-ref.mean
    # grp.up[[i]]=results[[grp.name[i]]][results[[grp.name[i]]]$padj<=fdr.co[i] &
    # results[[grp.name[i]]]$log2FoldChange>(log2(fc.cutoff[i])) &
@@ -2400,6 +2432,12 @@ react.tab3.rdata <- reactive({
   fdr.co <- react.tab3.fdr.cutoff()
   fc.cutoff <- react.tab3.fc.cutoff()
   meanDiff.cutoff <- react.tab3.meanDiff.cutoff()
+  out.DESeq2=react.tab3.rdata()
+  
+  # get the replicate names
+  # needed to correctly differentiate sample names
+  # i.e. iEF vs iEFempty
+  rep.name=levels(colData(out.DESeq2$dds)$rep)
   
   # down-regulated genes
   grp.dwn=list()
@@ -2408,8 +2446,13 @@ react.tab3.rdata <- reactive({
    grps=strsplit(grp.name[i],"_vs_")
    treat.grp=grps[[1]][1]
    ref.grp=grps[[1]][2]
-   treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
-   ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   # fixed bug: below code will get both UASVN2_1055A and 1055A samples while
+   # grepping only 1055A 
+   #treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
+   #ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   # adding rep.name so it will get the correct samples.
+   treat.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(treat.grp,rep.name))])
+   ref.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(ref.grp,rep.name))])
    diff.mean=ref.mean-treat.mean
    grp.dwn[[i]]=results[[grp.name[i]]][results[[grp.name[i]]]$padj<=fdr.co[i] &
                                         results[[grp.name[i]]]$log2FoldChange<(-log2(fc.cutoff[i])) &
@@ -2706,32 +2749,49 @@ react.tab3.rdata <- reactive({
   fdr.co <- react.tab3.fdr.cutoff()
   fc.cutoff <- react.tab3.fc.cutoff()
   meanDiff.cutoff <- react.tab3.meanDiff.cutoff()
+  out.DESeq2=react.tab3.rdata()
+  
+  # get the replicate names
+  # needed to correctly differentiate sample names
+  # i.e. iEF vs iEFempty
+  rep.name=levels(colData(out.DESeq2$dds)$rep)
+  
   expr.tbl <- list()
   for(i in 1:length(grp.name)){
    # get indiv grpname
    grps=strsplit(grp.name[i],"_vs_")
    treat.grp=grps[[1]][1]
    ref.grp=grps[[1]][2]
-   treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
-   ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   
+   # fixed bug: below code will get both UASVN2_1055A and 1055A samples while
+   # grepping only 1055A 
+   #treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
+   #ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   # adding rep.name so it will get the correct samples.
+   treat.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(treat.grp,rep.name))])
+   ref.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(ref.grp,rep.name))])
    diff.mean=treat.mean-ref.mean
    data=data.frame(
-    Genes=rownames(results[[grp.name[i]]]),
-    logFC=results[[grp.name[i]]]$log2FoldChange,
-    FDR=results[[grp.name[i]]]$padj,
-    diff.mean=diff.mean)
+    rownames(results[[grp.name[i]]]),
+    results[[grp.name[i]]]$log2FoldChange,
+    results[[grp.name[i]]]$padj,
+    diff.mean,
+    ref.mean,
+    treat.mean)
+   names(data)=c("Genes","log2FC","FDR","difference",ref.grp,
+                 treat.grp)
    data <- data %>% 
     mutate(
      Expression = 
-      case_when(logFC >= log2(fc.cutoff[i]) & 
+      case_when(log2FC >= log2(fc.cutoff[i]) & 
                  FDR <= fdr.co[i] & 
                  diff.mean >= meanDiff.cutoff[i] ~ "Up-regulated",
-                logFC < -log2(fc.cutoff[i]) &
+                log2FC < -log2(fc.cutoff[i]) &
                  FDR <= fdr.co[i] & 
                  diff.mean <= -meanDiff.cutoff[i] ~ "Down-regulated",
                 TRUE ~ "NS")
     ) %>%
-    arrange(round(FDR,digits=3),desc(abs(logFC)))
+    arrange(round(FDR,digits=3),desc(abs(log2FC)))
    expr.tbl[[i]] <- data
   }
   names(expr.tbl)=grp.plot.title
@@ -2747,6 +2807,13 @@ react.tab3.rdata <- reactive({
  fc.cutoff <- react.tab3.fc.cutoff()
  meanDiff.cutoff <- react.tab3.meanDiff.cutoff()
  hilite.genes <- react.tab3.hilite.genes()
+ out.DESeq2=react.tab3.rdata()
+ 
+ # get the replicate names
+ # needed to correctly differentiate sample names
+ # i.e. iEF vs iEFempty
+ rep.name=levels(colData(out.DESeq2$dds)$rep)
+ 
  for(i in 1:length(grp.name)){
   # Need local so that each item gets its own number. Without it, the value
   # of i in the renderPlot() will be the same across all instances, because
@@ -2759,8 +2826,13 @@ react.tab3.rdata <- reactive({
    grps=strsplit(grp.name[my_i],"_vs_")
    treat.grp=grps[[1]][1]
    ref.grp=grps[[1]][2]
-   treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
-   ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   # fixed bug: below code will get both UASVN2_1055A and 1055A samples while
+   # grepping only 1055A 
+   #treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
+   #ref.mean=rowMeans(normCts[,grep(ref.grp,colnames(normCts))])
+   # adding rep.name so it will get the correct samples.
+   treat.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(treat.grp,rep.name))])
+   ref.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(ref.grp,rep.name))])
    diff.mean=treat.mean-ref.mean
    data=data.frame(
     Genes=rownames(results[[grp.name[my_i]]]),
@@ -3220,9 +3292,20 @@ react.tab3.rdata <- reactive({
   output$selected_folder <- renderText({
    paste("Selected folder:", folder_path)
   })
+  
+  # Display merged fastq size
+  req(dir.exists(file.path(folder_path,"outputs","merged_fastq"))||
+       dir.exists(file.path(folder_path,"outputs","trim")))
+  output$dir_size_merged_fastq <- renderUI({
+   HTML(paste("<b>Merged fastq size:", 
+         get_dir_size(file.path(folder_path,"outputs","merged_fastq")),"<br>",
+         "Trimmed fastq size:",
+         get_dir_size(file.path(folder_path,"outputs","trim")),"</b><br><br>"))
+  })
+  
  })
  
- # Observe the delete button click
+ # Observe the delete project folder button click
  observeEvent(input$delete, {
   # Show a modal dialog asking for confirmation
   showModal(modalDialog(
@@ -3302,6 +3385,48 @@ react.tab3.rdata <- reactive({
    }
   } else {
    output$delete_keep_samples_status <- renderText("Folder does not exist.")
+  }
+ })
+ 
+ # Observe the delete merged fastq files button click
+ observeEvent(input$delete_merged_fastq, {
+  # Show a modal dialog asking for confirmation
+  showModal(modalDialog(
+   title = "Confirm Deletion",
+   "Are you sure you want to delete merged and/or trimmed fastq files?",
+   easyClose = FALSE,
+   footer = tagList(
+    modalButton("Cancel"),
+    actionButton("confirm_delete_merged_fastq", "Yes, Delete")
+   )
+  ))
+ })
+ 
+ # Handle the actual deletion when the user confirms
+ observeEvent(input$confirm_delete_merged_fastq, {
+  # Close the modal dialog
+  removeModal()
+  req(input$del_folder)
+  
+  # Get the selected folder path
+  folder_path <- parseDirPath(volumes, input$del_folder)
+  merged_fastq_path <- file.path(folder_path,"outputs","merged_fastq")
+  trim_fastq_path <- file.path(folder_path,"outputs","trim")
+  
+  if (dir.exists(merged_fastq_path) || dir.exists(trim_fastq_path)) {
+   # Attempt to delete the folder
+   unlink(merged_fastq_path, recursive = TRUE)
+   # Attempt to delete the folder
+   unlink(trim_fastq_path, recursive = TRUE)
+   
+   if (!dir.exists(merged_fastq_path) || !dir.exists(trim_fastq_path) ) {
+    output$delete_merged_fastq_status <- renderText("Merged and/or trimmed fastq files are deleted successfully.")
+   } else {
+    output$delete_merged_fastq_status <- 
+     renderText("Failed to delete merged and/or trimmed fastq files.")
+   }
+  } else {
+   output$delete_merged_fastq_status <- renderText("Merged and/or trimmed fastq files do not exist.")
   }
  })
  

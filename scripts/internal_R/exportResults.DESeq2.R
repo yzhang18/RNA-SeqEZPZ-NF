@@ -35,17 +35,19 @@ exportResults.DESeq2 <- function (out.DESeq2, group, alpha = 0.05, export = TRUE
                            log2FoldChange = round(results[[name]][,"log2FoldChange"], 3), 
                            pvalue = results[[name]][,"pvalue"], 
                            padj = results[[name]][, "padj"])
-    #### modified CT 2018/08/13 changing fold-change when it is less than 0.
+    #### modified CT 2018/08/13 changing fold-change when it is less than 1.
     res.name$FoldChange=ifelse(res.name$FoldChange<1,-1/res.name$FoldChange,res.name$FoldChange)
     # round fold-change after converting the sign
     res.name$FoldChange=round(res.name$FoldChange,3)
     complete.name <- merge(complete.name, res.name, by = "Id", 
                            all = TRUE)
-    mcols.add <- data.frame(Id = rownames(counts(dds)), dispGeneEst = round(mcols(dds)$dispGeneEst, 
-                                                                            4), dispFit = round(mcols(dds)$dispFit, 4), dispMAP = round(mcols(dds)$dispMAP, 
-                                                                                                                                        4), dispersion = round(mcols(dds)$dispersion, 4), 
-                            betaConv = mcols(dds)$betaConv, maxCooks = round(mcols(dds)$maxCooks, 
-                                                                             4))
+    mcols.add <- data.frame(Id = rownames(counts(dds)), 
+                            dispGeneEst = round(mcols(dds)$dispGeneEst, 4), 
+                            dispFit = round(mcols(dds)$dispFit, 4), 
+                            dispMAP = round(mcols(dds)$dispMAP, 4), 
+                            dispersion = round(mcols(dds)$dispersion, 4), 
+                            betaConv = mcols(dds)$betaConv, 
+                            maxCooks = round(mcols(dds)$maxCooks,4))
     complete.name <- merge(complete.name, mcols.add, by = "Id", 
                            all = TRUE)
     ##-- modified by CT 2019/05/15
@@ -77,15 +79,18 @@ exportResults.DESeq2 <- function (out.DESeq2, group, alpha = 0.05, export = TRUE
     complete[[name]] <- complete.name
     if (export) {
       up.name <- complete.name[which(complete.name$padj <= 
-                                       alpha & complete.name$betaConv & complete.name$log2FoldChange >
+                                       alpha & complete.name$betaConv & 
+                                      complete.name$log2FoldChange >
                                        (log2(fc.cutoff))), ]
       up.name <- up.name[order(up.name$padj), ]
       down.name <- complete.name[which(complete.name$padj <= 
-                                         alpha & complete.name$betaConv & complete.name$log2FoldChange < 
+                                         alpha & complete.name$betaConv & 
+                                        complete.name$log2FoldChange < 
                                          (-log2(fc.cutoff))), ]
       down.name <- down.name[order(down.name$padj), ]
       name <- gsub("_", "", name)
-      write.table(complete.name, file = paste0("tables/",name, ".complete.txt"), sep = "\t", row.names = FALSE, 
+      write.table(complete.name, file = paste0("tables/",name, ".complete.txt"), 
+                  sep = "\t", row.names = FALSE, 
                   dec = ".", quote = FALSE)
       write.table(up.name, file = paste0("tables/",name, 
                                          ".up.txt"), row.names = FALSE, sep = "\t", dec = ".", 

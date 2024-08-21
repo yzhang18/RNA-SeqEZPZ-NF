@@ -320,12 +320,12 @@ else
 		scancel $tmp1
 		echo -e "Trimming and/or QC failed. Please check run_trim_qc.out\n"
 		cp $proj_dir/run_rnaseq_full.out $log_dir/
-	exit 1
+		exit 1
 	fi
 fi
 
 
-echo -e "Aligning reads and creating tracks for visualization.\n"
+echo -e "Aligning reads and creating tracks for visualization....\n"
 echo -e "See progress in run_align_create_tracks_rna.out.\n"
 cp $proj_dir/run_rnaseq_full.out $log_dir/
 

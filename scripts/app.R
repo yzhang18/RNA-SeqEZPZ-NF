@@ -562,14 +562,14 @@ ui <- fluidPage(
                       tags$head(
                        tags$style(HTML(
                        "#logtab_log_content{ /* id of verbatimTextOutput CAN'T have dot */
-                        height: 80vh;  /* Set height to 70% of the viewport height */
+                        height: 90vh;  /* Set height to 90% of the viewport height */
                         overflow-y: auto;  /* Enable vertical scrolling */
-                        overflow-x: auto;  /* Enable vertical scrolling */
+                        overflow-x: auto;  /* Enable horizontal scrolling */
                        }"
                        ))
                        ),
                       verbatimTextOutput("logtab_log_content"),
-                     )#fluidPage
+                     )#div
                      # commenting this out since I can't find FAILED word in other slurm settings
                       #h5("Failed log content:"),
                      #verbatimTextOutput("logtab.fail.log.content")
@@ -581,8 +581,10 @@ ui <- fluidPage(
            htmlOutput("multiqc")
   ), #tabPanel QCs
   tabPanel("Outputs",id="outputtab",fluid=TRUE,
+           fluidPage(
             htmlOutput("diff_report")
-           ), #tabPanel Outputs
+           )#fluidPage
+            ), #tabPanel Outputs
   tabPanel("Plots", id="tab3",fluid = TRUE,
            sidebarLayout(
             sidebarPanel(
@@ -829,7 +831,29 @@ ui <- fluidPage(
              actionButton("delete_merged_fastq", "Delete merged and/or trimmed fastq files"),
              br(),
              textOutput("delete_merged_fastq_status")
-            )#div
+            ),#div
+            br(),
+            div(
+             style = "border-style: solid; border:1px solid rgba(0,0,0,0.15);
+                padding:9.5px",
+             uiOutput("dir_size_bam"),
+             p(HTML(paste(
+             "BAM files can be big. Keep your bam files if you are going to re-run the same",
+             "samples. Otherwise, depending on your space limitation, you may or may not",
+             "want to keep your bam files.<br>",
+             "This pipeline generates bigwig files which are much smaller than bam files",
+             "while still displaying read coverage.<br>",
+             "Keep bam files if you have the storage capacity and want to be able to",
+             "look at mapping of reads to the reference genome.<br>",
+             "Otherwise, you should delete your bam files once you are done",
+             "with your analysis.<br>",
+             "Use \"Delete bam files\" to delete all bam files inside
+                      the project directory"))),
+             actionButton("delete_bam", "Delete all bam files"),
+             br(),
+             textOutput("delete_bam_status")
+            ),#div
+            br(),
            )#fluidpage
            )#tabpanel
   ,selected="Run Analysis")#tabsetpanel
@@ -3294,13 +3318,17 @@ react.tab3.rdata <- reactive({
   })
   
   # Display merged fastq size
-  req(dir.exists(file.path(folder_path,"outputs","merged_fastq"))||
-       dir.exists(file.path(folder_path,"outputs","trim")))
   output$dir_size_merged_fastq <- renderUI({
    HTML(paste("<b>Merged fastq size:", 
          get_dir_size(file.path(folder_path,"outputs","merged_fastq")),"<br>",
          "Trimmed fastq size:",
          get_dir_size(file.path(folder_path,"outputs","trim")),"</b><br><br>"))
+  })
+  
+  # Display bam file size
+  output$dir_size_bam <- renderUI({
+   HTML(paste("<b>BAM files size:", 
+              get_dir_size(file.path(folder_path,"outputs","STAR_2pass")),"</b><br><br>"))
   })
   
  })
@@ -3364,7 +3392,7 @@ react.tab3.rdata <- reactive({
   
   # Get the selected folder path
   folder_path <- parseDirPath(volumes, input$del_folder)
-  
+
   if (dir.exists(folder_path)) {
    # Specify the filename you want to keep
    file_to_keep <- "samples.txt"
@@ -3374,6 +3402,9 @@ react.tab3.rdata <- reactive({
    
    # Exclude the file you want to keep
    files_to_delete <- setdiff(all_files, file.path(folder_path, file_to_keep))
+   
+   print("files_to_delete")
+   print(files_to_delete)
    
    # Attempt to delete the folder
    unlink(files_to_delete, recursive = TRUE)
@@ -3430,6 +3461,45 @@ react.tab3.rdata <- reactive({
   }
  })
  
+ 
+ # Observe the delete bam files button click
+ observeEvent(input$delete_bam, {
+  # Show a modal dialog asking for confirmation
+  showModal(modalDialog(
+   title = "Confirm Deletion",
+   "Are you sure you want to delete BAM files?",
+   easyClose = FALSE,
+   footer = tagList(
+    modalButton("Cancel"),
+    actionButton("confirm_delete_bam", "Yes, Delete")
+   )
+  ))
+ })
+ 
+ # Handle the actual deletion when the user confirms
+ observeEvent(input$confirm_delete_bam, {
+  # Close the modal dialog
+  removeModal()
+  req(input$del_folder)
+  
+  # Get the selected folder path
+  folder_path <- parseDirPath(volumes, input$del_folder)
+  bam_path <- file.path(folder_path,"outputs","STAR_2pass")
+
+  if (dir.exists(bam_path)) {
+   # Attempt to delete the folder
+   unlink(bam_path, recursive = TRUE)
+
+   if (!dir.exists(bam_path)) {
+    output$delete_bam_status <- renderText("BAM files are deleted successfully.")
+   } else {
+    output$delete_bam_status <- 
+     renderText("Failed to BAM files.")
+   }
+  } else {
+   output$delete_bam_status <- renderText("BAM files do not exist.")
+  }
+ })
 }
 
 # app

@@ -206,6 +206,15 @@ if [[ ! -d $log_dir/scripts ]]; then
 fi
 $(cp $img_dir/scripts/run_rnaseq_full.sh $log_dir/scripts/)
 
+# getting samples info from samples.txt
+$(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)
+$(mv samples_tmp.txt samples.txt)
+groupname_array=($(awk '!/#/ {print $1}' samples.txt))
+repname_array=($(awk '!/#/ {print $3}' samples.txt))
+email=$(awk '!/#/ {print $5;exit}' samples.txt | tr -d '[:space:]')
+path_to_r1_fastq=($(awk '!/#/ {print $6}' samples.txt))
+path_to_r2_fastq=($(awk '!/#/ {print $7}' samples.txt))
+
 ### check and run star index if it doesn't exist
 echo ""
 echo Check and generate STAR index if genome has not been indexed yet....
@@ -254,6 +263,8 @@ echo ""
 ### trimming and QC
 date
 echo "Checking whether trimming already ran to completion"
+# set default to not skip trim
+skip_run_trim_qc=0
 cp $proj_dir/run_rnaseq_full.out $log_dir/
 # check if trim_fastqc file exist
 # enable nullglob for check_trim
@@ -265,116 +276,130 @@ check_trim=(${proj_dir}/outputs/logs/trim_fastqc_*.out)
 shopt -u nullglob
 #echo ${#check_trim[@]}
 if [[ ${#check_trim[@]} -gt 0 ]]; then
-	nfastq=$(ls ${proj_dir}/outputs/merged_fastq/*.gz | wc -l)
         # check to make sure all trimming were run to completion
         ncomplete=$(grep "Analysis complete" ${proj_dir}/outputs/logs/trim_fastqc*.out | wc -l)
-        if [[ $ncomplete -eq $nfastq ]];then
-        echo "Skip trimming since it's already done."
-        else
-            	echo Trimming and QC.....see progress in $proj_dir/run_trim_qc.out
-                echo ""
-		cp $proj_dir/run_rnaseq_full.out $log_dir/
-                export run time
-                . $img_dir/scripts/run_trim_qc.sh run=$run time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
-		cp run_trim_qc.out $log_dir/
-                echo "Done running trim and QC."
-                echo "Read run_trim_qc.out log in ${log_dir} and see whether all steps ran to completion"
-                echo ""
-		cp $proj_dir/run_rnaseq_full.out $log_dir/
-        fi
-	cp $proj_dir/run_rnaseq_full.out $log_dir/
-else
-	echo ""
-	echo Trimming and QC.....see progress in run_trim_qc.out
-	echo ""
-	cp $proj_dir/run_rnaseq_full.out $log_dir/
-	cd $proj_dir
-	. $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
-	cp run_trim_qc.out $log_dir/
-
-	message="Done trimming and QC.\n"
-	message=${message}"See run_trim_qc.out.\n\n\n"
-	message=${message}"Aligning reads to $ref_ver and creating tracks for visualization.....\n"
-	message=${message}"See progress in run_align_create_tracks_rna.out\n"
-
-	tmp1=$($run sbatch --dependency=afterok:$jid2 \
-		--time=5:00 \
-		--output=$log_dir/dummy_run_trim_qc.txt \
-		--job-name=run_trim_qc \
-		--export message="$message",proj_dir=$proj_dir \
-		--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out; \
-		cp $proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
-	# message if jobs never satisfied
-	check_jid2=$(echo $jid2 | sed 's/:/,/g')
-	state=($(squeue -j $check_jid2 -h))
-
-	while [ ${#state[@]} -ne 0 ];
-	do
-        	sleep 10
-        	state=($(squeue -j $check_jid2 -h))
-	done
-
-	reason=$(squeue -j $tmp1 -o "%R" -h)
-	state=$(sacct -j $tmp1 --format=state | tail -n +3 | head -n 1)
-	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-		scancel $tmp1
-		echo -e "Trimming and/or QC failed. Please check run_trim_qc.out\n"
-		cp $proj_dir/run_rnaseq_full.out $log_dir/
-		exit 1
+        # divide by 2 for paired reads
+	ncomplete=$((ncomplete/2))
+	if [[ $ncomplete -eq ${#groupname_array[@]} ]];then
+        	echo "Skip trimming since it's already done."
+        	cp $proj_dir/run_rnaseq_full.out $log_dir/
+		skip_run_trim_qc=1
 	fi
 fi
 
+if [[ $skip_run_trim_qc == 0 ]]; then
+	echo ""
+        echo Trimming and QC.....see progress in run_trim_qc.out
+        echo ""
+        cp $proj_dir/run_rnaseq_full.out $log_dir/
+        cd $proj_dir
+        . $img_dir/scripts/run_trim_qc.sh run=$run_debug time=$time ncpus_trim=$ncpus_trim &> run_trim_qc.out
+        cp run_trim_qc.out $log_dir/
 
-echo -e "Aligning reads and creating tracks for visualization....\n"
-echo -e "See progress in run_align_create_tracks_rna.out.\n"
-cp $proj_dir/run_rnaseq_full.out $log_dir/
+        message="Done trimming and QC.\n"
+        message=${message}"See run_trim_qc.out.\n\n\n"
+        message=${message}"Aligning reads to $ref_ver and creating tracks for visualization.....\n"
+        message=${message}"See progress in run_align_create_tracks_rna.out\n"
 
-### aligning reads and creating tracks
-cd $proj_dir
-#. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
-#	ncpus_star=$ncpus_star 2>&1 | tee run_align_create_tracks_rna.out $log_dir/run_align_create_tracks_rna.out
-. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
-        ref_fa=$fasta_file ref_gtf=$gtf_file ncpus_star=$ncpus_star &> run_align_create_tracks_rna.out
+        tmp1=$($run sbatch --dependency=afterok:$jid2 \
+                --time=5:00 \
+                --output=$log_dir/dummy_run_trim_qc.txt \
+                --job-name=run_trim_qc \
+                --export message="$message",proj_dir=$proj_dir \
+                --wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out; \
+                cp $proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
+        # message if jobs never satisfied
+        check_jid2=$(echo $jid2 | sed 's/:/,/g')
+        state=($(squeue -j $check_jid2 -h))
 
-message="Done alignment and create tracks for visualization.\n"
-message=${message}"See log run_align_create_tracks_rna.out.\n\n\n"
-message=${message}"Performing differential genes analysis.....\n"
-message=${message}"See progress in run_differential_analysis_rna.out.\n"
-cp $proj_dir/run_rnaseq_full.out $log_dir/
+        while [ ${#state[@]} -ne 0 ];
+        do
+          	sleep 10
+                state=($(squeue -j $check_jid2 -h))
+        done
 
-tmp=$($run sbatch --dependency=afterok:$jid4c \
-		--time=5:00 \
-		--output=$log_dir/dummy_run_align_create_tracks_rna.txt \
-		--job-name=run_trim_qc \
-		--export message="$message",proj_dir=$proj_dir \
-		--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out; \
-		$proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
-# message if jobs failed
-check_jid4c=$(echo $jid4c | sed 's/:/,/g')
-state=($(squeue -j $check_jid4c -h))
-
-while [ ${#state[@]} -ne 0 ];
-do
-        sleep 10
-        state=($(squeue -j $check_jid4c -h))
-done
-
-reason=$(squeue -j $tmp -o "%R" -h)
-state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
-if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-	scancel $tmp
-	echo -e "Alignment and/or track creation failed. Please check run_align_create_tracks_rna.out\n"
-	exit 1
+	reason=$(squeue -j $tmp1 -o "%R" -h)
+        state=$(sacct -j $tmp1 --format=state | tail -n +3 | head -n 1)
+        if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
+                scancel $tmp1
+                echo -e "Trimming and/or QC failed. Please check run_trim_qc.out\n"
+                cp $proj_dir/run_rnaseq_full.out $log_dir/
+                exit 1
+        fi
 fi
-cp $proj_dir/run_rnaseq_full.out $log_dir/
+
+### skip alignment if STAR pass2 is done
+date
+echo "Checking whether alignment already ran to completion"
+# set default to not skip alignment
+skip_run_align_create_tracks_rna=0
+# check if star_pass2 files exist
+# enable nullglob for check_trim
+shopt -s nullglob
+# need to do this instead of $(ls ${proj_dir}/outputs/logs/star_pass2_*.out | wc -l)
+# to avoid error when files not there
+check_align=(${proj_dir}/outputs/logs/star_pass2_*.out)
+# disable nullglob
+shopt -u nullglob
+if [[ ${#check_align[@]} -gt 0 ]]; then
+        # check to make sure all star_pass2 were run to completion
+        ncomplete=$(grep "finished successfully" ${proj_dir}/outputs/logs/star_pass2_*.out | wc -l)
+        if [[ $ncomplete -eq ${#groupname_array[@]} ]];then
+  	      	echo "Skip alignment since it's already done."
+		skip_run_align_create_tracks_rna=1
+	fi
+fi
+
+if [[ $skip_run_align_create_tracks_rna == 0 ]]; then
+	# run alignment and create tracks
+	echo -e "Aligning reads and creating tracks for visualization....\n"
+	echo -e "See progress in run_align_create_tracks_rna.out.\n"
+        cp $proj_dir/run_rnaseq_full.out $log_dir/
+	cd $proj_dir
+	. $img_dir/scripts/run_align_create_tracks_rna.sh run=$run_debug time=$time genome=$ref_ver \
+        	ref_fa=$fasta_file ref_gtf=$gtf_file ncpus_star=$ncpus_star &> \
+		run_align_create_tracks_rna.out
+	message="Done alignment and create tracks for visualization.\n"
+	message=${message}"See log run_align_create_tracks_rna.out.\n\n\n"
+	message=${message}"Performing differential genes analysis.....\n"
+	message=${message}"See progress in run_differential_analysis_rna.out.\n"
+	cp $proj_dir/run_rnaseq_full.out $log_dir/
+
+	tmp=$($run sbatch --dependency=afterok:$jid4c \
+               	--time=5:00 \
+               	--output=$log_dir/dummy_run_align_create_tracks_rna.txt \
+               	--job-name=run_trim_qc \
+               	--export message="$message",proj_dir=$proj_dir \
+               	--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out" | cut -f 4 -d' ')
+
+	# message if jobs failed
+	check_jid4c=$(echo $jid4c | sed 's/:/,/g')
+	state=($(squeue -j $check_jid4c -h))
+
+	while [ ${#state[@]} -ne 0 ];
+		do
+       			sleep 10
+       			state=($(squeue -j $check_jid4c -h))
+	done
+
+	reason=$(squeue -j $tmp -o "%R" -h)
+	state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
+	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
+       		scancel $tmp
+       		echo -e "Alignment and/or track creation failed.\n"
+		echo -e	"Please check run_align_create_tracks_rna.out\n"
+		cp $proj_dir/run_rnaseq_full.out $log_dir/
+       		exit 1
+	fi
+fi
 
 ### Running differential genes analysis
 echo -e "Running differential genes analysis.\n"
 echo -e "Please check run_differential_analysis_rna.out for progress.\n"
-cp $proj_dir/run_differential_analysis_rna.out $log_dir/
-
+cp $proj_dir/run_rnaseq_full.out $log_dir/
 cd $proj_dir
-. $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time genome=$ref_ver batch_adjust=$batch_adjust &> run_differential_analysis_rna.out
+. $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time \
+	genome=$ref_ver batch_adjust=$batch_adjust &> run_differential_analysis_rna.out
 cp $proj_dir/run_differential_analysis_rna.out $log_dir/
 
 message="Done differential RNA-seq analysis.\n"
@@ -401,7 +426,7 @@ tmp=$($run sbatch --dependency=afterok:$jid8 \
 		--export message="$message",proj_dir=$proj_dir \
 		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_rnaseq_full.out; \
 		cp $proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
-# message if jobs failed
+## message if jobs failed
 check_jid8=$(echo $jid8 | sed 's/:/,/g')
 state=($(squeue -j $check_jid8 -h))
 
@@ -418,3 +443,4 @@ if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; the
 	echo -e "Differential RNA-seq analysis failed. Please check run_differential_analysis_rna.out\n"
 fi
 cp $proj_dir/run_rnaseq_full.out $log_dir/
+

@@ -2863,6 +2863,8 @@ react.tab3.rdata <- reactive({
     logFC=results[[grp.name[my_i]]]$log2FoldChange,
     FDR=results[[grp.name[my_i]]]$padj,
     diff.mean=diff.mean)
+   print("data$Genes")
+   print(data[data$Genes =="polr3gla",])
    data <- data %>% 
     mutate(
      Expression = 
@@ -2874,30 +2876,42 @@ react.tab3.rdata <- reactive({
                  diff.mean <= -meanDiff.cutoff[my_i] ~ "Down-regulated",
                 TRUE ~ "NS")
     )
+   print("Down-regulated")
+   print(data[data$Expression =="Down-regulated",])
+   # making sure colors are correctly assigned to expression
+   data$Expression <- factor(data$Expression,levels=c("NS","Up-regulated","Down-regulated"))
+   total_up=sum(data$Expression == "Up-regulated")
+   total_down=sum(data$Expression == "Down-regulated")
    # change FDR=0 so it can be graphed correctly
    # remove FDR=na
    data=data[!is.na(data$FDR),]
    data$logFDR=-log(data$FDR+min(c(data$FDR[data$FDR>0],1e-32)),10)
+   print("Down-regulated")
+   print(data[data$Expression =="Down-regulated",])
    genes_show = hilite.genes
    genes_show_data <- dplyr::bind_rows(
     data %>%
      filter(Genes %in% genes_show)
    )
-   xlim=c(-max(data$logFC)*1.1,max(data$logFC)*1.1)
+   xlim=c(-max(abs(data$logFC))*1.1,max(abs(data$logFC))*1.1)
    ylim=c(0,max(data$logFDR,na.rm=TRUE)*1.1)
    p <- ggplot(data, aes(logFC, logFDR)) +
     geom_hline(yintercept=-log10(fdr.co[my_i]), col="#5d5d5d",linetype="dashed")+
     geom_point(aes(color = Expression), size = 4,alpha=4/5) +
     xlab(expression("log"[2]*"FC")) + 
     ylab(expression("-log"[10]*"FDR")) +
-    scale_color_manual(values = c(tab3.colors[2], "gray50", tab3.colors[6])) +
+    labs(
+     subtitle=paste("Up-regulated:",total_up, " | Down-regulated:", total_down)
+    )+
+    scale_color_manual(values = c("NS"="gray50","Down-regulated"=tab3.colors[2],"Up-regulated"=tab3.colors[6])) +
     guides(colour = guide_legend(override.aes = list(size=2))) + 
     geom_label_repel(data = genes_show_data,mapping=aes(logFC,logFDR,label=Genes),
                      size=5,min.segment.length = 0) +
     theme_classic(base_size = 18) +
     theme(panel.grid.major=element_line(color = "#EBEBEB"),
           panel.grid.minor=element_line(color = "#EBEBEB"),
-          plot.title=element_text(hjust=0.5))+
+          # margin add space below title
+          plot.title=element_text(hjust=0.5,margin=margin(b=20)))+
     ggtitle(paste0("Volcano plot for ",grp.plot.title[my_i])) +
     scale_x_continuous(limits=xlim)
    if(fc.cutoff[my_i]>1){

@@ -170,6 +170,7 @@ cd $proj_dir
 
 target_link=$(readlink -f fastq)
 
+date
 # merge fastq files
 echo "Merging fastq files"
 echo ""
@@ -188,6 +189,7 @@ for  (( row = 0; row <= len_row-1; row++ ));do
         echo ""
 	cat ${path_to_r2_fastq[$row]//,/ } > ${work_dir}/merged_fastq/${groupname_array[$row]}_${repname_array[$row]}_r2_fastq.gz
 done
+date
 
 # note: trim_galore is set to --cores 4 which actually translate to 15 cores
 # see trim_galore help for more info

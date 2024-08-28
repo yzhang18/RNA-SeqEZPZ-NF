@@ -45,21 +45,27 @@ These are the steps to get human hg19 references to run this pipeline.
    ```
    # go to RNA-SeqEZPZ/ref/hg19 directory
    cd ref/hg19
-   # download and unzip the fasta file from UCSC
-   wget -O -  https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/analysisSet/hg19.p13.plusMT.full_analysis_set.fa.gz | gunzip -c > hg19.p13.plusMT.full_analysis_set.fa
+   # download and unzip the fasta file from Ensembl
+   wget -O - https://ftp.ensembl.org/pub/grch37/current/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz | gunzip -c > Homo_sapiens.GRCh37.dna.primary_assembly.fa
    ```
 4. Download annotation file (.gtf)
    ```
-   # download and unzip the gtf file from UCSC
-   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.refGene.gtf.gz | gunzip -c > hg19.refGene.gtf
+   # download and unzip the gtf file from Ensembl
+   wget -O - https://ftp.ensembl.org/pub/grch37/current/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz | gunzip -c > Homo_sapiens.GRCh37.87.gtf
    ```
-5. Now, you should have ```hg19.p13.plusMT.full_analysis_set.fa``` and ```hg19.refGene.gtf.gz``` inside ```RNA-SeqEZPZ/ref/hg19```
+5. Now, you should have ```Homo_sapiens.GRCh37.dna.primary_assembly.fa``` and ```Homo_sapiens.GRCh37.87.gtf``` inside ```RNA-SeqEZPZ/ref/hg19```
    ```
-   ls
-   hg19.p13.plusMT.full_analysis_set.fa  hg19.refGene.gtf
+   # list the files
+   ls -1
    ```
-
+   The above command should show you the fasta and gtf files.
+   
 **Similarly for hg38**, the foldername MUST be ```ref/hg38``` and placed under ```RNA-SeqEZPZ```
+
+## Tips on downloading other references
+1. Make sure both gtf and fasta files have the same chromosome names.
+2. In order for pathway analysis to work, gtf file MUST contains gene symbols.
+3. Please place the fasta file inside a folder with <genome_name>.
 
 ## Running test dataset
 1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:

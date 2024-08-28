@@ -1,9 +1,10 @@
-# RNA-SeqEZPZ: A point-and-click RNA-Seq pipeline for comprehensive analysis of RNA-Seq with interactive plots
+# RNA-SeqEZPZ: A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations
 <br />
 <br />
 
 RNA-SeqEZPZ is a pipeline to run analysis of RNA-Seq experiments from raw FASTQ files all the way to differential genes analysis.
-The pipeline can be accessed using a GUI interface implemented using a Shiny app and offer interactive plots.
+The pipeline is accessible through a graphical user interface implemented using a Shiny app and features interactive plots.
+Advanced users have the ability to customize the scripts provided with the pipeline.
 This pipeline is designed to run on an HPC cluster.
 <br />
 ## Installation
@@ -29,6 +30,36 @@ The following step-by-step is for a system with SLURM scheduler and it will run 
    ```
    This step will copy a singularity image.
    Now, you have all the scripts and programs needed to run the entire RNA-Seq pipeline. 
+
+## Downloading reference files
+In order to run the pipeline, you will need to download reference files.
+These are the steps to get human hg19 references to run this pipeline.
+1. Go to ```RNA-SeqEZPZ``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
+   ```
+   # go to RNA-SeqEZPZ directory. Only do this if you haven't done "cd RNA-SeqEZPZ" before
+   cd RNA-SeqEZPZ
+   # create a ref directory inside RNA-SeqEZPZ and a sub-directory called hg19 under ref
+   mkdir -p ref/hg19
+   ```
+3. Go to the directory created in step 1 and download hg38 fasta file to this directory
+   ```
+   # go to RNA-SeqEZPZ/ref/hg19 directory
+   cd ref/hg19
+   # download and unzip the fasta file from UCSC
+   wget -O -  https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/analysisSet/hg19.p13.plusMT.full_analysis_set.fa.gz | gunzip -c > hg19.p13.plusMT.full_analysis_set.fa
+   ```
+4. Download annotation file (.gtf)
+   ```
+   # download and unzip the gtf file from UCSC
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.refGene.gtf.gz | gunzip -c > hg19.refGene.gtf
+   ```
+5. Now, you should have ```hg19.p13.plusMT.full_analysis_set.fa``` and ```hg19.refGene.gtf.gz``` inside ```RNA-SeqEZPZ/ref/hg19```
+   ```
+   ls
+   hg19.p13.plusMT.full_analysis_set.fa  hg19.refGene.gtf
+   ```
+
+**Similarly for hg38**, the foldername MUST be ```ref/hg38``` and placed under ```RNA-SeqEZPZ```
 
 ## Running test dataset
 1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:
@@ -78,7 +109,7 @@ The following step-by-step is for a system with SLURM scheduler and it will run 
 
    **Note**: this step only works because there is an existing samples.txt in the ```project_ex``` directory that was provided for you.
       
-5. At this point, you are now ready to click on ```Run full analysis``` to run the entire RNA-Seq pipeline steps with the example datasets provided.
+5. At this point, you are ready to click on ```Run full analysis``` to run the entire RNA-Seq pipeline steps with the example datasets provided.
 
 6. After clicking on ```Run full analysis```, you can click on ```Log``` then click on ```Refresh list``` to see the content of ```run_rnaseq_full.out```
    which contains the progress of the pipeline.

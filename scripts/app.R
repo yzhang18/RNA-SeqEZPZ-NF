@@ -2414,6 +2414,10 @@ react.tab3.rdata <- reactive({
   # needed to correctly differentiate sample names
   # i.e. iEF vs iEFempty
   rep.name=levels(colData(out.DESeq2$dds)$rep)
+  # if rep is not used in DESeq, it will remain a character
+  # therefore rep.name will be NULL
+  # so instead get the unique rep
+  if(is.null(rep.name)) rep.name=unique(colData(out.DESeq2$dds)$rep)
   
   # up-regulated genes
   grp.up=list()
@@ -2462,6 +2466,10 @@ react.tab3.rdata <- reactive({
   # needed to correctly differentiate sample names
   # i.e. iEF vs iEFempty
   rep.name=levels(colData(out.DESeq2$dds)$rep)
+  # if rep is not used in DESeq, it will remain a character
+  # therefore rep.name will be NULL
+  # so instead get the unique rep
+  if(is.null(rep.name)) rep.name=unique(colData(out.DESeq2$dds)$rep)
   
   # down-regulated genes
   grp.dwn=list()
@@ -2492,6 +2500,8 @@ react.tab3.rdata <- reactive({
     grp.dwn[[i]]$norm.diff.mean = diff.mean[row.pass]
    }
   }#for(i in 1:length(grp.name))
+  print("length(grp.dwn)")
+  print(length(grp.dwn))
   grp.dwn
  })
  
@@ -2720,6 +2730,8 @@ react.tab3.rdata <- reactive({
  output$tab3.volcano.plots <- renderUI({
   grp.name=react.tab3.grp.name()
   genes.lists.dwn = tab3.genes.lists.dwn()
+  print("genes.lists.dwn")
+  print(length(genes.lists.dwn))
   genes.lists.up = tab3.genes.lists.up()
   plot_output_list<-list()
   for (i in 1:length(grp.name)){
@@ -2779,6 +2791,10 @@ react.tab3.rdata <- reactive({
   # needed to correctly differentiate sample names
   # i.e. iEF vs iEFempty
   rep.name=levels(colData(out.DESeq2$dds)$rep)
+  # if rep is not used in DESeq, it will remain a character
+  # therefore rep.name will be NULL
+  # so instead get the unique rep
+  if(is.null(rep.name)) rep.name=unique(colData(out.DESeq2$dds)$rep)
   
   expr.tbl <- list()
   for(i in 1:length(grp.name)){
@@ -2786,7 +2802,8 @@ react.tab3.rdata <- reactive({
    grps=strsplit(grp.name[i],"_vs_")
    treat.grp=grps[[1]][1]
    ref.grp=grps[[1]][2]
-   
+   print("treat.grp")
+   print(treat.grp)
    # fixed bug: below code will get both UASVN2_1055A and 1055A samples while
    # grepping only 1055A 
    #treat.mean=rowMeans(normCts[,grep(treat.grp,colnames(normCts))])
@@ -2795,6 +2812,14 @@ react.tab3.rdata <- reactive({
    treat.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(treat.grp,rep.name))])
    ref.mean=rowMeans(normCts[,which(colnames(normCts) %in% paste0(ref.grp,rep.name))])
    diff.mean=treat.mean-ref.mean
+   print("colnames(normCts)")
+   print(colnames(normCts))
+   print("paste0(treat.grp,rep.name)")
+   print(paste0(treat.grp,rep.name))
+   print("paste0(ref.grp,rep.name)")
+   print(paste0(ref.grp,rep.name))
+   print("levels(colData(out.DESeq2$dds)$rep)")
+   print(levels(colData(out.DESeq2$dds)$rep))
    data=data.frame(
     rownames(results[[grp.name[i]]]),
     results[[grp.name[i]]]$log2FoldChange,
@@ -2837,6 +2862,10 @@ react.tab3.rdata <- reactive({
  # needed to correctly differentiate sample names
  # i.e. iEF vs iEFempty
  rep.name=levels(colData(out.DESeq2$dds)$rep)
+ # if rep is not used in DESeq, it will remain a character
+ # therefore rep.name will be NULL
+ # so instead get the unique rep
+ if(is.null(rep.name)) rep.name=unique(colData(out.DESeq2$dds)$rep)
  
  for(i in 1:length(grp.name)){
   # Need local so that each item gets its own number. Without it, the value
@@ -2863,8 +2892,8 @@ react.tab3.rdata <- reactive({
     logFC=results[[grp.name[my_i]]]$log2FoldChange,
     FDR=results[[grp.name[my_i]]]$padj,
     diff.mean=diff.mean)
-   print("data$Genes")
-   print(data[data$Genes =="polr3gla",])
+   #print("data$Genes")
+   #print(data[data$Genes =="polr3gla",])
    data <- data %>% 
     mutate(
      Expression = 
@@ -2876,8 +2905,8 @@ react.tab3.rdata <- reactive({
                  diff.mean <= -meanDiff.cutoff[my_i] ~ "Down-regulated",
                 TRUE ~ "NS")
     )
-   print("Down-regulated")
-   print(data[data$Expression =="Down-regulated",])
+   #print("Down-regulated")
+   #print(data[data$Expression =="Down-regulated",])
    # making sure colors are correctly assigned to expression
    data$Expression <- factor(data$Expression,levels=c("NS","Up-regulated","Down-regulated"))
    total_up=sum(data$Expression == "Up-regulated")
@@ -2886,8 +2915,8 @@ react.tab3.rdata <- reactive({
    # remove FDR=na
    data=data[!is.na(data$FDR),]
    data$logFDR=-log(data$FDR+min(c(data$FDR[data$FDR>0],1e-32)),10)
-   print("Down-regulated")
-   print(data[data$Expression =="Down-regulated",])
+   #print("Down-regulated")
+   #print(data[data$Expression =="Down-regulated",])
    genes_show = hilite.genes
    genes_show_data <- dplyr::bind_rows(
     data %>%

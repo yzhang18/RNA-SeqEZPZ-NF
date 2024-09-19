@@ -41,7 +41,7 @@ These are the steps to get human hg19 references to run this pipeline.
    # create a ref directory inside RNA-SeqEZPZ and a sub-directory called hg19 under ref
    mkdir -p ref/hg19
    ```
-3. Go to the directory created in step 1 and download hg38 fasta file to this directory
+3. Go to the directory created in step 1 and download hg19 fasta file to this directory
    ```
    # go to RNA-SeqEZPZ/ref/hg19 directory
    cd ref/hg19

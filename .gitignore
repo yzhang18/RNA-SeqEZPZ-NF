@@ -7,4 +7,5 @@ fastq
 *\.Rhistory
 **/project_ex??
 **/project_ex?
+!project_ex/*
 !project_ex_out/*

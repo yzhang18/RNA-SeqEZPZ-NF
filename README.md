@@ -70,8 +70,9 @@ These are the steps to get human hg19 references to run this pipeline.
 ## Running test dataset
 1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:
 ```
-   # go to RNA-SeqEZPZ. Only do this if you haven't done "cd RNA-SeqEZPZ" before
-   cd RNA-SeqEZPZ
+   # go to RNA-SeqEZPZ folder
+   # if you are currently in ref/hg19 folder go up to RNA-SeqEZPZ folder
+   cd ../..
    # run the user interface
    bash scripts/run_shiny_analysis.sh filepath=project_ex
    ``` 

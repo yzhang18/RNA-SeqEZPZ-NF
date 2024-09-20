@@ -150,13 +150,15 @@ img_dir=$(dirname $(dirname $(readlink -f $0)))
 genome_dir=$img_dir/ref/$ref_ver
 # set ref_fa to fasta file in genome_dir if variable ref_fa is not defined
 if [[ -z $ref_fa ]];then
-    	fasta_file=${genome_dir}/$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
+	# adding -L to avoid error when symbolic link is used
+    	fasta_file=${genome_dir}/$(find -L $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 else
 	# else set to ref_fa
         fasta_file=$ref_fa
 fi
 # set gtf file to ref_gtf in genome_dir if variable ref_gtf is not defined
 if [[ -z $ref_gtf ]];then
+	# adding -L to avoid error when symbolic link is used
     	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
 else
         gtf_file=$ref_gtf

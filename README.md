@@ -25,8 +25,8 @@ The following step-by-step is for a system with SLURM scheduler and it will run 
    ```
    # go to RNA-SeqEZPZ directory
    cd RNA-SeqEZPZ
-   # download the singularity image
-   singularity pull library://cxtaslim/pipelines/rna-seqezpz:latest
+   # download the singularity image and save as rnaseq-pipe-container.sif
+   singularity pull --name rnaseq-pipe-container.sif library://cxtaslim/pipelines/rna-seqezpz:latest
    ```
    This step will copy a singularity image.
    Now, you have all the scripts and programs needed to run the entire RNA-Seq pipeline. 

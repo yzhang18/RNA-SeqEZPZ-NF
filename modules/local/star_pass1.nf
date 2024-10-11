@@ -35,7 +35,7 @@ process STAR_PASS1 {
         --readFilesCommand zcat \
         --outFileNamePrefix ${prefix}_
         
-    genome_for_pass2.sh ${prefix}
+    /scripts/genome_for_pass2.sh ${prefix}
     set +x
     conda deactivate
 

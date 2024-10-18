@@ -3,7 +3,7 @@
  * using tools STAR 
  */
 process STAR_INDEX {
-    label "hi_mem_cpus"
+    label "star"
     publishDir params.star_index, mode: "copy", pattern: "STAR_index"
 
     input:

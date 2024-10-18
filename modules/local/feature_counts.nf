@@ -24,7 +24,12 @@ process FEATURE_COUNTS {
     source activate rna_env
     featureCounts -v
     set -x
+
+    # --countReadPairs read-pairs will be counted instead of reads
+    # --countReadPairs needed for featureCounts v 2.0.6
+    # --countReadPairs NOT needed when using featureCounts v 2.0.1
     featureCounts -p \
+            --countReadPairs
             -a /ref/${params.genome}/${gtf} \
             -t exon \
             -g gene_id \

@@ -159,7 +159,7 @@ fi
 # set gtf file to ref_gtf in genome_dir if variable ref_gtf is not defined
 if [[ -z $ref_gtf ]];then
 	# adding -L to avoid error when symbolic link is used
-    	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
+    	gtf_file=${genome_dir}/$(find -L $genome_dir -name *.gtf | xargs basename)
 else
         gtf_file=$ref_gtf
 fi

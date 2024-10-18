@@ -8,4 +8,5 @@ fastq
 **/project_ex??
 **/project_ex?
 !project_ex/*
+**/project_ex/outputs*
 !project_ex_out/*

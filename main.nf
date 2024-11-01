@@ -70,7 +70,7 @@ params.batch_adjust = "yes"
 params.ncpus_trim = 4
 params.ncpus_star = 20 
 
-params.debug = 'no'
+params.run = ''
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

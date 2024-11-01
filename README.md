@@ -45,21 +45,31 @@ These are the steps to get human hg19 references to run this pipeline.
    ```
    # go to RNA-SeqEZPZ/ref/hg19 directory
    cd ref/hg19
-   # download and unzip the fasta file from Ensembl
-   wget -O - https://ftp.ensembl.org/pub/grch37/current/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz | gunzip -c > Homo_sapiens.GRCh37.dna.primary_assembly.fa
+   # download and unzip the fasta file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.fa.gz | gunzip -c > hg19.fa
    ```
 4. Download annotation file (.gtf)
    ```
-   # download and unzip the gtf file from Ensembl
-   wget -O - https://ftp.ensembl.org/pub/grch37/current/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz | gunzip -c > Homo_sapiens.GRCh37.87.gtf
+   # download and unzip the gtf file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.refGene.gtf.gz | gunzip -c > hg19.refGene.gtf
    ```
-5. Now, you should have ```Homo_sapiens.GRCh37.dna.primary_assembly.fa``` and ```Homo_sapiens.GRCh37.87.gtf``` inside ```RNA-SeqEZPZ/ref/hg19```
+5. Optional. Download the chrom.sizes file. You can skip this and the pipeline will generate it for you as long as the ref folder is writable
+   ```
+   wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes
+   ```
+7. Now, you should have ```hg19.fa```, ```hg19.refGene.gtf``` and ```hg19.chrom.sizes``` inside ```RNA-SeqEZPZ/ref/hg19```
    ```
    # list the files
    ls -1
    ```
-   The above command should show you the fasta and gtf files.
-   
+   The above command should show you the fasta, gtf and chrom.sizes files as shown below:
+   ```
+   ls -1
+   hg19.chrom.sizes
+   hg19.fa
+   hg19.refGene.gtf
+   ```
+  
 **Similarly for hg38**, the foldername MUST be ```ref/hg38``` and placed under ```RNA-SeqEZPZ```
 
 ## Tips on downloading other references

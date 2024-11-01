@@ -25,21 +25,16 @@ source activate samtools_env
 samtools --version
 set -x
 chr_info="${target_fa_name%.*}"
-# check if fai file exist
-if [[ ! -f /ref_fa/${target_fa_name}.fai ]]; then
-	if [[ -w  /ref_fa ]]; then
-		$run samtools faidx /ref_fa/$target_fa_name
-	else
-		echo fasta directory is not writable. Cannot create fasta index file
-		exit 1
-	fi
-fi
+
 # check if chrom.sizes exist
 if [[ ! -f /ref/${chr_info}.chrom.sizes ]];then
 	if [[ -w  /ref_fa ]]; then
+		if [[ ! -f /ref_fa/${target_fa_name}.fai ]]; then
+			samtools faidx /ref_fa/$target_fa_name
+		fi
 		cut -f1,2 /ref_fa/${target_fa_name}.fai > /ref/${chr_info}.chrom.sizes
 	else
-		echo fasta directory is not writable. Cannot create chrom sizes file
+		echo fasta directory is not writable. Cannot create chrom sizes file.
 	fi
 fi
 set +x

@@ -76,8 +76,8 @@ These are the steps to get human hg19 references to run this pipeline.
 1. Make sure both gtf and fasta files have the same chromosome names.
 3. In order for pathway analysis to work, gtf file MUST contains gene symbols.
 4. Please place the fasta file inside a folder with ```<genome_name>```.
-5. If you don't have ```fasta.fai``` and ```chrom.sizes``` files for the genome, you need to make the folder ```<genome_name>``` writable.
-   On the first run, ```fasta.fai``` and ```chrom.sizes``` will be created by the pipeline.
+5. If you don't have ```chrom.sizes``` file for the genome, you need to make the folder ```<genome_name>``` writable.
+   On the first run, ```chrom.sizes``` file will be created by the pipeline.
 
 ## Running test dataset
 1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:

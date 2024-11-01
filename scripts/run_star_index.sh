@@ -148,46 +148,55 @@ genome_dir=$img_dir/ref/$ref_ver
 # set fasta file to ref_fa if exist
 if [[ -f $ref_fa ]];then
 	fasta_file=$ref_fa
-	genome_dir=$(dirname $ref_fa)
-	star_index_dir=$genome_dir/STAR_index
 else
-	fasta_file=${genome_dir}/$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
+	fasta_file=${genome_dir}/$(find -L $genome_dir -name *.fasta -o -name *.fa | xargs basename)
 fi
+
+# set genome_dir and star_index_dir accordingly
+genome_dir=$(dirname $fasta_file)
+star_index_dir=$genome_dir/STAR_index
+
 # set gtf file to ref_gtf if exist
 if [[ -f $ref_gtf ]];then
         gtf_file=$ref_gtf
 else
-	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
+	gtf_file=${genome_dir}/$(find -L $genome_dir -name *.gtf | xargs basename)
 fi
 # throws an error if gtf_file or fasta_file doesn't exist
 if [[ ! -f $gtf_file || ! -f $fasta_file ]];then
 	echo "Please check your genome. Either fasta file or gtf file is not found\n"
 	exit 1
 fi
+
 # if genome_dir doesn't exist
 # set genome_dir to  project dir
-if [[ ! -d $genome_dir ]] || [[ ! -d $star_index_dir ]] ; then
-	genome_dir=$proj_dir/ref/$ref_ver
-	mkdir -p $genome_dir
+# and generate star index and chrom sizes in project_dir
+if [[ ! -d $genome_dir ]]; then
+		genome_dir=$proj_dir/ref/$ref_ver
+                mkdir -p $genome_dir
 fi
 
-# if star_index_dir doesn't exist
-# create in proj_dir
+# if star_index_dir not exist yet
+# check if directory writeable if it is create the STAR_index dir
+# if not set star_index_dir to proj_dir 
 if [[ ! -d $star_index_dir ]] ; then
-	star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
-	mkdir -p $star_index_dir
+	if [[ -w $(dirname $star_index_dir) ]]; then
+		mkdir -p $star_index_dir
+	else
+		# star_index will be in proj_dir
+		star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
+                mkdir -p $star_index_dir
+	fi
 fi
 
-work_dir=$star_index_dir
-echo "all outputs will be stored in $work_dir"
 ## check whether STAR_index, chrom size and fasta index exist
-chr_info_path=$(find $genome_dir -name *.chrom.sizes)
+chr_info_path=$(find -L $genome_dir -name *.chrom.sizes)
 if [[ ! -z "$chr_info_path" ]]; then
 	chr_info=$(basename $chr_info_path)
 fi
 ## check STAR_index makes sure it's not empy
-if [ -d "$work_dir" ];then
-	if [ -z "$(ls -A $work_dir)" ];then
+if [ -d "$star_index_dir" ];then
+	if [[ -z "$(ls -A $star_index_dir)" ]];then
 		echo -e "Generating STAR index.\n"
 	elif [[ -z $chr_info_path || ! -f ${fasta_file}.fai ]];then
 		echo -e "Generating chrom sizes and/or fasta index files.\n"
@@ -279,6 +288,7 @@ jid0=$(SINGULARITYENV_PYTHONPATH= \
 				--bind $genome_dir:/ref \
 				--bind $target_fa_dir:/ref_fa \
 				--bind $target_gtf_dir:/ref_gtf \
+				--bind $star_index_dir:/star_index_dir \
 				$img_dir/$img_name \
 				/bin/bash /scripts/star_index_simg.sbatch"| cut -f 4 -d' ')
 echo "Generating STAR index job id: $jid0"

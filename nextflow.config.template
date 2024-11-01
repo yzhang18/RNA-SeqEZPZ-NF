@@ -1,0 +1,65 @@
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    GLOBAL DEFAULT PARAMS, USED IN CONFIGS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+params {
+    help    = false
+    version = false
+    monochrome_logs = false
+}
+
+
+process {
+    container = 'library://olechwin/pipelines/rnaseq'
+    time = '5hours'
+    queue = 'general'
+    memory = ''
+    cpus = 1
+    email = ''
+    clusterOptions = '--account=gdtheisenlab'
+
+    withName: SAMPLESHEET_CHECK { 
+        container = 'library://olechwin/pipelines/samplesheet_check:latest'
+    }
+
+
+    withName: TRIM_FASTQC {
+        cpus = NCPUS_TRIM
+    }
+
+    withLabel: short_time {
+        time = '30min'
+    }
+    
+    withLabel: hi_cpus {
+        cpus = 15
+    }
+
+    withLabel: hi_mem {
+        queue = 'himem'
+        memory = '50g'
+    }
+
+    withLabel: star {
+        queue = 'himem'
+        cpus = NCPUS_STAR
+    }
+
+    withLabel: hi_mem_cpus {
+        queue = 'himem'
+        cpus = 20 
+    }
+}
+
+singularity.enabled = true
+singularity.autoMounts = true
+
+# singularity.runOptions = "--bind /home/gdhpcgroup/yxz006/nextflow/RNA-SeqEZPZ-NF/scripts:/scripts,/home/gdhpcgroup/yxz006/nextflow/testdata3:/mnt,/export/apps/opt/rnaseq-pipeline/ref:/ref,/gpfs0:/gpfs0"
+
+singularity.runOptions = "--bind /PIPELINE/scripts:/scripts,/DATA:/mnt,/REF:/ref,/gpfs0:/gpfs0"
+
+
+process.executor = 'slurm'
+dag.overwrite = true
+report.overwrite = true

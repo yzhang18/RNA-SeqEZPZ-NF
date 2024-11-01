@@ -11,7 +11,7 @@ params {
 
 
 process {
-    container = 'library://olechwin/pipelines/rnaseq'
+    container = CONTAINER 
     time = '5hours'
     queue = 'general'
     memory = ''

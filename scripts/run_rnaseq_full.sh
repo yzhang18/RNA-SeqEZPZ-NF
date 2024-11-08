@@ -156,12 +156,23 @@ else
 	# else set to ref_fa
         fasta_file=$ref_fa
 fi
+
+# set genome_dir and star_index_dir accordingly
+genome_dir=$(dirname $fasta_file)
+star_index_dir=$genome_dir/STAR_index
+
 # set gtf file to ref_gtf in genome_dir if variable ref_gtf is not defined
 if [[ -z $ref_gtf ]];then
 	# adding -L to avoid error when symbolic link is used
     	gtf_file=${genome_dir}/$(find -L $genome_dir -name *.gtf | xargs basename)
 else
         gtf_file=$ref_gtf
+fi
+
+# throws an error if gtf_file or fasta_file doesn't exist
+if [[ ! -f $gtf_file || ! -f $fasta_file ]];then
+        echo "Please check your genome. Either fasta file or gtf file is not found\n"
+        exit 1
 fi
 
 # run parameter needs to be set differently here
@@ -232,7 +243,6 @@ cp run_rnaseq_full.out $log_dir/
 
 # skip checking job if not generating star index.
 if [[ $skip_run_star_index == 0 ]];then
-
 	tmp0=$($run sbatch --dependency=$jid0 \
                 --time=5:00 \
                 --output=$log_dir/dummy_run_star_index.txt \
@@ -401,7 +411,7 @@ echo -e "Please check run_differential_analysis_rna.out for progress.\n"
 cp $proj_dir/run_rnaseq_full.out $log_dir/
 cd $proj_dir
 . $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time \
-	genome=$ref_ver batch_adjust=$batch_adjust &> run_differential_analysis_rna.out
+	batch_adjust=$batch_adjust &> run_differential_analysis_rna.out
 cp $proj_dir/run_differential_analysis_rna.out $log_dir/
 
 message="Done differential RNA-seq analysis.\n"

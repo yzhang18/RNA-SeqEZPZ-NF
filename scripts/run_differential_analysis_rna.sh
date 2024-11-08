@@ -7,9 +7,6 @@
 # Examples:
 # bash scripts/run_differential_analysis_rna.sh &> run_differential_analysis_rna.out &
 #
-# by default, alignment is done to human reference genome hg19 (genome=hg19) unless specified genome=hg38:
-# bash scripts/run_differential_analysis_rna.sh genome=hg38 &> run_differential_analysis_rna.out &
-#
 # or to change FDR (padj) of differential analysis:
 # bash scripts/run_differential_analysis_rna.sh padj=1 &> run_differential_analysis_rna.out &
 #
@@ -36,18 +33,6 @@ while [[ "$#" -gt 0 ]]; do
 		time=$(echo $1 | cut -d '=' -f 2)
 		shift
 	fi
-	if [[ $1 == "genome"* ]];then
-		ref_ver=$(echo $1 | cut -d '=' -f 2)
-		shift
-	fi
-	 if [[ $1 == "ref_fa"* ]];then
-                ref_fa=$(echo $1 | cut -d '=' -f 2)
-                shift
-        fi
-        if [[ $1 == "ref_gtf"* ]];then
-                ref_gtf=$(echo $1 | cut -d '=' -f 2)
-                shift
-        fi
 	if [[ $1 == "batch_adjust"* ]];then
 		batch_adjust=$(echo $1 | cut -d '=' -f 2)
 		shift
@@ -66,15 +51,6 @@ while [[ "$#" -gt 0 ]]; do
 		echo run=echo
 		echo -e "\tdo not run, echo all commands. Default is running all commands"
 		echo -e "\tif set to "debug", it will run with "set -x""
-		echo -e "genome=hg19"
-		echo -e "\tset reference genome. Default is hg19. Other option: hg38"
-		echo -e "\tif using genome other than hg19 or hg38, need to specify both ref_fa and ref_gtf."
-                echo -e "ref_fa=/path/to/ref.fa"
-                echo -e "\tif using genome other than hg19 or hg38, need to specify ref_fa with path to fasta file"
-                echo -e "\tof the reference genome."
-                echo -e "ref_gtf=/path/to/ref.gtf"
-                echo -e "\tif using genome other than hg19 or hg38, need to specify ref_gtf with path to gtf file"
-                echo -e "\tof the reference genome."
 		echo padj=0.05
 		echo -e "\tset FDR of differential genes (as calculated by DESeq2) < 0.05. Default=0.05"
 		echo -e "time=1-00:00:00"
@@ -102,9 +78,6 @@ fi
 if [[ -z "$time" ]];then
 	time=1-00:00:00
 fi
-if [[ -z "$ref_ver" ]];then
-	ref_ver=hg19
-fi
 if [[ -z "$batch_adjust" ]];then
         batch_adjust=yes 
 fi
@@ -119,7 +92,6 @@ echo -e "\nRunning differential analysis with $ref_ver as reference. \n"
 echo -e "Options used to run:"
 echo padj="$padj"
 echo time="$time"
-echo genome="$ref_ver"
 echo batch_adjust="$batch_adjust"
 echo ""
 
@@ -170,37 +142,6 @@ fi
 $(cp $img_dir/scripts/run_differential_analysis_rna.sh $log_dir/scripts)
 $(cp $img_dir/scripts/feature_counts_simg.sbatch $log_dir/scripts)
 $(cp $img_dir/scripts/run_sartools_simg.sbatch $log_dir/scripts)
-
-### specify reference genome
-# if ref genome is not in $img_dir/ref, set genome_dir to  project dir
-genome_dir=$img_dir/ref/$ref_ver
-# set fasta file to ref_fa if exist
-if [[ -f $ref_fa ]];then
-        fasta_file=$ref_fa
-else
-    	fasta_file=${genome_dir}/$(find $genome_dir -name *.fasta -o -name *.fa | xargs basename)
-fi
-# set gtf file to ref_gtf if exist
-if [[ -f $ref_gtf ]];then
-        gtf_file=$ref_gtf
-else
-    	gtf_file=${genome_dir}/$(find $genome_dir -name *.gtf | xargs basename)
-fi
-
-# this is where star index will be stored. Create if directory doesn't exist yet.
-if [[ ! -d $genome_dir ]];then
-        star_index_dir=$proj_dir/ref/$ref_ver/STAR_index
-        genome_dir=$proj_dir/ref/$ref_ver
-else
-    	star_index_dir=$genome_dir/STAR_index
-fi
-if [[ ! -d $star_index_dir ]]; then
-        mkdir -p $star_index_dir
-fi
-
-# calculate genome_size
-genome_size=$(grep -v ">" $fasta_file | grep -v "N" | wc | awk '{print $3-$1}')
-chr_info=$(find $genome_dir -name *.chrom.sizes | xargs basename)
 
 # getting samples info from samples.txt
 $(sed -e 's/[[:space:]]*$//' samples.txt | sed 's/"*$//g' | sed 's/^"*//g' > samples_tmp.txt)
@@ -365,8 +306,8 @@ fi
 rm -r $proj_dir/outputs/STAR_2pass/Pass1 2> /dev/null || true
 rm -r $proj_dir/outputs/STAR_2pass/GenomeForPass2 2> /dev/null || true
 rm $proj_dir/outputs/STAR_2pass/Pass2/*Aligned.out.bam 2> /dev/null || true
-# delete STAR index
-rm -r $star_index_dir 2> /dev/null || true
+# delete STAR index only if it is in proj_dir
+rm -r $proj_dir/ref/$ref_ver/STAR_index 2> /dev/null || true
 
 message="Differential analysis has been completed\n\
 Output files are in $work_dir/diff_analysis_rslt\n\

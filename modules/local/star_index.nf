@@ -20,16 +20,17 @@ process STAR_INDEX {
     STAR --runMode genomeGenerate \
         --genomeDir STAR_index \
         --runThreadN ${task.cpus} \
-        --sjdbGTFfile /ref/${params.genome}/${gtf} \
-        --genomeFastaFiles /ref/${params.genome}/${fasta} \
+        --sjdbGTFfile ${gtf} \
+        --genomeFastaFiles ${fasta} \
         --sjdbOverhang 100 
     conda deactivate
 
     source activate samtools_env
-    if [ ! -f /ref/${params.genome}/${fasta} ]; then
-        samtools faidx /ref/${params.genome}/${fasta}
+    chr_info=${fasta%.*}
+    if [ ! -f ${chr_info}.chrom.sizes ]; then
+        samtools faidx ${fasta}
     fi
-    cut -f1,2 /ref/${params.genome}/${fasta}.fai >  ${fasta}.chrom.sizes
+    cut -f1,2 ${chr_info}.fai >  ${chr_info}.chrom.sizes
     conda deactivate
     """ 
 }

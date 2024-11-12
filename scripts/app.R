@@ -2,7 +2,7 @@
 
 # remove user library path to avoid confusion
 if(length(.libPaths())>1) .libPaths(.libPaths()[-1])
-
+run_nextflow=TRUE
 library(shiny)
 library(GeneOverlap)
 library(gridExtra)
@@ -1495,8 +1495,34 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
     hostgtf=gsub('/root/','/',genome.gtf)
    }
    options=paste0("genome=",genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
+   if(run_nextflow)
+	  options=paste0("--genome=",genome.name,"--fasta=",hostfa,"--gtf=",hostgtf)
   }else{
    options=paste0("genome=",genome)
+   if(run_nextflow){
+    options=paste0("--genome=",genome)
+    if(genome=="hg19"){
+	    # search for fasta file in /ref/hg19
+     # /ref is bound by singularity to img.dir
+     fa.name=list.files(path="/ref/hg19",pattern="\\.(fasta|fa)$")
+	    gtf.name=list.files(path="/ref/hg19",pattern="\\.(gtf)$")
+	    print("fa.name")
+	    print(fa.name)
+	    # options given to nextflow need to have full path including img.dir
+	    options=paste0(options," --fasta=",img.dir,"/ref/hg19/",fa.name[1],
+	                   " --gtf=",img.dir,"/ref/hg19/",gtf.name[1])
+    }else if(genome=="hg38"){
+     # search for fasta file in /ref/hg38
+     # /ref is bound by singularity to img.dir
+     fa.name=list.files(path="/ref/hg38",pattern="\\.(fasta|fa)$")
+     gtf.name=list.files(path="/ref/hg38",pattern="\\.(gtf)$")
+     print("fa.name")
+     print(fa.name)
+     # options given to nextflow need to have full path including img.dir
+     options=paste0(options," --fasta=",img.dir,"/ref/hg38/",fa.name[1],
+                    " --gtf=",img.dir,"/ref/hg38/",gtf.name[1])
+    }
+    }
    }
    print("options") 
    print(options)
@@ -1505,19 +1531,32 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    
    if(input$setup.debug==TRUE){ run="debug"
    }else{ run=""}
-  options=paste0(options," time=",input$setup.time," batch_adjust=",batch_adjust,
+  if(!run_nextflow){
+   options=paste0(options," time=",input$setup.time," batch_adjust=",batch_adjust,
                  " ncpus_trim=",input$setup.ncpus.trim," ncpus_star=",input$setup.ncpus.star,
                  " run=",run)
+  }else{
+	  options=paste0(options," --time=",input$setup.time," --batch_adjust=",batch_adjust,
+                 " --ncpus_trim=",input$setup.ncpus.trim,
+                 " --ncpus_star=",input$setup.ncpus.star,
+                 " --run=",run)
+  }
   # converting project dir to host path
   if(file.exists("/filepath")){
    hostprojdir=gsub('/filepath/',hostfilepath,projdir)
   }else{ 
    hostprojdir=gsub('/root/','/',projdir)
   }
-   print(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
-                " &> run_rnaseq_full.out' > /hostpipe"))
+   if(!run_nextflow){
    system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
+   }else{
+    cmd=paste0("echo 'ml load nextflow/22.10.6.5843 && nextflow run -resume ",img.dir,
+               "/main.nf -ansi-log false --inputdir=",hostprojdir," ",options,
+               " &> run_rnaseq_full.out' > /hostpipe")
+    print(cmd)
+    system(cmd)
+   }
 })
  
  #### log tab #####

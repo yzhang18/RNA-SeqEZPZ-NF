@@ -26,11 +26,12 @@ process STAR_INDEX {
     conda deactivate
 
     source activate samtools_env
-    chr_info=${fasta%.*}
-    if [ ! -f ${chr_info}.chrom.sizes ]; then
+    filename_no_ext=\${fasta%.fa}
+    filename_no_ext=\${filename_no_ext%.fasta}
+    if [ ! -f \${filename_no_ext}.chrom.sizes ]; then
         samtools faidx ${fasta}
     fi
-    cut -f1,2 ${chr_info}.fai >  ${chr_info}.chrom.sizes
+    cut -f1,2 ${fasta}.fai >  \${filename_no_ext}.chrom.sizes
     conda deactivate
     """ 
 }

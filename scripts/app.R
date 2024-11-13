@@ -1551,7 +1551,16 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    system(paste0("echo 'cd ",hostprojdir,"&& bash ",img.dir,"/scripts/run_rnaseq_full.sh ",options,
                 " &> run_rnaseq_full.out' > /hostpipe"))
    }else{
-    cmd=paste0("echo 'ml load nextflow/22.10.6.5843 && nextflow run -resume ",img.dir,
+    # create nextflow config
+    if(!genome=="other"){
+     nf.config=paste0("singularity.runOptions = \\\"--bind ",img.dir,"/scripts:/scripts,",
+                      hostprojdir,":/mnt,",img.dir,"/ref:/ref",",/gpfs0:/gpfs0\\\"\"")
+    }else{
+     nf.config=paste0("singularity.runOptions = \\\"--bind ",img.dir,"/scripts:/scripts,",
+                      hostprojdir,":/mnt,/gpfs0:/gpfs0\\\"\"")
+     }
+    cmd=paste0("echo 'echo \"",nf.config," >> ",img.dir,"/nextflow.config",
+               " && ml load nextflow/22.10.6.5843 && nextflow run -resume ",img.dir,
                "/main.nf -ansi-log false --inputdir=",hostprojdir," ",options,
                " &> run_rnaseq_full.out' > /hostpipe")
     print(cmd)

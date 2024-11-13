@@ -1,0 +1,47 @@
+N E X T F L O W  ~  version 22.10.6
+Launching `/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/main.nf` [dreamy_leakey] DSL2 - revision: 158fe51703
+
+
+-[2m----------------------------------------------------[0m-
+
+[0;34m              RNAseq Pipeline
+[0;34m        Nationwide Children's Hospital [0m
+
+-[2m----------------------------------------------------[0m-
+[1mCore Nextflow options[0m
+  [0;34mrunName        : [0;32mdreamy_leakey[0m
+  [0;34mcontainerEngine: [0;32msingularity[0m
+  [0;34mcontainer      : [0;32mfile://../rnaseq-pipe-container.sif[0m
+  [0;34mlaunchDir      : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex[0m
+  [0;34mworkDir        : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/work[0m
+  [0;34mprojectDir     : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF[0m
+  [0;34muserName       : [0;32mcxt050[0m
+  [0;34mprofile        : [0;32mstandard[0m
+  [0;34mconfigFiles    : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/nextflow.config[0m
+
+[1mInput/output options[0m
+  [0;34minput          : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex//samples.txt[0m
+  [0;34moutdir         : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/[0m
+
+[1mReference genome options[0m
+  [0;34mgenome         : [0;32mhg19[0m
+  [0;34mfasta          : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/ref/hg19/hg19.fa[0m
+  [0;34mgtf            : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/ref/hg19/hg19.refGene.gtf[0m
+  [0;34mstar_index     : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex//outputs[0m
+
+!! Only displaying parameters that differ from the pipeline defaults !!
+-[2m----------------------------------------------------[0m-
+If you use null for your analysis please cite:
+
+* The pipeline
+  https://doi.org/10.5281/zenodo.7116979
+
+* The nf-core framework
+  https://doi.org/10.1038/s41587-020-0439-x
+
+* Software dependencies
+  https://github.com/null/blob/master/CITATIONS.md
+-[2m----------------------------------------------------[0m-
+[12/265940] Submitted process > RNASEQ:STAR_INDEX
+[2a/b80289] Submitted process > RNASEQ:MERGE_FASTQ (merge_fastq)
+[e6/e3bab1] Submitted process > RNASEQ:INPUT_CHECK:SAMPLESHEET_CHECK (merged_samples.csv)

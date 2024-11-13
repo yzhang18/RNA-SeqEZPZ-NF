@@ -40,22 +40,9 @@ params.logdir = "$params.outdir/outputs/logs"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 params.ref = "$params.inputdir/ref"
-params.genome = "hg19"
-
-if ( "$params.genome" == "hg19" )
-{
-    params.fasta = "human_g1k_v37_decoy.fasta"
-}
-else if ( "$params.genome" == "hg38" )
-{
-    params.fasta = "hg38.analysisSet.fa" 
-}
-else
-{
-    params.fasta = "*.fasta"
-}
-params.gtf = "*.gtf"
-
+params.genome = "$params.genome"
+params.fasta = "$params.fasta"
+params.gtf = "$params.gtf"
 
 
 /*

@@ -1,0 +1,146 @@
+Nov-13 10:35:42.252 [main] DEBUG nextflow.cli.Launcher - $> nextflow run -resume /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/main.nf -ansi-log false --inputdir=/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/ --genome=hg19 --fasta=/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/ref/hg19/hg19.fa --gtf=/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/ref/hg19/hg19.refGene.gtf '--time=7-00:00:00' --batch_adjust=yes --ncpus_trim=4 --ncpus_star=20 --run=
+Nov-13 10:35:42.518 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 22.10.6
+Nov-13 10:35:42.560 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/gdtheisenlab/cxt050/.nextflow/plugins; core-plugins: nf-amazon@1.11.3,nf-azure@0.14.2,nf-codecommit@0.1.2,nf-console@1.0.4,nf-ga4gh@1.0.4,nf-google@1.4.5,nf-tower@1.5.6,nf-wave@0.5.3
+Nov-13 10:35:42.602 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Nov-13 10:35:42.605 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Nov-13 10:35:42.608 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Nov-13 10:35:42.618 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Nov-13 10:35:42.666 [main] DEBUG nextflow.config.ConfigBuilder - Found config base: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/nextflow.config
+Nov-13 10:35:42.669 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/nextflow.config
+Nov-13 10:35:42.731 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Nov-13 10:35:44.270 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=2 from script declararion
+Nov-13 10:35:44.314 [main] INFO  nextflow.cli.CmdRun - Launching `/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/main.nf` [dreamy_leakey] DSL2 - revision: 158fe51703
+Nov-13 10:35:44.326 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Nov-13 10:35:44.335 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+Nov-13 10:35:44.359 [main] DEBUG nextflow.secret.LocalSecretsProvider - Secrets store: /home/gdtheisenlab/cxt050/.nextflow/secrets/store.json
+Nov-13 10:35:44.371 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@10c72a6f] - activable => nextflow.secret.LocalSecretsProvider@10c72a6f
+Nov-13 10:35:44.445 [main] DEBUG nextflow.Session - Session UUID: 503a2646-97a3-41da-a94f-352b45ff06d5
+Nov-13 10:35:44.477 [main] DEBUG nextflow.Session - Run name: dreamy_leakey
+Nov-13 10:35:44.485 [main] DEBUG nextflow.Session - Executor pool size: 2
+Nov-13 10:35:44.509 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=10; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Nov-13 10:35:44.603 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 22.10.6 build 5843
+  Created: 23-01-2023 23:20 UTC (18:20 EDT)
+  System: Linux 4.18.0-513.24.1.el8_9.x86_64
+  Runtime: Groovy 3.0.13 on OpenJDK 64-Bit Server VM 15+36-1562
+  Encoding: UTF-8 (UTF-8)
+  Process: 3799716@r1pl-hpcf-n02 [10.73.170.42]
+  CPUs: 1 - Mem: 7.3 GB (6.1 GB) - Swap: 0 (0)
+Nov-13 10:35:44.800 [main] DEBUG nextflow.Session - Work-dir: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/work [gpfs]
+Nov-13 10:35:44.810 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/bin
+Nov-13 10:35:44.838 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Nov-13 10:35:44.867 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Nov-13 10:35:44.908 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Nov-13 10:35:44.932 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 2; maxThreads: 1000
+Nov-13 10:35:45.367 [main] DEBUG nextflow.Session - Session start
+Nov-13 10:35:45.378 [main] DEBUG nextflow.Session - Using default localLib path: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/lib
+Nov-13 10:35:45.403 [main] DEBUG nextflow.Session - Adding to the classpath library: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/lib
+Nov-13 10:35:45.405 [main] DEBUG nextflow.Session - Adding to the classpath library: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/lib/nfcore_external_java_deps.jar
+Nov-13 10:35:48.311 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Nov-13 10:35:48.465 [main] INFO  nextflow.Nextflow - 
+
+-[2m----------------------------------------------------[0m-
+
+[0;34m              RNAseq Pipeline
+[0;34m        Nationwide Children's Hospital [0m
+
+-[2m----------------------------------------------------[0m-
+[1mCore Nextflow options[0m
+  [0;34mrunName        : [0;32mdreamy_leakey[0m
+  [0;34mcontainerEngine: [0;32msingularity[0m
+  [0;34mcontainer      : [0;32mfile://../rnaseq-pipe-container.sif[0m
+  [0;34mlaunchDir      : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex[0m
+  [0;34mworkDir        : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/work[0m
+  [0;34mprojectDir     : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF[0m
+  [0;34muserName       : [0;32mcxt050[0m
+  [0;34mprofile        : [0;32mstandard[0m
+  [0;34mconfigFiles    : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/nextflow.config[0m
+
+[1mInput/output options[0m
+  [0;34minput          : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex//samples.txt[0m
+  [0;34moutdir         : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/[0m
+
+[1mReference genome options[0m
+  [0;34mgenome         : [0;32mhg19[0m
+  [0;34mfasta          : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/ref/hg19/hg19.fa[0m
+  [0;34mgtf            : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/ref/hg19/hg19.refGene.gtf[0m
+  [0;34mstar_index     : [0;32m/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex//outputs[0m
+
+!! Only displaying parameters that differ from the pipeline defaults !!
+-[2m----------------------------------------------------[0m-
+If you use null for your analysis please cite:
+
+* The pipeline
+  https://doi.org/10.5281/zenodo.7116979
+
+* The nf-core framework
+  https://doi.org/10.1038/s41587-020-0439-x
+
+* Software dependencies
+  https://github.com/null/blob/master/CITATIONS.md
+-[2m----------------------------------------------------[0m-
+Nov-13 10:35:51.827 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withLabel:star` matches labels `star` for process with name RNASEQ:STAR_INDEX
+Nov-13 10:35:51.843 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:51.866 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:51.884 [main] DEBUG nextflow.executor.Executor - [warm up] executor > slurm
+Nov-13 10:35:51.892 [main] DEBUG n.processor.TaskPollingMonitor - Creating task monitor for executor 'slurm' > capacity: 100; pollInterval: 5s; dumpInterval: 5m 
+Nov-13 10:35:51.931 [main] DEBUG n.executor.AbstractGridExecutor - Creating executor 'slurm' > queue-stat-interval: 1m
+Nov-13 10:35:52.101 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.106 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.113 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withLabel:short_time` matches labels `short_time` for process with name RNASEQ:INPUT_CHECK:SAMPLESHEET_CHECK
+Nov-13 10:35:52.124 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.125 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.221 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withName:TRIM_FASTQC` matches process RNASEQ:TRIM_FASTQC
+Nov-13 10:35:52.232 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.233 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.264 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.266 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.281 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withLabel:hi_mem_cpus` matches labels `hi_mem_cpus` for process with name RNASEQ:STAR_PASS1
+Nov-13 10:35:52.287 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.288 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.303 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withLabel:hi_mem_cpus` matches labels `hi_mem_cpus` for process with name RNASEQ:GENOME_SIZE
+Nov-13 10:35:52.306 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.308 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.316 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withLabel:hi_mem_cpus` matches labels `hi_mem_cpus` for process with name RNASEQ:STAR_PASS2
+Nov-13 10:35:52.320 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.322 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.346 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.357 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.374 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withLabel:hi_cpus` matches labels `hi_cpus` for process with name RNASEQ:FEATURE_COUNTS
+Nov-13 10:35:52.377 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.553 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.572 [main] DEBUG nextflow.script.ProcessConfig - Config settings `withLabel:hi_mem` matches labels `hi_mem` for process with name RNASEQ:SARTOOLS
+Nov-13 10:35:52.575 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.583 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.597 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.599 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.612 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: slurm
+Nov-13 10:35:52.614 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'slurm'
+Nov-13 10:35:52.626 [main] DEBUG nextflow.Session - Workflow process names [dsl2]: STAR_PASS1, STAR_PASS2, TRIM_FASTQC, RNASEQ:INPUT_CHECK:SAMPLESHEET_CHECK, RNASEQ:FEATURE_COUNTS, RNASEQ:MERGE_FASTQ, RNASEQ:STAR_PASS1, RNASEQ:SARTOOLS, RNASEQ:STAR_PASS2, OVERLAP, MERGE_FASTQ, COMBINEBW, RNASEQ:TRIM_FASTQC, SARTOOLS, RNASEQ:STAR_INDEX, SAMPLESHEET_CHECK, GENOME_SIZE, RNASEQ:OVERLAP, FEATURE_COUNTS, GET_SAMPLE, STAR_INDEX, MULTIQC1, MULTIQC2, RNASEQ:COMBINEBW, RNASEQ:GENOME_SIZE, RNASEQ:MULTIQC2, RNASEQ:MULTIQC1
+Nov-13 10:35:52.630 [main] DEBUG nextflow.Session - Igniting dataflow network (15)
+Nov-13 10:35:52.634 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:STAR_INDEX
+Nov-13 10:35:52.635 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:MERGE_FASTQ
+Nov-13 10:35:52.654 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:INPUT_CHECK:SAMPLESHEET_CHECK
+Nov-13 10:35:52.707 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:TRIM_FASTQC
+Nov-13 10:35:52.707 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:MULTIQC1
+Nov-13 10:35:52.718 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:STAR_PASS1
+Nov-13 10:35:52.720 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:GENOME_SIZE
+Nov-13 10:35:52.721 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:STAR_PASS2
+Nov-13 10:35:52.721 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:COMBINEBW
+Nov-13 10:35:52.722 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:FEATURE_COUNTS
+Nov-13 10:35:52.723 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:SARTOOLS
+Nov-13 10:35:52.723 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:MULTIQC2
+Nov-13 10:35:52.724 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > RNASEQ:OVERLAP
+Nov-13 10:35:52.725 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Nov-13 10:35:52.726 [main] DEBUG nextflow.Session - Session await
+Nov-13 10:35:53.160 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process RNASEQ:STAR_INDEX > jobId: 6038579; workDir: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/work/12/265940ee65e9d14c979d7fd7b76c15
+Nov-13 10:35:53.164 [Task submitter] INFO  nextflow.Session - [12/265940] Submitted process > RNASEQ:STAR_INDEX
+Nov-13 10:35:53.316 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process RNASEQ:MERGE_FASTQ (merge_fastq) > jobId: 6038580; workDir: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/work/2a/b802898cdada1a032e485691b76fe8
+Nov-13 10:35:53.316 [Task submitter] INFO  nextflow.Session - [2a/b80289] Submitted process > RNASEQ:MERGE_FASTQ (merge_fastq)
+Nov-13 10:35:57.082 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 6038580; id: 2; name: RNASEQ:MERGE_FASTQ (merge_fastq); status: COMPLETED; exit: 0; error: -; workDir: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/work/2a/b802898cdada1a032e485691b76fe8 started: 1731512157079; exited: 2024-11-13T15:35:56.149066538Z; ]
+Nov-13 10:35:57.206 [Task monitor] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'PublishDir' minSize=10; maxSize=10; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Nov-13 10:35:57.331 [Task submitter] DEBUG nextflow.executor.GridTaskHandler - [SLURM] submitted process RNASEQ:INPUT_CHECK:SAMPLESHEET_CHECK (merged_samples.csv) > jobId: 6038581; workDir: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/work/e6/e3bab16cb0428b533a8090b8d2688a
+Nov-13 10:35:57.335 [Task submitter] INFO  nextflow.Session - [e6/e3bab1] Submitted process > RNASEQ:INPUT_CHECK:SAMPLESHEET_CHECK (merged_samples.csv)
+Nov-13 10:36:01.934 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[jobId: 6038581; id: 3; name: RNASEQ:INPUT_CHECK:SAMPLESHEET_CHECK (merged_samples.csv); status: COMPLETED; exit: 0; error: -; workDir: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/work/e6/e3bab16cb0428b533a8090b8d2688a started: 1731512161928; exited: 2024-11-13T15:35:59.894987626Z; ]
+Nov-13 10:40:56.952 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor slurm > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[jobId: 6038579; id: 1; name: RNASEQ:STAR_INDEX; status: RUNNING; exit: -; error: -; workDir: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ-NF/project_ex/work/12/265940ee65e9d14c979d7fd7b76c15 started: 1731512156950; exited: -; ]

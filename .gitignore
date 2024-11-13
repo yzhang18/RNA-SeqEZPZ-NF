@@ -10,3 +10,6 @@ fastq
 !project_ex/*
 **/project_ex/outputs*
 !project_ex_out/*
+**/project_ex/work/*
+**/project_ex/.nextflow/*
+**/project_ex/.nextflow.log.*

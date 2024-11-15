@@ -26,6 +26,7 @@ process STAR_INDEX {
     conda deactivate
 
     source activate samtools_env
+    fasta="${fasta}"
     filename_no_ext=\${fasta%.fa}
     filename_no_ext=\${filename_no_ext%.fasta}
     if [ ! -f \${filename_no_ext}.chrom.sizes ]; then

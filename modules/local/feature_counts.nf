@@ -30,7 +30,7 @@ process FEATURE_COUNTS {
     # --countReadPairs NOT needed when using featureCounts v 2.0.1
     featureCounts -p \
             --countReadPairs \
-            -a /ref/${params.genome}/${gtf} \
+            -a ${gtf} \
             -t exon \
             -g gene_id \
             -T ${task.cpus} \

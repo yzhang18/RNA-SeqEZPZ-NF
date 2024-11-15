@@ -18,7 +18,7 @@ process GENOME_SIZE {
     set -x
 
     read readlength < ${readlength}
-    unique-kmers.py -k \$readlength /ref/${params.genome}/${fasta} &> ./kmers.txt
+    unique-kmers.py -k \$readlength ${fasta} &> ./kmers.txt
     genome_size=\$(tail -n1 ./kmers.txt | cut -f2 -d:)
     echo \$genome_size > gsize.txt
     """

@@ -33,6 +33,7 @@ process STAR_INDEX {
         samtools faidx ${fasta}
     fi
     cut -f1,2 ${fasta}.fai >  \${filename_no_ext}.chrom.sizes
+    cut -f1,2 ${fasta}.fai > genome.chrom.sizes
     conda deactivate
     """ 
 }

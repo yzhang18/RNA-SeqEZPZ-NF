@@ -5,7 +5,7 @@
  */
 process SARTOOLS {
     tag ""
-    label "hi_mem"
+    label "very_hi_mem"
     publishDir params.logdir, mode: "copy", pattern: "sartools.log"
 
     input:

@@ -1399,11 +1399,24 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    path_to_r2_fastq=unlist(r2_fastq))
   print("file.path(projdir,samples.txt)")
   print(file.path(projdir,"samples.txt"))
+  if(file.exists(file.path(projdir,"samples.txt"))){
+   exist.samples.md5 = tools::md5sum(file.path(projdir,"samples.txt"))
+  }
   write.table(paste0("#Groupname\tControlname\tReplicatename\tspikename\temail",
                      "\tpath_to_r1_fastq\tpath_to_r2_fastq"),
-              file=file.path(projdir,"samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE)
-  write.table(df,file=file.path(projdir,"samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE,
+              file=file.path(projdir,"tmp_samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE)
+  write.table(df,file=file.path(projdir,"tmp_samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE,
               append = TRUE)
+  tmp.samples.md5=tools::md5sum(file.path(projdir,"tmp_samples.txt"))
+  # only create samples.txt if the content changes
+  # this is to allow nextflow to resume
+  print("check samples.txt content")
+  print("tmp.samples.md5")
+  print(tmp.samples.md5)
+  print("exist.samples.md5")
+  print(exist.samples.md5)
+  if(!tmp.samples.md5 == exist.samples.md5)
+   file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
  })
  
  observeEvent(input$setup.run.analysis,{
@@ -1474,11 +1487,26 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
     email=email,
     path_to_r1_fastq=unlist(r1_fastq),
     path_to_r2_fastq=unlist(r2_fastq))
+   
+   # only create samples.txt if the content changes
+   # this is to allow nextflow to resume
+      if(file.exists(file.path(projdir,"samples.txt"))){
+    exist.samples.md5 = tools::md5sum(file.path(projdir,"samples.txt"))
+   }
    write.table(paste0("#Groupname\tControlname\tReplicatename\tspikename\temail",
                       "\tpath_to_r1_fastq\tpath_to_r2_fastq"),
-               file=file.path(projdir,"samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE)
-   write.table(df,file=file.path(projdir,"samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE,
+               file=file.path(projdir,"tmp_samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE)
+   write.table(df,file=file.path(projdir,"tmp_samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE,
                append = TRUE)
+   tmp.samples.md5=tools::md5sum(file.path(projdir,"tmp_samples.txt"))
+
+   print("check samples.txt content")
+   print("tmp.samples.md5")
+   print(tmp.samples.md5)
+   print("exist.samples.md5")
+   print(exist.samples.md5)
+   if(!tmp.samples.md5 == exist.samples.md5)
+    file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
   #system("echo 'sbatch --help' > /hostpipe")
   # getting genome options
   if(genome=="other"){
@@ -1552,15 +1580,102 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                 " &> run_rnaseq_full.out' > /hostpipe"))
    }else{
     # create nextflow config
-    if(!genome=="other"){
-     nf.config=paste0("singularity.runOptions = \\\"--bind ",img.dir,"/scripts:/scripts,",
-                      hostprojdir,":/mnt,",img.dir,"/ref:/ref",",/gpfs0:/gpfs0\\\"\"")
-    }else{
-     nf.config=paste0("singularity.runOptions = \\\"--bind ",img.dir,"/scripts:/scripts,",
-                      hostprojdir,":/mnt,/gpfs0:/gpfs0\\\"\"")
+    # read variables defined in nextflow_config_var.config
+    text.nf=readLines("/scripts/nextflow_config_var.config")
+    for (i in seq_along(text.nf)){
+     if(grepl("#",text.nf[i]))
+      assign(strsplit(text.nf[i+1],"=")[[1]][1],strsplit(text.nf[i+1],"=")[[1]][2])
+    }
+    # convert time to nextflow format
+    nf.setup.time=""
+    tmp.setup.time=unlist(strsplit(input$setup.time,"-"))
+    if(length(tmp.setup.time) > 1){
+     nf.setup.time=paste0(tmp.setup.time[1],"d")
+     tmp.setup.time=tmp.setup.time[2]
+    }
+     tmp.setup.time=unlist(strsplit(tmp.setup.time,":"))
+     # pad zeros if not defined
+     while(length(tmp.setup.time)<3){
+      tmp.setup.time[length(tmp.setup.time)+1]=0
      }
-    cmd=paste0("echo 'echo \"",nf.config," >> ",img.dir,"/nextflow.config",
-               " && ml load nextflow/22.10.6.5843 && nextflow run -resume ",img.dir,
+    nf.setup.time=paste(nf.setup.time,
+                         paste0(tmp.setup.time,c('h','m', 's'),collapse=" "))
+     nf.setup.time=trimws(nf.setup.time)
+     print("email")
+     print(email)
+     if(email=="NA")
+      email=""
+    nf.config=paste0(
+    "params {
+      help= false
+      version = false
+      monochrome_logs= false
+    }\n\n",
+    "process {
+      // container path defined as absolute path to <img.dir> rnaseq-pipe-container.sif
+      container = 'file:///",img.dir,"/rnaseq-pipe-container.sif'
+      time = '",nf.setup.time,"'
+      queue = '",general_partition,"'
+      cpus = 1
+      email = '",email,"'
+      withLabel: hi_mem {
+         queue= '",high_mem_partition,"'
+         memory= '",high_mem,"g'
+      }
+      
+      withLabel: TRIM_FASTQC {
+         cpus = ",input$setup.ncpus.trim,"
+      }
+      
+      withLabel: short_time {
+         time = '30min'
+      }
+      
+      withLabel: hi_cpus {
+         cpus = 15
+      }
+      
+      // used for star index
+      withLabel: star {
+         queue = '",high_mem_partition,"'
+         cpus = ",input$setup.ncpus.star,"
+      }
+      
+      withLabel: very_hi_mem {
+         queue = '",high_mem_partition,"'  
+         memory = '",very_high_mem,"g'
+      }
+      
+      withLabel: hi_mem_cpus {
+        queue = '",high_mem_partition,"'
+        cpus = ",input$setup.ncpus.star,"
+    }
+
+    }
+    singularity.enabled = true
+    singularity.autoMounts = true
+    
+    process.executor = '",executor,"'
+    dag.overwrite = true
+    report.overwrite = true
+    
+    ")
+    if(!genome=="other"){
+     nf.config=paste0(nf.config,"singularity.runOptions = \"--bind ",img.dir,"/scripts:/scripts,",
+                      hostprojdir,":/mnt,",img.dir,"/ref:/ref",",/gpfs0:/gpfs0\"")
+    }else{
+     nf.config=paste0(nf.config,'singularity.runOptions = \"--bind ',img.dir,'/scripts:/scripts,',
+                      hostprojdir,':/mnt,/gpfs0:/gpfs0\"')
+    }
+    # had to specify [1] don't know why
+    print("nf.config[1]")
+    print(nf.config[1])
+    writeLines(nf.config[1],"/img_dir/nextflow.config")
+    # cmd=paste0("echo 'echo \"",nf.config," >> ",img.dir,"/nextflow.config",
+    #            " && ml load nextflow/22.10.6.5843 && nextflow run -resume ",img.dir,
+    #            "/main.nf -ansi-log false --inputdir=",hostprojdir," ",options,
+    #            " &> run_rnaseq_full.out' > /hostpipe")
+    cmd=paste0("echo '",load_nextflow," && nextflow run -resume ",img.dir,
                "/main.nf -ansi-log false --inputdir=",hostprojdir," ",options,
                " &> run_rnaseq_full.out' > /hostpipe")
     print(cmd)
@@ -1575,7 +1690,22 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   projdir <- react.setup.proj.dir()
   # copy log (i.e. *.out) files to log folder to view
   files.to.copy <- list.files(projdir,pattern="\\.out$",full.names=TRUE)
-  file.copy.msg=file.copy(files.to.copy,paste0(projdir,"outputs/logs"),overwrite=TRUE)
+  print("files.to.copy")
+  print(files.to.copy)
+  print("projdir/outputs/logs")
+  print(paste0(projdir,"outputs/logs"))
+  # Check if the logs directory exists; if not, create it
+  dir_path=paste0(projdir,"outputs/logs")
+  if (!dir.exists(dir_path)) {
+   dir.create(dir_path, recursive = TRUE)
+   cat("Directory created:", dir_path, "\n")
+  } else {
+   cat("Directory already exists:", dir_path, "\n")
+  }
+  #file.copy.msg=file.copy(files.to.copy,paste0(projdir,"outputs/logs"),overwrite=TRUE)
+  # modified to use sapply to avoid error when copying multiple files
+  file.copy.msg=sapply(files.to.copy, 
+                       function(x) file.copy(x,paste0(projdir,"outputs/logs"),overwrite = TRUE))
   files=list.files(paste0(projdir,"outputs/logs"),pattern = "\\.txt$|\\.out$",full.names = TRUE)
   # Sort files, placing filenames starting with "run_" at the top
   sorted_files <- c(sort(files[startsWith(files, "run_")]), sort(files[!startsWith(files, "run_")]))

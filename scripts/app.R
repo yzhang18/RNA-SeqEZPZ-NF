@@ -2,7 +2,7 @@
 
 # remove user library path to avoid confusion
 if(length(.libPaths())>1) .libPaths(.libPaths()[-1])
-run_nextflow=TRUE
+run_nextflow <- TRUE
 library(shiny)
 library(GeneOverlap)
 library(gridExtra)
@@ -869,6 +869,7 @@ server <- function(input, output,session) {
  shinyjs::disable(selector = 'a[data-value="Three Groups"')
  #shinyjs::disable(selector = 'a[data-value="Plots"')
 
+
  #write.table(isolate(session$clientData$url_port),file="/mnt/outputs/port.txt",
  #	quote=FALSE,row.names=FALSE,col.names=FALSE)
  
@@ -1524,7 +1525,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
    }
    options=paste0("genome=",genome.name," ref_fa=",hostfa," ref_gtf=",hostgtf)
    if(run_nextflow)
-	  options=paste0("--genome=",genome.name,"--fasta=",hostfa,"--gtf=",hostgtf)
+	  options=paste0("--genome=",genome.name," --fasta=",hostfa," --gtf=",hostgtf)
   }else{
    options=paste0("genome=",genome)
    if(run_nextflow){
@@ -1676,8 +1677,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
     #            "/main.nf -ansi-log false --inputdir=",hostprojdir," ",options,
     #            " &> run_rnaseq_full.out' > /hostpipe")
     cmd=paste0("echo '",load_nextflow," && nextflow run -resume ",img.dir,
-               "/main.nf -ansi-log false --inputdir=",hostprojdir," ",options,
-               " &> run_rnaseq_full.out' > /hostpipe")
+               "/main.nf -ansi-log false -with-report run_rnaseq_full.html --inputdir=",
+               hostprojdir," ",options," &> run_rnaseq_full.out' > /hostpipe")
     print(cmd)
     system(cmd)
    }
@@ -1761,6 +1762,30 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  output$logtab.fail.log.content <- renderPrint({
   shiny::req(input$logtab.fail.log.path!="")
   react.logtab.fail.log.content()
+ })
+ 
+ # Observe the global variable and add/remove a tab accordingly
+ observe({
+  if (run_nextflow) {
+   # Add a new tab if the global variable is TRUE
+   insertTab(inputId = "tabset",
+             tabPanel(id="nfreporttab", "Nextflow report", fluid=TRUE,
+                      htmlOutput("nfreport")
+             ),
+             target = "Log",  # Insert the tab after "Log Tab"
+             position = "after")
+  } 
+ })
+ 
+ #### Nextflow report tab #####
+ output$nfreport <- renderUI({
+  projdir <- react.setup.proj.dir()
+  # path for nfreport html to be referred to in iframe
+  addResourcePath("nfreport", projdir)
+  tags$iframe(seamless="seamless",
+              src="nfreport/run_rnaseq_full.html",
+              width="100%",
+              height="1000")
  })
  
  #### QC tab #####

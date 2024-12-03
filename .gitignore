@@ -1,4 +1,4 @@
-
+nextflow.config
 ref
 *\.sif
 **/outputs*

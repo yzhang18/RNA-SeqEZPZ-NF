@@ -26,7 +26,6 @@ include { COMBINEBW     } from '../modules/local/combinebw'
 include { FEATURE_COUNTS} from '../modules/local/feature_counts'
 include { SARTOOLS      } from '../modules/local/sartools'
 include { GET_SAMPLE    } from '../modules/local/get_sample'
-include { OVERLAP       } from '../modules/local/overlap'
 
 
 /*
@@ -158,13 +157,6 @@ workflow RNASEQ {
      * rerun MULTIQC at the end of the pipeline
      */
     MULTIQC2 (ch_log)
-    ch_log = MULTIQC2.out.log
-
-
-    /*
-     * MODULE: OVERLAP
-     */ 
-    OVERLAP (ch_log)
 
 }
 

@@ -4,13 +4,13 @@
  *
  */
 process MULTIQC2 {
-    publishDir params.logdir, mode: "copy", pattern: "multiqc2.log"
+    publishDir params.logdir, mode: "copy", pattern: "multiqc2.out"
 
     input:
     path("*.log")
 
     output:
-    path ("multiqc2.log"), emit: log
+    path ("multiqc2.out"), emit: log
 
     script:
     """
@@ -24,7 +24,7 @@ process MULTIQC2 {
     conda deactivate
 
     cd \${log_dir}
-    cat .command.log > multiqc2.log
+    cat .command.log > multiqc2.out
     """
 }
 

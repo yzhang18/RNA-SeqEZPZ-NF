@@ -7,7 +7,7 @@ process STAR_PASS2 {
     label "hi_mem_cpus"
     publishDir params.star_pass2, mode: "copy", pattern: "*{out,tab,txt,summary,STARgenome}"
     publishDir params.bw_files, mode: "copy", pattern: "*.bw"
-    publishDir params.logdir, mode: "copy", pattern: "star_pass2_*.log"
+    publishDir params.logdir, mode: "copy", pattern: "star_pass2_*.out"
 
     input:
     tuple val(meta), path(reads)
@@ -24,7 +24,7 @@ process STAR_PASS2 {
     tuple val(meta), path("*.tab")                   , optional:true, emit: tab
     tuple val(meta), path("*__STARgenome")           , emit: stargenome
     tuple val(meta), path("*_norm.bw")               , emit: bw
-    path("star_pass2_*.log")                         , emit: log
+    path("star_pass2_*.out")                         , emit: log
 
 
 
@@ -70,7 +70,7 @@ process STAR_PASS2 {
     set +x
     conda deactivate
 
-    cat .command.log > star_pass2_${prefix}.log
+    cat .command.log > star_pass2_${prefix}.out
 
     """
 }

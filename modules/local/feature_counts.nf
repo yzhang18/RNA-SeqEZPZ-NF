@@ -7,7 +7,7 @@ process FEATURE_COUNTS {
     tag "$meta.id"
     label "hi_cpus"
     publishDir params.star_pass2, mode: "copy", pattern: "*{counts.txt,counts.txt.summary}"
-    publishDir params.logdir, mode: "copy", pattern: "feature_counts_*.log"
+    publishDir params.logdir, mode: "copy", pattern: "feature_counts_*.out"
 
     input:
     tuple val(meta), path(bam_sorted_file)
@@ -16,7 +16,7 @@ process FEATURE_COUNTS {
     output:
     tuple val(meta), path("*_counts.txt")        , emit: counts
     tuple val(meta), path("*_counts.txt.summary"), emit: counts_summary
-    path("feature_counts_*.log")                 , emit: log
+    path("feature_counts_*.out")                 , emit: log
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}" 
@@ -39,7 +39,7 @@ process FEATURE_COUNTS {
     set +x
     conda deactivate
 
-    cat .command.log > feature_counts_${prefix}.log
+    cat .command.log > feature_counts_${prefix}.out
     """
 }
 

@@ -6,7 +6,7 @@
 process COMBINEBW {
     tag "$groupid"
     publishDir params.bw_files, mode:"copy", pattern: ""
-    publishDir params.logdir, mode: "copy", pattern: "combinebw_*.log"
+    publishDir params.logdir, mode: "copy", pattern: "combinebw_*.out"
 
     input:
     path (chr)
@@ -14,7 +14,7 @@ process COMBINEBW {
 
     output:
     tuple val(groupid), path("*_comb.bw"), emit: comb_bw
-    path("combinebw_*.log")             , emit: log
+    path("combinebw_*.out")             , emit: log
 
     script:
     """
@@ -25,7 +25,7 @@ process COMBINEBW {
     set +x
     conda deactivate
 
-    cat .command.log > combinebw_${groupid}.log
+    cat .command.log > combinebw_${groupid}.out
     """
 }
 

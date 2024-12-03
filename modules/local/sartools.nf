@@ -6,13 +6,13 @@
 process SARTOOLS {
     tag ""
     label "hi_mem"
-    publishDir params.logdir, mode: "copy", pattern: "sartools.log"
+    publishDir params.logdir, mode: "copy", pattern: "sartools.out"
 
     input:
     path("*_counts.txt")
 
     output:
-    path("sartools.log"), emit: log 
+    path("sartools.out"), emit: log 
 
 
     script:
@@ -33,7 +33,7 @@ process SARTOOLS {
     #set -eu
 
     cd \${log_dir}
-    cat .command.log > sartools.log
+    cat .command.log > sartools.out
     """
 }
 

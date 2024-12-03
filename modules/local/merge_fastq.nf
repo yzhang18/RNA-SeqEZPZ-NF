@@ -6,7 +6,7 @@ process MERGE_FASTQ {
     tag "merge_fastq"
     publishDir params.merged_fastq,  mode: "copy", pattern: "*.{fastq.gz}"
     publishDir params.sampledir,  mode: "copy", pattern: "merged_samples.csv"
-    publishDir params.logdir, mode: "copy", pattern: "merge_fastq.log"
+    publishDir params.logdir, mode: "copy", pattern: "merge_fastq.out"
 
 
     input:
@@ -14,7 +14,7 @@ process MERGE_FASTQ {
 
     output:
     path("*.fastq.gz"),                 emit: reads
-    path("merge_fastq.log"),            emit: log
+    path("merge_fastq.out"),            emit: log
     path("merged_samples.csv"),          emit: ch_merged_samples
 
 
@@ -38,7 +38,7 @@ process MERGE_FASTQ {
     done < samples_tmp.txt  >> merged_samples.csv
    
  
-    cat .command.log > merge_fastq.log
+    cat .command.log > merge_fastq.out
     """
 }
 

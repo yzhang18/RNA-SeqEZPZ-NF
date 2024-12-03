@@ -7,7 +7,7 @@ process TRIM_FASTQC {
     tag "$meta.id"
     publishDir params.trim,  mode: "copy", pattern: "*.{fq.gz,txt}"
     publishDir params.fastqc, mode: "copy", pattern: "*.{html,zip}"
-    publishDir params.logdir, mode: "copy", pattern: "trim_fastqc_*.log"
+    publishDir params.logdir, mode: "copy", pattern: "trim_fastqc_*.out"
 
     input:
     tuple val(meta), path(reads)
@@ -19,7 +19,7 @@ process TRIM_FASTQC {
     tuple val(meta), path("*report.txt"),    emit: report
     tuple val(meta), path("*.zip"),          emit: zip
     tuple val(meta), path("*.html"),         emit: html
-    path("trim_fastqc_*.log"),            emit: log
+    path("trim_fastqc_*.out"),            emit: log
 
 
     script:
@@ -35,7 +35,7 @@ process TRIM_FASTQC {
     conda deactivate
     set +x
 
-    cat .command.log > trim_fastqc_${prefix}.log
+    cat .command.log > trim_fastqc_${prefix}.out
     """
 }
 

@@ -6,7 +6,7 @@
 process STAR_PASS1 {
     tag "$meta.id"
     label "hi_mem_cpus"
-    publishDir params.logdir, mode: "copy", pattern: "star_pass1_*.log"
+    publishDir params.logdir, mode: "copy", pattern: "star_pass1_*.out"
 
 
     input:
@@ -21,7 +21,7 @@ process STAR_PASS1 {
     tuple val(meta), path("*Log.progress.out"), emit: log_progress
     tuple val(meta), path("*.tab")            , optional:true, emit: tab
     path("*.sjdb")                            , optional:true, emit: sjdb
-    path("star_pass1_*.log")                  , emit: log
+    path("star_pass1_*.out")                  , emit: log
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
@@ -39,7 +39,7 @@ process STAR_PASS1 {
     set +x
     conda deactivate
 
-    cat .command.log > star_pass1_${prefix}.log
+    cat .command.log > star_pass1_${prefix}.out
     """
 }   
 

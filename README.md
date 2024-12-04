@@ -1,5 +1,6 @@
-# RNA-SeqEZPZ-NF: Nextflow Pipeline for RNA-SeqEZPZ 
-## - A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations
+# RNA-SeqEZPZ-NF
+## Nextflow Pipeline for RNA-SeqEZPZ 
+### A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations
 <br />
 <br />
 

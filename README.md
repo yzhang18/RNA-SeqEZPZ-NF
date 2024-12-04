@@ -1,20 +1,18 @@
-# RNA-SeqEZPZ: A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations
+# RNA-SeqEZPZ-NF: Nextflow pipeline for RNA-SeqEZPZ - A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations
 <br />
 <br />
 
-RNA-SeqEZPZ is a pipeline to run analysis of RNA-Seq experiments from raw FASTQ files all the way to differential genes analysis.
-The pipeline is accessible through a graphical user interface implemented using a Shiny app and features interactive plots.
-Advanced users have the ability to customize the scripts provided with the pipeline.
-This pipeline is designed to run on an HPC cluster.
+RNA-SeqEZPZ-NF is another implementation of [RNA-SeqEZPZ](https://github.com/cxtaslim/RNA-SeqEZPZ). RNA-SeqEZPZ-NF uses the same user interface as RNA-SeqEZPZ and runs the same pipeline, but runs the pipeline implemented by [Nextflow](https://www.nextflow.io/). This pipeline is currently tested on HPC cluster with SLURM scheduler. Advanced users have the ability to customize the scripts to run with other schedulers.
+
 <br />
 ## Installation
-In order to use the pipeline, you will need to have Singularity installed in your HPC. See installation instruction at https://docs.sylabs.io/guides/3.0/user-guide/installation.html
+In order to use the pipeline, you will need to have Singularity and Nextflow installed in your HPC. See installation instructions at https://docs.sylabs.io/guides/3.0/user-guide/installation.html and https://www.nextflow.io/docs/latest/install.html
 
-The following step-by-step is for a system with SLURM scheduler and it will run bash scripts. If you don't have SLURM or if you prefer to use the Nextflow version of the pipeline, please go to https://github.com/yzhang18/rnaseq
+The following step-by-step is for a system with SLURM scheduler and it will run bash scripts. If you don't have SLURM or if you prefer to use the Nextflow version of the pipeline, please go to [https://github.com/yzhang18/RNA-SeqEZPZ-NF](https://github.com/yzhang18/RNA-SeqEZPZ-NF)
 
 1. Download the code/scripts:
    ```
-   git clone https://github.com/cxtaslim/RNA-SeqEZPZ.git
+   git clone https://github.com/yzhang18/RNA-SeqEZPZ-NF.git
    ```
    This step will copy all the required code into your local directory.
 2. Change the SLURM setting to reflect your HPC settings in your local copy of 

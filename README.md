@@ -1,4 +1,4 @@
-# RNA-SeqEZPZ-NF: Nextflow pipeline for RNA-SeqEZPZ - A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations
+# RNA-SeqEZPZ-NF: Nextflow Pipeline for RNA-SeqEZPZ - A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations
 <br />
 <br />
 
@@ -9,21 +9,21 @@ RNA-SeqEZPZ-NF is another implementation of [RNA-SeqEZPZ](https://github.com/cxt
 
 In order to use the pipeline, you will need to have Singularity and Nextflow installed in your HPC. See installation instructions at https://docs.sylabs.io/guides/3.0/user-guide/installation.html and https://www.nextflow.io/docs/latest/install.html
 
-The following step-by-step is for a system with SLURM scheduler and it will run bash scripts. If you don't have SLURM or if you prefer to use the Nextflow version of the pipeline, please go to [https://github.com/yzhang18/RNA-SeqEZPZ-NF](https://github.com/yzhang18/RNA-SeqEZPZ-NF)
+The following step-by-step is for a system with SLURM scheduler. If you'd like to use the version of the pipeline without Nextflow, please go to [https://github.com/cxtaslim/RNA-SeqEZPZ](https://github.com/cxtaslim/RNA-SeqEZPZ)
 
 1. Download the code/scripts:
    ```
    git clone https://github.com/yzhang18/RNA-SeqEZPZ-NF.git
    ```
    This step will copy all the required code into your local directory.
-2. Change the SLURM setting to reflect your HPC settings in your local copy of 
+2. Change the configuration to reflect the Nextflow and HPC settings in your local copy of 
 
-   ```RNA-SeqEZPZ/scripts/slurm_config_var.sh```
+   ```RNA-SeqEZPZ/scripts/nextflow_config_var.config```
 
-4. Go to the ```RNA-SeqEZPZ``` directory and download the singularity image:
+4. Go to the ```RNA-SeqEZPZ-NF``` directory and download the singularity image:
    ```
-   # go to RNA-SeqEZPZ directory
-   cd RNA-SeqEZPZ
+   # go to RNA-SeqEZPZ-NF directory
+   cd RNA-SeqEZPZ-NF
    # download the singularity image and save as rnaseq-pipe-container.sif
    singularity pull --name rnaseq-pipe-container.sif library://cxtaslim/pipelines/rna-seqezpz:latest
    ```
@@ -33,16 +33,16 @@ The following step-by-step is for a system with SLURM scheduler and it will run 
 ## Downloading reference files
 In order to run the pipeline, you will need to download reference files.
 These are the steps to get human hg19 references to run this pipeline.
-1. Go to ```RNA-SeqEZPZ``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
+1. Go to ```RNA-SeqEZPZ-NF``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
    ```
-   # go to RNA-SeqEZPZ directory. Only do this if you haven't done "cd RNA-SeqEZPZ" before
-   cd RNA-SeqEZPZ
-   # create a ref directory inside RNA-SeqEZPZ and a sub-directory called hg19 under ref
+   # go to RNA-SeqEZPZ-NF directory. Only do this if you haven't done "cd RNA-SeqEZPZ-NF" before
+   cd RNA-SeqEZPZ-NF
+   # create a ref directory inside RNA-SeqEZPZ-NF and a sub-directory called hg19 under ref
    mkdir -p ref/hg19
    ```
 3. Go to the directory created in step 1 and download hg19 fasta file to this directory
    ```
-   # go to RNA-SeqEZPZ/ref/hg19 directory
+   # go to RNA-SeqEZPZ-NF/ref/hg19 directory
    cd ref/hg19
    # download and unzip the fasta file from Ensembl
    wget -O - https://ftp.ensembl.org/pub/grch37/current/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz | gunzip -c > Homo_sapiens.GRCh37.dna.primary_assembly.fa
@@ -52,14 +52,14 @@ These are the steps to get human hg19 references to run this pipeline.
    # download and unzip the gtf file from Ensembl
    wget -O - https://ftp.ensembl.org/pub/grch37/current/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz | gunzip -c > Homo_sapiens.GRCh37.87.gtf
    ```
-5. Now, you should have ```Homo_sapiens.GRCh37.dna.primary_assembly.fa``` and ```Homo_sapiens.GRCh37.87.gtf``` inside ```RNA-SeqEZPZ/ref/hg19```
+5. Now, you should have ```Homo_sapiens.GRCh37.dna.primary_assembly.fa``` and ```Homo_sapiens.GRCh37.87.gtf``` inside ```RNA-SeqEZPZ-NF/ref/hg19```
    ```
    # list the files
    ls -1
    ```
    The above command should show you the fasta and gtf files.
    
-**Similarly for hg38**, the foldername MUST be ```ref/hg38``` and placed under ```RNA-SeqEZPZ```
+**Similarly for hg38**, the foldername MUST be ```ref/hg38``` and placed under ```RNA-SeqEZPZ-NF```
 
 ## Tips on downloading other references
 1. Make sure both gtf and fasta files have the same chromosome names.
@@ -67,10 +67,10 @@ These are the steps to get human hg19 references to run this pipeline.
 3. Please place the fasta file inside a folder with <genome_name>.
 
 ## Running test dataset
-1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:
+1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ-NF``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:
 ```
-   # go to RNA-SeqEZPZ folder
-   # if you are currently in ref/hg19 folder go up to RNA-SeqEZPZ folder
+   # go to RNA-SeqEZPZ-NF folder
+   # if you are currently in ref/hg19 folder go up to RNA-SeqEZPZ-NF folder
    cd ../..
    # run the user interface
    bash scripts/run_shiny_analysis.sh filepath=project_ex
@@ -139,7 +139,7 @@ These are the steps to get human hg19 references to run this pipeline.
 11. [project_ex_out](project_ex_out) contains all the outputs automatically generated by the pipeline.
 
 Since test dataset provided is a small dataset that are provided to quickly test the installation of the pipeline, below we provided screenshots of the ```plots``` tab
-which were done on the full example dataset to illustrate the analysis that can be done on ```RNA-SeqEZPZ```.
+which were done on the full example dataset to illustrate the analysis that can be done on ```RNA-SeqEZPZ-NF```.
 
 Example of table feature where you can search by gene name and get its log Fold-Change, mean of count difference, and whether it is significantly up-regulated, down-regulated or not significant (NS).
 You can adjust the significance cut-offs then export the gene list with adjusted significance cut-offs.

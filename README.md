@@ -7,8 +7,9 @@
 RNA-SeqEZPZ-NF is another implementation of [RNA-SeqEZPZ](https://github.com/cxtaslim/RNA-SeqEZPZ). RNA-SeqEZPZ-NF uses the same user interface as RNA-SeqEZPZ and runs the same pipeline, but runs the pipeline implemented by [Nextflow](https://www.nextflow.io/). This pipeline is currently tested on HPC cluster with SLURM scheduler. Advanced users have the ability to customize the scripts to run with other schedulers.
 
 <br />
+
 ## Installation
-<br />
+
 In order to use the pipeline, you will need to have Singularity and Nextflow installed in your HPC. See installation instructions at https://docs.sylabs.io/guides/3.0/user-guide/installation.html and https://www.nextflow.io/docs/latest/install.html
 
 The following step-by-step is for a system with SLURM scheduler. If you'd like to use the version of the pipeline without Nextflow, please go to [https://github.com/cxtaslim/RNA-SeqEZPZ](https://github.com/cxtaslim/RNA-SeqEZPZ)

@@ -21,7 +21,7 @@ params.input = "$params.inputdir/samples.txt"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 params.outdir = "$params.inputdir"
-params.star_index = "$params.outdir/outputs"
+params.star_index = "$params.outdir"
 params.merged_fastq = "$params.outdir/outputs/merged_fastq"
 params.trim = "$params.outdir/outputs/trim"
 params.fastqc = "$params.outdir/outputs/fastqc_rslt"

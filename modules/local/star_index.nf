@@ -4,6 +4,7 @@
  */
 process STAR_INDEX {
     label "star"
+    publishDir params.logdir, mode: "copy", pattern: "star_index.out"
     //publishDir params.star_index, mode: "copy", pattern: "STAR_index"
 
     input:
@@ -13,11 +14,11 @@ process STAR_INDEX {
     output:
     path ("genome.chrom.sizes"), emit: chr
     path ("STAR_index"), emit: index
+    path ("star_index.out"), emit: log
 
     script:
     """
-
-    set -x
+    set -x 
 
     # Set the bash variable fasta.
     fasta=${fasta}
@@ -70,6 +71,8 @@ process STAR_INDEX {
     fi
     ln -s \${filename_no_ext}.chrom.sizes genome.chrom.sizes
     conda deactivate
+    
+    cat .command.log > star_index.out
     """ 
 }
 

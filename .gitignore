@@ -14,3 +14,4 @@ fastq
 **/project_ex/.nextflow/*
 **/project_ex/.nextflow.log.*
 nextflow.config
+project_1/

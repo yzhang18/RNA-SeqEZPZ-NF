@@ -19,25 +19,36 @@ process STAR_INDEX {
 
     set -x
 
-    # If STAR_index/ folder is already built and available, skip building it. 
-    if [ -d "/ref/${params.genome}/STAR_index" ]; then
-        ln -s ${params.inputdir}/../ref/${params.genome}/STAR_index STAR_index
+    # Set the bash variable fasta.
+    fasta=${fasta}
 
-    elif [ -d "${params.star_index}/STAR_index" ]; then
-        ln -s ${params.star_index}/STAR_index STAR_index
+    # Get the folder where the fasta file is.
+    fasta_dir=\$(dirname \${fasta})
 
-    elif [ -w "/ref" ] && [ -w "/ref/${params.genome}" ]; then
-        # If /ref and /ref/${params.genome} folders are writable, build STAR_index and copy there
-        star_index="${params.inputdir}/../ref/${params.genome}/STAR_index"
+    # The first location where STAR_index could be.
+    star_index_1=\${fasta_dir}/${params.genome}/STAR_index
 
-    else 
-        star_index="${params.star_index}/STAR_index"
+    # The second location where STAR_index could be
+    star_index_2=${params.inputdir}/${params.genome}/STAR_index
+
+    # The variable to hold the location of STAR_index if it's not built.
+    star_index=
+
+    # If STAR_index/ folder is already built and available, just copy it here.
+    if [ -d \${star_index_1} ] && [ -z \$(ls -A \${star_index_1} >/dev/null 2>&1) ]; then
+        ln -s \${star_index_1} STAR_index
+    elif [ -d \${star_index_2} ]; then
+        ln -s \${star_index_2} STAR_index
     fi
 
-    echo \${star_index}
-
- 
+    # If STAR_index isn't built, build it in its location and then copy it here. 
     if [ ! -L STAR_index ]; then 
+        if [ -w \${fasta_dir} ]; then
+            star_index=\${star_index_1}
+        else 
+            star_index=\${star_index_2}
+        fi  
+
         source activate rna_env
         STAR --runMode genomeGenerate \
             --genomeDir \${star_index} \
@@ -46,11 +57,11 @@ process STAR_INDEX {
             --genomeFastaFiles ${fasta} \
             --sjdbOverhang 100 
         conda deactivate
+    
         ln -s \${star_index} STAR_index
     fi
 
     source activate samtools_env
-    fasta="${fasta}"
     filename_no_ext=\${fasta%.fa}
     filename_no_ext=\${filename_no_ext%.fasta}
     if [ ! -f \${filename_no_ext}.chrom.sizes ]; then

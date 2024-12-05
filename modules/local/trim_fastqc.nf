@@ -5,6 +5,7 @@
  */
 process TRIM_FASTQC {
     tag "$meta.id"
+    label TRIM_FASTQC
     publishDir params.trim,  mode: "copy", pattern: "*.{fq.gz,txt}"
     publishDir params.fastqc, mode: "copy", pattern: "*.{html,zip}"
     publishDir params.logdir, mode: "copy", pattern: "trim_fastqc_*.out"

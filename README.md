@@ -19,9 +19,12 @@ The following step-by-step is for a system with SLURM scheduler, Singularity and
    git clone https://github.com/yzhang18/RNA-SeqEZPZ-NF.git
    ```
    This step will copy all the required code into your local directory.
-2. Change the configuration to reflect the Nextflow and HPC settings in your local copy of 
+2. There are only two files that you need to make changes to reflect the settings in your local copy of the code.
 
-   ```RNA-SeqEZPZ/scripts/nextflow_config_var.config```
+   ```
+   RNA-SeqEZPZ/main.nf
+   RNA-SeqEZPZ/scripts/nextflow_config_var.config
+   ```
 
 4. Go to the ```RNA-SeqEZPZ-NF``` directory and download the singularity image:
    ```

@@ -19,11 +19,12 @@ The following step-by-step is for a system with SLURM scheduler, Singularity and
    git clone https://github.com/yzhang18/RNA-SeqEZPZ-NF.git
    ```
    This step will copy all the required code into your local directory.
-2. There are two files that you can make changes to reflect the settings in your local copy of the code.
+2. There are three files that you can make changes to reflect the settings in your local copy of the code.
 
    ```
-   RNA-SeqEZPZ/main.nf
-   RNA-SeqEZPZ/scripts/nextflow_config_var.config
+   RNA-SeqEZPZ-NF/main.nf  ## Set up your input, output, genome file, gtf file, etc..
+   RNA-SeqEZPZ-NF/scripts/nextflow_config_var.config  ## Set up the variables for your local scheduler.
+   RNA-SeqEZPZ-NF/project_ex/nextflow.config  ## Set up the resource limit for processes. This is optional, since most parameters are set up in RNA-Seq-EZPZ-NF/nextflow.config, which is generated automatically by the pipeline. 
    ```
 
 4. Go to the ```RNA-SeqEZPZ-NF``` directory and download the singularity image:

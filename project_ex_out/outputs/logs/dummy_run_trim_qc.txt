@@ -1,7 +1,0 @@
-Job Statistics for 5749631:
-           JobID       User               Start                 End    Elapsed     MaxRSS   TotalCPU      State Exit        NodeList                                  ReqTRES 
----------------- ---------- ------------------- ------------------- ---------- ---------- ---------- ---------- ---- --------------- ---------------------------------------- 
-         5749631     cxt050 2024-07-31T12:21:25 2024-07-31T12:21:26   00:00:01             00:00.012  COMPLETED  0:0   r1pl-hpcf-n03         billing=1,cpu=1,mem=7720M,node=1 
-   5749631.batch            2024-07-31T12:21:25 2024-07-31T12:21:26   00:00:01          0  00:00.010  COMPLETED  0:0   r1pl-hpcf-n03                                          
-  5749631.extern            2024-07-31T12:21:25 2024-07-31T12:21:26   00:00:01          0  00:00.002  COMPLETED  0:0   r1pl-hpcf-n03                                          
-CPU Efficiency: 0.00% of 00:00:01 core-walltime

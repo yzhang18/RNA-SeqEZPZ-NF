@@ -1,7 +1,0 @@
-Sample	Total	Assigned	Unassigned_Unmapped	Unassigned_Read_Type	Unassigned_Singleton	Unassigned_MappingQuality	Unassigned_Chimera	Unassigned_FragmentLength	Unassigned_Duplicate	Unassigned_MultiMapping	Unassigned_Secondary	Unassigned_NonSplit	Unassigned_NoFeatures	Unassigned_Overlapping_Length	Unassigned_Ambiguity	percent_assigned
-iEF_EE4_rep1	22582	12793	0	0	0	0	0	0	0	5899	0	0	3051	0	839	56.651315206801875
-iEF_EE4_rep2	22562	13707	0	0	0	0	0	0	0	5967	0	0	2050	0	838	60.75259285524333
-iEF_EF_rep1	22849	13143	0	0	0	0	0	0	0	6515	0	0	2399	0	792	57.52111689789488
-iEF_EF_rep2	22388	14185	0	0	0	0	0	0	0	5672	0	0	1685	0	846	63.35983562622833
-iEF_empty_rep1	22161	12846	0	0	0	0	0	0	0	5308	0	0	3255	0	752	57.96669825368891
-iEF_empty_rep2	22044	13604	0	0	0	0	0	0	0	5149	0	0	2576	0	715	61.71293776084196

@@ -1,7 +1,0 @@
-Job Statistics for 5749664:
-           JobID       User               Start                 End    Elapsed     MaxRSS   TotalCPU      State Exit        NodeList                                  ReqTRES 
----------------- ---------- ------------------- ------------------- ---------- ---------- ---------- ---------- ---- --------------- ---------------------------------------- 
-         5749664     cxt050 2024-07-31T12:34:24 2024-07-31T12:34:26   00:00:02             00:00.021  COMPLETED  0:0   r1pl-hpcf-n10         billing=1,cpu=1,mem=7720M,node=1 
-   5749664.batch            2024-07-31T12:34:24 2024-07-31T12:34:26   00:00:02          0  00:00.017  COMPLETED  0:0   r1pl-hpcf-n10                                          
-  5749664.extern            2024-07-31T12:34:24 2024-07-31T12:34:26   00:00:02          0  00:00.003  COMPLETED  0:0   r1pl-hpcf-n10                                          
-CPU Efficiency: 0.00% of 00:00:02 core-walltime

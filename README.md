@@ -19,7 +19,7 @@ The following step-by-step is for a system with SLURM scheduler, Singularity and
    git clone https://github.com/yzhang18/RNA-SeqEZPZ-NF.git
    ```
    This step will copy all the required code into your local directory.
-2. There are only two files that you need to make changes to reflect the settings in your local copy of the code.
+2. There are two files that you can make changes to reflect the settings in your local copy of the code.
 
    ```
    RNA-SeqEZPZ/main.nf
@@ -163,6 +163,9 @@ Example of upset plot showing overlaps of genes regulated by EWSR1::FLI1 (iEF_EF
 
 Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs iEF_empty) and genes down-/up-regulated by EWSR1::ETV4 (iEF_EE4 vs iEF_empty)
 ![pathway_example](assets/pathway_example.png)
+
+12. The pipeline provides a "Nextflow Pipeline Report" after the pipeline is completed. It provides information about the resource utilization of the pipeline and each step.
+![Nextflow Pipeline Report Summary](assets/nextflow_pipeline_report.png)
 
 ## References
 

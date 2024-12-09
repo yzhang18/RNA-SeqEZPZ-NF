@@ -6,7 +6,7 @@ RNA-SeqEZPZ is a pipeline to run analysis of RNA-Seq experiments from raw FASTQ 
 The pipeline is accessible through a graphical user interface implemented using a Shiny app and features interactive plots.
 Advanced users have the ability to customize the scripts provided with the pipeline.
 This pipeline is designed to run on an HPC cluster.
-Please cite [[1]] if you are using this pipeline for a publication.
+Please cite [[1](#1) if you are using this pipeline for a publication.
 
 <br />
 
@@ -215,6 +215,7 @@ Feel free to open an issue for any questions or problems.
 ## References
 <a id="1">[1]</a>
 Taslim, C., Yuan, Z., Kendall, G.C. & Theisen, E.R. RNA-SeqEzPZ: A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations. Submitted.
+
 <a id="2">[2]</a>
 Love, M.I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). https://doi.org/10.1186/s13059-014-0550-8
 

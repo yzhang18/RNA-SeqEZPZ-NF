@@ -37,7 +37,7 @@ The following step-by-step is for a system with SLURM scheduler, Singularity and
    This step will copy a singularity image.
    Now, you have all the scripts and programs needed to run the entire RNA-Seq pipeline. 
 
-## Downloading reference files
+## Downloading hg19 reference files
 In order to run the pipeline, you will need to download reference files.
 These are the steps to get human hg19 references to run this pipeline.
 1. Go to ```RNA-SeqEZPZ-NF``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
@@ -66,14 +66,52 @@ These are the steps to get human hg19 references to run this pipeline.
    ```
    The above command should show you the fasta and gtf files.
    
-**Similarly for hg38**, the foldername MUST be ```ref/hg38``` and placed under ```RNA-SeqEZPZ-NF```
+## Downloading hg38 reference files
+These are the steps to get **human hg38** references to run this pipeline. Following these steps will enable you to select hg38 genome in the graphical interface.
+You can skip this step if you are not going to use hg38 genome in the graphical interface.
+1. Go to ```RNA-SeqEZPZ``` directory and create a ```ref/hg38``` directory. **Note**: foldername MUST be ```ref/hg38```
+   ```
+   # create RNA-SeqEZPZ/ref/hg38 folder. If you are following the steps above to get hg19 then you'd have to do the
+   # following command to create RNA-SeqEZPZ/ref/hg38
+   mkdir -p ../hg38
+   ```
+3. Go to the directory created in step 1 and download hg38 fasta file to this directory
+   ```
+   # go to RNA-SeqEZPZ/ref/hg38 directory
+   cd ../hg38
+   # download and unzip the fasta file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz | gunzip -c > hg38.fa
+   ```
+4. Download annotation file (.gtf)
+   ```
+   # download and unzip the gtf file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.refGene.gtf.gz  | gunzip -c > hg38.refGene.gtf
+   ```
+5. Optional. Download the chrom.sizes file. You can skip this and the pipeline will generate it for you as long as the ref folder is writable
+   ```
+   wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes
+   ```
+7. Now, you should have ```hg38.fa```, ```hg38.refGene.gtf``` and ```hg38.chrom.sizes``` inside ```RNA-SeqEZPZ/ref/hg38```
+   ```
+   # list the files
+   ls -1
+   ```
+   The above command should show you the fasta, gtf and chrom.sizes files as shown below:
+   ```
+   ls -1
+   hg38.chrom.sizes
+   hg38.fa
+   hg38.refGene.gtf
+   ```
 
 ## Tips on downloading other references
 1. Make sure both gtf and fasta files have the same chromosome names.
-2. In order for pathway analysis to work, gtf file MUST contains gene symbols.
-3. Please place the fasta file inside a folder with <genome_name>.
+3. In order for pathway analysis to work, gtf file MUST contains gene symbols.
+4. Please place the fasta file inside a folder with ```<genome_name>```.
+5. If you don't have ```chrom.sizes``` file for the genome, you need to make the folder ```<genome_name>``` writable.
+   On the first run, ```chrom.sizes``` file will be created by the pipeline.
 
-## Running test dataset
+## Running test dataset with hg19 genome
 1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ-NF``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:
 ```
    # go to RNA-SeqEZPZ-NF folder

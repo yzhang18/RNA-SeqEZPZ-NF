@@ -6,7 +6,7 @@ RNA-SeqEZPZ is a pipeline to run analysis of RNA-Seq experiments from raw FASTQ 
 The pipeline is accessible through a graphical user interface implemented using a Shiny app and features interactive plots.
 Advanced users have the ability to customize the scripts provided with the pipeline.
 This pipeline is designed to run on an HPC cluster.
-Please cite [[1](#1) if you are using this pipeline for a publication.
+Please cite [[1]](#1) if you are using this pipeline for a publication.
 
 <br />
 

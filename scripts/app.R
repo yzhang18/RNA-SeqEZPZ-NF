@@ -239,7 +239,9 @@ ui <- fluidPage(
     id = "setup-genome-name-info",
     title = "More information",
     content = HTML(paste0(
-     "Name of genome assembly, e.g., mm10, danRer11, etc. "
+     "Name of genome assembly, e.g., mm10, danRer11, etc.<br> ",
+     "STAR_index will be searched and/or created in the same folder as the FASTA file below, ",
+     "within a subfolder named according to the Genome name specified by user."
     )),
     placement = "right",
     trigger = "hover",
@@ -1582,10 +1584,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                  " ncpus_trim=",input$setup.ncpus.trim," ncpus_star=",input$setup.ncpus.star,
                  " run=",run)
   }else{
-	  options=paste0(options," --time=",input$setup.time," --batch_adjust=",batch_adjust,
-                 " --ncpus_trim=",input$setup.ncpus.trim,
-                 " --ncpus_star=",input$setup.ncpus.star,
-                 " --run=",run)
+	  options=paste0(options," --batch_adjust=",batch_adjust)
   }
   # converting project dir to host path
   if(file.exists("/filepath")){
@@ -1663,7 +1662,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
          queue = '",high_mem_partition,"'  
          memory = '",very_high_mem,"g'
       }
-      
+      // used for star pass1 and pass2
       withLabel: hi_mem_cpus {
         queue = '",high_mem_partition,"'
         cpus = ",input$setup.ncpus.star,"
@@ -1679,23 +1678,27 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
     
     ")
     if(!genome=="other"){
-     nf.config=paste0(nf.config,"singularity.runOptions = \"--bind ",img.dir,"/scripts:/scripts,",
+     nf.config=paste0(nf.config,"singularity.runOptions = \"--bind ",
+                      img.dir,"/scripts:/scripts,",
                       hostprojdir,":/mnt,",img.dir,"/ref:/ref",",/gpfs0:/gpfs0\"")
     }else{
-     nf.config=paste0(nf.config,'singularity.runOptions = \"--bind ',img.dir,'/scripts:/scripts,',
+     hostfolderfa=dirname(hostfa)
+     nf.config=paste0(nf.config,'singularity.runOptions = \"--bind ',
+                      img.dir,'/scripts:/scripts,',hostfolderfa,":/ref,",
                       hostprojdir,':/mnt,/gpfs0:/gpfs0\"')
     }
     # had to specify [1] don't know why
-    print("nf.config[1]")
-    print(nf.config[1])
-    writeLines(nf.config[1],"/img_dir/nextflow.config")
+    print("nf.config")
+    print(nf.config)
+    writeLines(nf.config,"/img_dir/nextflow.config")
     # cmd=paste0("echo 'echo \"",nf.config," >> ",img.dir,"/nextflow.config",
     #            " && ml load nextflow/22.10.6.5843 && nextflow run -resume ",img.dir,
     #            "/main.nf -ansi-log false --inputdir=",hostprojdir," ",options,
     #            " &> run_rnaseq_full.out' > /hostpipe")
     cmd=paste0("echo '",load_nextflow," && nextflow run -resume ",img.dir,
-               "/main.nf -ansi-log false -with-report run_rnaseq_full.html --inputdir=",
-               hostprojdir," ",options," &> run_rnaseq_full.out' > /hostpipe")
+               "/main.nf -ansi-log false -with-report ",
+               hostprojdir,"run_rnaseq_full.html --inputdir=",
+               hostprojdir," ",options," &> ",hostprojdir,"run_rnaseq_full.out' > /hostpipe")
     print(cmd)
     system(cmd)
    }
@@ -1708,6 +1711,8 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   projdir <- react.setup.proj.dir()
   # copy log (i.e. *.out) files to log folder to view
   files.to.copy <- list.files(projdir,pattern="\\.out$",full.names=TRUE)
+  if(run_nextflow)
+   files.to.copy <- c(files.to.copy,file.path(projdir,".nextflow.log"))
   print("files.to.copy")
   print(files.to.copy)
   print("projdir/outputs/logs")
@@ -1724,9 +1729,13 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   # modified to use sapply to avoid error when copying multiple files
   file.copy.msg=sapply(files.to.copy, 
                        function(x) file.copy(x,paste0(projdir,"outputs/logs"),overwrite = TRUE))
-  files=list.files(paste0(projdir,"outputs/logs"),pattern = "\\.txt$|\\.out$",full.names = TRUE)
+  files=list.files(paste0(projdir,"outputs/logs"),
+                   pattern = "\\.txt$|\\.out$|\\.log$",full.names = TRUE,all.files = TRUE)
+  print("files")
+  print(files)
   # Sort files, placing filenames starting with "run_" at the top
-  sorted_files <- c(sort(files[startsWith(files, "run_")]), sort(files[!startsWith(files, "run_")]))
+  sorted_files <- c(sort(files[startsWith(files, "run_")]), 
+                    sort(files[!startsWith(files, "run_")]))
   log.lst = basename(sorted_files)
   if(file.exists(paste0(projdir,"outputs/logs/run_rnaseq_full.out"))){
    updateSelectInput(session,"logtab.log.path",choices=log.lst,selected = "run_rnaseq_full.out")
@@ -1791,7 +1800,10 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
              ),
              target = "Log",  # Insert the tab after "Log Tab"
              position = "after")
-  } 
+   # hide run debug
+   hide("setup.debug")
+  }
+  
  })
  
  #### Nextflow report tab #####

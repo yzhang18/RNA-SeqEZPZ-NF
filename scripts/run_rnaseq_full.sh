@@ -202,6 +202,9 @@ echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 # scripts to run analysis are in $img_dir/scripts
 # reference to run analysis are in $img_dir/ref
 
+# getting SLURM configuration
+source $img_dir/scripts/slurm_config_var.sh
+
 work_dir=$proj_dir/outputs
 echo -e "All outputs will be stored in $work_dir\n"
 if [ ! -d $work_dir ]; then

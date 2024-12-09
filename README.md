@@ -39,10 +39,10 @@ The following step-by-step is for a system with SLURM scheduler, Singularity and
 
 ## Downloading hg19 reference files
 In order to run the pipeline, you will need to download reference files.
-These are the steps to get human hg19 references to run this pipeline.
+These are the steps to get **human hg19** references to run this pipeline. Following these steps will enable you to select hg19 genome in the graphical interface.
 1. Go to ```RNA-SeqEZPZ-NF``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
    ```
-   # go to RNA-SeqEZPZ-NF directory. Only do this if you haven't done "cd RNA-SeqEZPZ-NF" before
+   # go to RNA-SeqEZPZ-NF directory. Only do this if you haven't done "cd RNA-SeqEZPZ" before
    cd RNA-SeqEZPZ-NF
    # create a ref directory inside RNA-SeqEZPZ-NF and a sub-directory called hg19 under ref
    mkdir -p ref/hg19
@@ -51,33 +51,43 @@ These are the steps to get human hg19 references to run this pipeline.
    ```
    # go to RNA-SeqEZPZ-NF/ref/hg19 directory
    cd ref/hg19
-   # download and unzip the fasta file from Ensembl
-   wget -O - https://ftp.ensembl.org/pub/grch37/current/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz | gunzip -c > Homo_sapiens.GRCh37.dna.primary_assembly.fa
+   # download and unzip the fasta file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.fa.gz | gunzip -c > hg19.fa
    ```
 4. Download annotation file (.gtf)
    ```
-   # download and unzip the gtf file from Ensembl
-   wget -O - https://ftp.ensembl.org/pub/grch37/current/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz | gunzip -c > Homo_sapiens.GRCh37.87.gtf
+   # download and unzip the gtf file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.refGene.gtf.gz | gunzip -c > hg19.refGene.gtf
    ```
-5. Now, you should have ```Homo_sapiens.GRCh37.dna.primary_assembly.fa``` and ```Homo_sapiens.GRCh37.87.gtf``` inside ```RNA-SeqEZPZ-NF/ref/hg19```
+5. Optional. Download the chrom.sizes file. You can skip this and the pipeline will generate it for you as long as the ref folder is writable
+   ```
+   wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes
+   ```
+7. Now, you should have ```hg19.fa```, ```hg19.refGene.gtf``` and ```hg19.chrom.sizes``` inside ```RNA-SeqEZPZ/ref/hg19```
    ```
    # list the files
    ls -1
    ```
-   The above command should show you the fasta and gtf files.
+   The above command should show you the fasta, gtf and chrom.sizes files as shown below:
+   ```
+   ls -1
+   hg19.chrom.sizes
+   hg19.fa
+   hg19.refGene.gtf
+   ```
    
 ## Downloading hg38 reference files
 These are the steps to get **human hg38** references to run this pipeline. Following these steps will enable you to select hg38 genome in the graphical interface.
 You can skip this step if you are not going to use hg38 genome in the graphical interface.
-1. Go to ```RNA-SeqEZPZ``` directory and create a ```ref/hg38``` directory. **Note**: foldername MUST be ```ref/hg38```
+1. Go to ```RNA-SeqEZPZ-NF``` directory and create a ```ref/hg38``` directory. **Note**: foldername MUST be ```ref/hg38```
    ```
-   # create RNA-SeqEZPZ/ref/hg38 folder. If you are following the steps above to get hg19 then you'd have to do the
-   # following command to create RNA-SeqEZPZ/ref/hg38
+   # create RNA-SeqEZPZ-NF/ref/hg38 folder. If you are following the steps above to get hg19 then you'd have to do the
+   # following command to create RNA-SeqEZPZ-NF/ref/hg38
    mkdir -p ../hg38
    ```
 3. Go to the directory created in step 1 and download hg38 fasta file to this directory
    ```
-   # go to RNA-SeqEZPZ/ref/hg38 directory
+   # go to RNA-SeqEZPZ-NF/ref/hg38 directory
    cd ../hg38
    # download and unzip the fasta file from UCSC genome browser
    wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz | gunzip -c > hg38.fa

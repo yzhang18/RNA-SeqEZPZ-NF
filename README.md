@@ -9,6 +9,7 @@ This pipeline is designed to run on an HPC cluster.
 Please cite [[1]] if you are using this pipeline for a publication.
 
 <br />
+
 ## Installation
 In order to use the pipeline, you will need to have Singularity installed in your HPC. See installation instruction at https://docs.sylabs.io/guides/3.0/user-guide/installation.html
 

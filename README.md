@@ -176,7 +176,7 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
    which contains the progress of the pipeline.
   ![run_example_2](assets/run_example_2.png)
    In the screenshot above, the pipeline is currently doing trimming and performing quality control of reads.
-   For more information, you can select ```run_trim_qc.out``` under ```Choose a log file to view:```
+   For more information, you can select the log file for a run, e.g. ```trim_fastqc_iEF_EE4_rep2.out``` under ```Choose a log file to view:```
   ![run_example_2_trim](assets/run_example_2_trim.png)
 
 7. When the entire pipeline is done, you can scroll down on ```run_rnaseq_full.out``` and see similar message as pictured below:

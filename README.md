@@ -39,9 +39,8 @@ In order to run the pipeline, you will need to download reference files.
 These are the steps to get **human hg19** references to run this pipeline. Following these steps will enable you to select hg19 genome in the graphical interface.
 1. Go to ```RNA-SeqEZPZ``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
    ```
-   # go to RNA-SeqEZPZ directory. Only do this if you haven't done "cd RNA-SeqEZPZ" before
-   cd RNA-SeqEZPZ
-   # create a ref directory inside RNA-SeqEZPZ and a sub-directory called hg19 under ref
+  # if you follow step 4 above, then you are already in RNA-SeqEZPZ directory
+  # create a ref directory inside RNA-SeqEZPZ and a sub-directory called hg19 under ref
    mkdir -p ref/hg19
    ```
 3. Go to the directory created in step 1 and download hg19 fasta file to this directory
@@ -78,13 +77,14 @@ These are the steps to get **human hg38** references to run this pipeline. Follo
 You can skip this step if you are not going to use hg38 genome in the graphical interface.
 1. Go to ```RNA-SeqEZPZ``` directory and create a ```ref/hg38``` directory. **Note**: foldername MUST be ```ref/hg38```
    ```
-   # create RNA-SeqEZPZ/ref/hg38 folder. If you are following the steps above to get hg19 then you'd have to do the
-   # following command to create RNA-SeqEZPZ/ref/hg38
+   # If you are following the steps above to get hg19 then you'd have to do the
+   # following command to create RNA-SeqEZPZ/ref/hg38 folder
    mkdir -p ../hg38
    ```
 3. Go to the directory created in step 1 and download hg38 fasta file to this directory
    ```
    # go to RNA-SeqEZPZ/ref/hg38 directory
+   # if you are following the steps above you do the following command to go to hg38 directory
    cd ../hg38
    # download and unzip the fasta file from UCSC genome browser
    wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz | gunzip -c > hg38.fa
@@ -114,15 +114,13 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
 ## Tips on downloading other references
 1. Make sure both gtf and fasta files have the same chromosome names.
 3. In order for pathway analysis to work, gtf file MUST contains gene symbols.
-4. Please place the fasta file inside a folder with ```<genome_name>```.
-5. If you don't have ```chrom.sizes``` file for the genome, you need to make the folder ```<genome_name>``` writable.
-   On the first run, ```chrom.sizes``` file will be created by the pipeline.
+4. If you don't have ```chrom.sizes``` file for the genome, it will be created for you in the folder where the fasta file is.
 
 ## Running test dataset using hg19
 1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:
 ```
    # go to RNA-SeqEZPZ folder
-   # if you are currently in ref/hg38 folder go up to RNA-SeqEZPZ folder
+   # if you are currently in ref/hg38 folder following step 7 above, go up to RNA-SeqEZPZ folder
    cd ../..
    # run the user interface
    bash scripts/run_shiny_analysis.sh filepath=project_ex
@@ -210,6 +208,50 @@ Example of upset plot showing overlaps of genes regulated by EWSR1::FLI1 (iEF_EF
 Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs iEF_empty) and genes down-/up-regulated by EWSR1::ETV4 (iEF_EE4 vs iEF_empty)
 ![pathway_example](assets/pathway_example.png)
 
+## Running your own dataset using zebrafish danRer11 genome.
+1. First, you would need to download zebrafish references. You can put these files in the ref directory under ```RNA-SeqEZPZ```
+   ```
+   # if you follow the steps to run test dataset, you can create ```RNA-SeqEZPZ/ref/danRer11``` with the following command
+   mkdir -p ref/danRer11
+   # go to danRer11 folder and download the reference files
+   cd danRer11
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/danRer11.fa.gz | gunzip -c > danRer11.fa
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/genes/danRer11.refGene.gtf.gz  | gunzip -c > danRer11.refGene.gtf
+   wget https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/danRer11.chrom.sizes
+   ```
+2. You would need to put your FASTQ files in directory under ```RNA-SeqEZPZ``. For example ```RNA-SeqEZPZ/raw_data/fastq```.
+3. Go to ```RNA-SeqEZPZ``` folder and run ```run_shiny_analysis.sh``` with filepath that contains both FASTQ, reference fasta, gtf files and also where you want to save your analysis.
+   For example, if your FASTQ files are inside ```RNA-SeqEZPZ/raw_data/fastq```, your reference are inside ```RNA-SeqEZPZ/ref``` and you want to save your analysis under the ```RNA-SeqEZPZ``` folder, since
+   all of your folders are downstream of RNA-SeqEZPZ, you can simply specify ```filepath=.```. The dot means setting filepath to the current folder.
+  ``` 
+   # if you are currently in RNA-SeqEZPZ/ref/danRer11 folder following step 1 of running your own dataset, you have to go up
+   cd ../..
+   bash scripts/run_shiny_analysis.sh filepath=.
+  ``` 
+   <br />
+   A Firefox browser will be displayed that will enable you to run the full analysis.
+   <br />  
+
+   ![run_analysis_screenshot](assets/run_analysis_screenshot.png)
+
+4. You will need to select project folder. 
+   In this case, you would click on ```Select project folder```, a window will appear.
+   You can create new folder and specified the folder name in the interface.
+   Click on ```Create new folder``` after clicking on root, it will allow you to put in name for the new folder.
+   ![run_example_create_folder](assets/run_example_create_folder.png)
+   Once you click on the plus sign, it will create the named folder under root which is RNA-SeqEZPZ.
+   In this example, I am creating a folder named ```my_project```
+   You will need to click on my_project and click ```select``` at the bottom right to select my_project as your project folder.
+   After clicking ```select```, you should see my_project under ```Select project folder``` button.
+   ![run_example_my_project](assets/run_example_my_project.png)
+
+3. Select your genome. If you are using genome that is neither hg19 or hg38, select ```other```.
+4. Type in your genome name. In this case, I'm going to type in ```danRer11```.
+5. Select your genome fasta file and genome GTF file you downloaded in step 1.
+   ![run_example_danrer](assets/run_example_danrer.png)
+6. Fill out the form. See step 3 for running test example to fill out the form for your own dataset.
+7. Once you're done filling out the form, you can click on ```Run full analysis``` to run the entire pipeline.
+   
 Feel free to open an issue for any questions or problems.
 
 ## References

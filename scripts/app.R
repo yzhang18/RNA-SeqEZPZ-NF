@@ -1428,15 +1428,15 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   write.table(df,file=file.path(projdir,"tmp_samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE,
               append = TRUE)
   tmp.samples.md5=tools::md5sum(file.path(projdir,"tmp_samples.txt"))
-  # only create samples.txt if the content changes
+  # rename tmp.samples.txt to samples.txt if the content changes
   # this is to allow nextflow to resume
-  print("check samples.txt content")
-  print("tmp.samples.md5")
-  print(tmp.samples.md5)
-  print("exist.samples.md5")
-  print(exist.samples.md5)
+  if(file.exists(file.path(projdir,"samples.txt"))){
   if(!tmp.samples.md5 == exist.samples.md5)
    file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
+  }else{
+   # there is no existing samples.txt just rename
+   file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
+  }
  })
  
  observeEvent(input$setup.run.analysis,{
@@ -1520,13 +1520,13 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                append = TRUE)
    tmp.samples.md5=tools::md5sum(file.path(projdir,"tmp_samples.txt"))
 
-   print("check samples.txt content")
-   print("tmp.samples.md5")
-   print(tmp.samples.md5)
-   print("exist.samples.md5")
-   print(exist.samples.md5)
+   if(file.exists(file.path(projdir,"samples.txt"))){
    if(!tmp.samples.md5 == exist.samples.md5)
     file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
+   }else{
+    # just rename there is no existing samples.txt
+    file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
+   }
   #system("echo 'sbatch --help' > /hostpipe")
   # getting genome options
   if(genome=="other"){

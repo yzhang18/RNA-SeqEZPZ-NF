@@ -238,17 +238,17 @@ Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs i
    In this case, you would click on ```Select project folder```, a window will appear.
    You can create new folder and specified the folder name in the interface.
    Click on ```Create new folder``` after clicking on root, it will allow you to put in name for the new folder.
-   ![run_example_create_folder](assets/run_example_create_folder.png)
+   ![run_create_folder](assets/run_create_folder.png)
    Once you click on the plus sign, it will create the named folder under root which is RNA-SeqEZPZ.
    In this example, I am creating a folder named ```my_project```
    You will need to click on my_project and click ```select``` at the bottom right to select my_project as your project folder.
    After clicking ```select```, you should see my_project under ```Select project folder``` button.
-   ![run_example_my_project](assets/run_example_my_project.png)
+   ![run_my_project](assets/run_my_project.png)
 
 3. Select your genome. If you are using genome that is neither hg19 or hg38, select ```other```.
 4. Type in your genome name. In this case, I'm going to type in ```danRer11```.
 5. Select your genome fasta file and genome GTF file you downloaded in step 1.
-   ![run_example_danrer](assets/run_example_danrer.png)
+   ![run_danrer](assets/run_danrer.png)
 6. Fill out the form. See step 3 for running test example to fill out the form for your own dataset.
 7. Once you're done filling out the form, you can click on ```Run full analysis``` to run the entire pipeline.
    

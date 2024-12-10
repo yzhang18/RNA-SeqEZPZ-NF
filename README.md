@@ -38,9 +38,10 @@ The following step-by-step is for a system with SLURM scheduler and it will run 
 In order to run the pipeline, you will need to download reference files.
 These are the steps to get **human hg19** references to run this pipeline. Following these steps will enable you to select hg19 genome in the graphical interface.
 1. Go to ```RNA-SeqEZPZ``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
+
    ```
-  # if you follow step 4 above, then you are already in RNA-SeqEZPZ directory
-  # create a ref directory inside RNA-SeqEZPZ and a sub-directory called hg19 under ref
+   # if you follow step 4 above, then you are already in RNA-SeqEZPZ directory
+   # create a ref directory inside RNA-SeqEZPZ and a sub-directory called hg19 under ref
    mkdir -p ref/hg19
    ```
 3. Go to the directory created in step 1 and download hg19 fasta file to this directory
@@ -219,8 +220,9 @@ Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs i
    wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/genes/danRer11.refGene.gtf.gz  | gunzip -c > danRer11.refGene.gtf
    wget https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/danRer11.chrom.sizes
    ```
-2. You would need to put your FASTQ files in directory under ```RNA-SeqEZPZ``. For example ```RNA-SeqEZPZ/raw_data/fastq```.
+2. You would need to put your FASTQ files in directory under ```RNA-SeqEZPZ```. For example ```RNA-SeqEZPZ/raw_data/fastq```.
 3. Go to ```RNA-SeqEZPZ``` folder and run ```run_shiny_analysis.sh``` with filepath that contains both FASTQ, reference fasta, gtf files and also where you want to save your analysis.
+   <br />
    For example, if your FASTQ files are inside ```RNA-SeqEZPZ/raw_data/fastq```, your reference are inside ```RNA-SeqEZPZ/ref``` and you want to save your analysis under the ```RNA-SeqEZPZ``` folder, since
    all of your folders are downstream of RNA-SeqEZPZ, you can simply specify ```filepath=.```. The dot means setting filepath to the current folder.
   ``` 
@@ -238,9 +240,9 @@ Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs i
    In this case, you would click on ```Select project folder```, a window will appear.
    You can create new folder and specified the folder name in the interface.
    Click on ```Create new folder``` after clicking on root, it will allow you to put in name for the new folder.
-   ![run_create_folder](assets/run_create_folder.png)
    Once you click on the plus sign, it will create the named folder under root which is RNA-SeqEZPZ.
    In this example, I am creating a folder named ```my_project```
+   ![run_create_folder](assets/run_create_folder.png)
    You will need to click on my_project and click ```select``` at the bottom right to select my_project as your project folder.
    After clicking ```select```, you should see my_project under ```Select project folder``` button.
    ![run_my_project](assets/run_my_project.png)

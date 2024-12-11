@@ -107,8 +107,8 @@ img_name=rnaseq-pipe-container.sif
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
-# getting SLURM configuration
-source $img_dir/scripts/slurm_config_var.sh
+# getting Nextflow configuration
+source $img_dir/scripts/nextflow_config_var.config
 
 echo -e "Options used to run:"
 echo time="$time"

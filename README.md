@@ -223,10 +223,11 @@ Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs i
 2. You would need to put your FASTQ files in directory under ```RNA-SeqEZPZ```. For example ```RNA-SeqEZPZ/raw_data/fastq```.
 3. Go to ```RNA-SeqEZPZ``` folder and run ```run_shiny_analysis.sh``` with filepath that contains both FASTQ, reference fasta, gtf files and also where you want to save your analysis.
    <br />
-   For example, if your FASTQ files are inside ```RNA-SeqEZPZ/raw_data/fastq```, your reference are inside ```RNA-SeqEZPZ/ref``` and you want to save your analysis under the ```RNA-SeqEZPZ``` folder, since
-   all of your folders are downstream of RNA-SeqEZPZ, you can simply specify ```filepath=.```. The dot means setting filepath to the current folder.
+   For example, if your FASTQ files are inside ```RNA-SeqEZPZ/raw_data/fastq```, your reference are inside ```RNA-SeqEZPZ/ref``` and you want to save your analysis under the ```RNA-SeqEZPZ``` folder.
+   Since all of your folders are downstream of RNA-SeqEZPZ, assuming you are in RNA-SeqEZPZ folder, you can simply specify ```filepath=.```. The dot means setting filepath to the current folder.
   ``` 
-   # if you are currently in RNA-SeqEZPZ/ref/danRer11 folder following step 1 of running your own dataset, you have to go up
+   # if you are currently in RNA-SeqEZPZ/ref/danRer11 folder following step 1 of running your own dataset,
+   # you have to go up twice to go to RNA-SeqEZPZ folder
    cd ../..
    bash scripts/run_shiny_analysis.sh filepath=.
   ``` 
@@ -247,12 +248,12 @@ Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs i
    After clicking ```select```, you should see my_project under ```Select project folder``` button.
    ![run_my_project](assets/run_my_project.png)
 
-3. Select your genome. If you are using genome that is neither hg19 or hg38, select ```other```.
-4. Type in your genome name. In this case, I'm going to type in ```danRer11```.
-5. Select your genome fasta file and genome GTF file you downloaded in step 1.
+5. Select your genome. If you are using genome that is neither hg19 or hg38, select ```other```.
+6. Type in your genome name. In this case, I'm going to type in ```danRer11```.
+7. Select your genome fasta file and genome GTF file you downloaded in step 1.
    ![run_danrer](assets/run_danrer.png)
-6. Fill out the form. See step 3 for running test example to fill out the form for your own dataset.
-7. Once you're done filling out the form, you can click on ```Run full analysis``` to run the entire pipeline.
+8. Fill out the form. See step 3 for running test example to fill out the form for your own dataset.
+9. Once you're done filling out the form, you can click on ```Run full analysis``` to run the entire pipeline.
    
 Feel free to open an issue for any questions or problems.
 

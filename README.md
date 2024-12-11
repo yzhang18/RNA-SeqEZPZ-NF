@@ -37,12 +37,12 @@ The following step-by-step is for a system with SLURM scheduler, Singularity and
    This step will copy a singularity image.
    Now, you have all the scripts and programs needed to run the entire RNA-Seq pipeline. 
 
-## Downloading reference files
+## Downloading hg19 reference files
 In order to run the pipeline, you will need to download reference files.
-These are the steps to get human hg19 references to run this pipeline.
+These are the steps to get **human hg19** references to run this pipeline. Following these steps will enable you to select hg19 genome in the graphical interface.
 1. Go to ```RNA-SeqEZPZ-NF``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
    ```
-   # go to RNA-SeqEZPZ-NF directory. Only do this if you haven't done "cd RNA-SeqEZPZ-NF" before
+   # go to RNA-SeqEZPZ-NF directory. Only do this if you haven't done "cd RNA-SeqEZPZ" before
    cd RNA-SeqEZPZ-NF
    # create a ref directory inside RNA-SeqEZPZ-NF and a sub-directory called hg19 under ref
    mkdir -p ref/hg19
@@ -51,29 +51,77 @@ These are the steps to get human hg19 references to run this pipeline.
    ```
    # go to RNA-SeqEZPZ-NF/ref/hg19 directory
    cd ref/hg19
-   # download and unzip the fasta file from Ensembl
-   wget -O - https://ftp.ensembl.org/pub/grch37/current/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz | gunzip -c > Homo_sapiens.GRCh37.dna.primary_assembly.fa
+   # download and unzip the fasta file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.fa.gz | gunzip -c > hg19.fa
    ```
 4. Download annotation file (.gtf)
    ```
-   # download and unzip the gtf file from Ensembl
-   wget -O - https://ftp.ensembl.org/pub/grch37/current/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz | gunzip -c > Homo_sapiens.GRCh37.87.gtf
+   # download and unzip the gtf file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.refGene.gtf.gz | gunzip -c > hg19.refGene.gtf
    ```
-5. Now, you should have ```Homo_sapiens.GRCh37.dna.primary_assembly.fa``` and ```Homo_sapiens.GRCh37.87.gtf``` inside ```RNA-SeqEZPZ-NF/ref/hg19```
+5. Optional. Download the chrom.sizes file. You can skip this and the pipeline will generate it for you as long as the ref folder is writable
+   ```
+   wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.chrom.sizes
+   ```
+7. Now, you should have ```hg19.fa```, ```hg19.refGene.gtf``` and ```hg19.chrom.sizes``` inside ```RNA-SeqEZPZ/ref/hg19```
    ```
    # list the files
    ls -1
    ```
-   The above command should show you the fasta and gtf files.
+   The above command should show you the fasta, gtf and chrom.sizes files as shown below:
+   ```
+   ls -1
+   hg19.chrom.sizes
+   hg19.fa
+   hg19.refGene.gtf
+   ```
    
-**Similarly for hg38**, the foldername MUST be ```ref/hg38``` and placed under ```RNA-SeqEZPZ-NF```
+## Downloading hg38 reference files
+These are the steps to get **human hg38** references to run this pipeline. Following these steps will enable you to select hg38 genome in the graphical interface.
+You can skip this step if you are not going to use hg38 genome in the graphical interface.
+1. Go to ```RNA-SeqEZPZ-NF``` directory and create a ```ref/hg38``` directory. **Note**: foldername MUST be ```ref/hg38```
+   ```
+   # create RNA-SeqEZPZ-NF/ref/hg38 folder. If you are following the steps above to get hg19 then you'd have to do the
+   # following command to create RNA-SeqEZPZ-NF/ref/hg38
+   mkdir -p ../hg38
+   ```
+3. Go to the directory created in step 1 and download hg38 fasta file to this directory
+   ```
+   # go to RNA-SeqEZPZ-NF/ref/hg38 directory
+   cd ../hg38
+   # download and unzip the fasta file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz | gunzip -c > hg38.fa
+   ```
+4. Download annotation file (.gtf)
+   ```
+   # download and unzip the gtf file from UCSC genome browser
+   wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.refGene.gtf.gz  | gunzip -c > hg38.refGene.gtf
+   ```
+5. Optional. Download the chrom.sizes file. You can skip this and the pipeline will generate it for you as long as the ref folder is writable
+   ```
+   wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes
+   ```
+7. Now, you should have ```hg38.fa```, ```hg38.refGene.gtf``` and ```hg38.chrom.sizes``` inside ```RNA-SeqEZPZ/ref/hg38```
+   ```
+   # list the files
+   ls -1
+   ```
+   The above command should show you the fasta, gtf and chrom.sizes files as shown below:
+   ```
+   ls -1
+   hg38.chrom.sizes
+   hg38.fa
+   hg38.refGene.gtf
+   ```
 
 ## Tips on downloading other references
 1. Make sure both gtf and fasta files have the same chromosome names.
-2. In order for pathway analysis to work, gtf file MUST contains gene symbols.
-3. Please place the fasta file inside a folder with <genome_name>.
+3. In order for pathway analysis to work, gtf file MUST contains gene symbols.
+4. Please place the fasta file inside a folder with ```<genome_name>```.
+5. If you don't have ```chrom.sizes``` file for the genome, you need to make the folder ```<genome_name>``` writable.
+   On the first run, ```chrom.sizes``` file will be created by the pipeline.
 
-## Running test dataset
+## Running test dataset with hg19 genome
 1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ-NF``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:
 ```
    # go to RNA-SeqEZPZ-NF folder
@@ -128,22 +176,23 @@ These are the steps to get human hg19 references to run this pipeline.
    which contains the progress of the pipeline.
   ![run_example_2](assets/run_example_2.png)
    In the screenshot above, the pipeline is currently doing trimming and performing quality control of reads.
-   For more information, you can select ```run_trim_qc.out``` under ```Choose a log file to view:```
+   For more information, you can select the log file for a run, e.g. ```trim_fastqc_iEF_EE4_rep2.out``` under ```Choose a log file to view:```
+  ![run_example_2_trim](assets/run_example_2_trim.png)
 
-6. When the entire pipeline is done, you can scroll down on ```run_rnaseq_full.out``` and see similar message as pictured below:
+7. When the entire pipeline is done, you can scroll down on ```run_rnaseq_full.out``` and see similar message as pictured below:
    ![run_example_3](assets/run_example_3.png)
    **Note**: try ```Refresh list``` to view updated file.
 
-7. Once full analysis is finished, you can click on ```QCs``` tab to see the Quality Control metrics generated.
+8. Once full analysis is finished, you can click on ```QCs``` tab to see the Quality Control metrics generated.
    ![run_example_4](assets/run_example_4.png)
 
-8. You can also click on ```Outputs``` tab which contains differential genes analysis calculated by DESeq2 [[2]](#2) and statistical report generated by SARTools [[3]](#3) with modifications.
+9. You can also click on ```Outputs``` tab which contains differential genes analysis calculated by DESeq2 [[2]](#2) and statistical report generated by SARTools [[3]](#3) with modifications.
 
-9. In the ```Plots``` tab, inserting another comparison group will show the overlap between the two groups of comparisons.
+10. In the ```Plots``` tab, inserting another comparison group will show the overlap between the two groups of comparisons.
    In this case, it will compare the differential genes in iEF_EF vs iEF_empty with iEF_EE4 vs iEF_empty.
    ![run_example_6](assets/run_example_6.png)
 
-10. [project_ex/outputs](project_ex/outputs) contains all the outputs automatically generated by the pipeline.
+11. [project_ex/outputs](project_ex/outputs) contains all the outputs automatically generated by the pipeline.
 
 Since test dataset provided is a small dataset that are provided to quickly test the installation of the pipeline, below we provided screenshots of the ```plots``` tab
 which were done on the full example dataset to illustrate the analysis that can be done on ```RNA-SeqEZPZ-NF```.

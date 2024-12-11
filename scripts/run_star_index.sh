@@ -198,8 +198,8 @@ fi
 if [ -d "$star_index_dir" ];then
 	if [[ -z "$(ls -A $star_index_dir)" ]];then
 		echo -e "Generating STAR index.\n"
-	elif [[ -z $chr_info_path || ! -f ${fasta_file}.fai ]];then
-		echo -e "Generating chrom sizes and/or fasta index files.\n"
+	elif [[ -z $chr_info_path ]];then
+		echo -e "Generating chrom sizes.\n"
 	else
 		# genome index exist, exit script
         	echo -e "run_star_index.sh was not run since genome index already exist.\n"
@@ -300,6 +300,7 @@ msg_ok="${msg_ok}STAR index files are in ${genome_dir}/${ref_ver}/STAR_index.\n"
 msg_fail="One of the steps in run_star_index.sh failed\n"
 jid_to_check=$jid0
 check_run_star_index_jid=$($run sbatch \
+	--partition=$general_partition \
         --output=$log_dir/check_run_star_index.out \
         --mail-type=END \
         --mail-user=$email \

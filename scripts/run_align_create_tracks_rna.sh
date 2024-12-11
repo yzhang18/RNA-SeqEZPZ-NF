@@ -416,6 +416,7 @@ if [[ n_rep -gt 1 ]]; then
 	cd $work_dir
 	# dummy sbatch waiting for previous jobs to finish
 	tmp=$($run sbatch \
+	--partition=$general_partition \
 	--dependency=afterok:$jid4 \
 	--output=$log_dir/dummy.txt \
 	--time=5:00 \
@@ -487,6 +488,7 @@ if [[ n_rep -gt 1 ]]; then
 		# set +x
 	done
 	jid4c=$($run sbatch \
+		--partition=$general_partition \
 		--dependency=afterok:$jid4b \
 		--output=$log_dir/dummy.txt \
 		--mail-type=END \
@@ -515,6 +517,7 @@ else
 	echo There are no replicates
 	jid4c=$($run sbatch \
 		--dependency=afterok:$jid4 \
+		--partition=$general_partition \
 		--output=$log_dir/dummy.txt \
 		--mail-type=END \
 		--mail-user=$email \
@@ -550,6 +553,7 @@ rm -r $work_dir/STAR_2pass/Pass1
 rm -r $work_dir/STAR_2pass/GenomeForPass2
 
 tmp=$($run sbatch --dependency=afterok:$jid4c \
+		--partition=$general_partition \
 		--output=$log_dir/dummy.txt \
 		--mail-type=END \
 		--mail-user=$email \

@@ -216,6 +216,7 @@ for (( idx =0; idx <= len_row-1; idx++ ));do
 			SINGULARITYENV_path_r2=$path_r2 \
 			SINGULARITYENV_ncpus_trim=$ncpus_trim \
 				$run sbatch --output=$log_dir/trim_fastqc_${prefix}.out \
+					--partition=$general_partition \
 					--job-name=trim_fastqc \
 					--time=$time \
 					--mail-type=FAIL \
@@ -245,6 +246,7 @@ jid2=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_proj_dir=$proj_dir \
 	SINGULARITYENV_input_dir=/mnt/outputs/fastqc_rslt \
 	$run sbatch --output=$log_dir/multiqc.out \
+		--partition=$general_partition \
 		--job-name=multiqc \
 		--mail-type=FAIL \
 		--mail-user=$email \
@@ -285,6 +287,7 @@ trimmed fastq files are in $work_dir/trim\n\n"
 cp $proj_dir/run_trim_qc.out $log_dir/
 
 tmp=$($run sbatch --dependency=afterok:$jid2 \
+		--partition=$general_partition \
 		--output=$log_dir/dummy.txt \
 		--time=5:00 \
 		--mail-type=END \

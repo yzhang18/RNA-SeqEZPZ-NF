@@ -107,6 +107,9 @@ img_name=rnaseq-pipe-container.sif
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
+# getting Nextflow configuration
+source $img_dir/scripts/nextflow_config_var.config
+
 echo -e "Options used to run:"
 echo time="$time"
 echo ""
@@ -131,6 +134,7 @@ fi
 # Activate environment where shiny is installed and go to "app.R" directory
 export port_num filepath max_nsamples img_dir proj_dir img_name bind_filepath
 jid=$(sbatch --time=$time \
+	--partition=$general_partition \
 	--export=port_num,filepath,max_nsamples,img_dir,proj_dir,img_name,bind_filepath \
 	--output=run_shiny_analysis.out \
 	--wrap "/bin/sh $img_dir/scripts/run_listen_app.sh"| cut -f 4 -d' ')

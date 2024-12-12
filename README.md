@@ -1,4 +1,6 @@
-# RNA-SeqEZPZ: A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations
+# RNA-SeqEZPZ-NF
+## Nextflow Pipeline for RNA-SeqEZPZ 
+### A Point-and-Click Pipeline for Comprehensive Transcriptomics Analysis with Interactive Visualizations
 <br />
 <br />
 
@@ -11,23 +13,26 @@ Please cite [[1]](#1) if you are using this pipeline for a publication.
 <br />
 
 ## Installation
-In order to use the pipeline, you will need to have Singularity installed in your HPC. See installation instruction at https://docs.sylabs.io/guides/3.0/user-guide/installation.html
 
 The following step-by-step is for a system with SLURM scheduler and it will run bash scripts. If you need to run it on a different scheduler or if you prefer to use the Nextflow version of the pipeline, please go to https://github.com/yzhang18/RNA-SeqEZPZ-NF
 
 1. Download the code/scripts:
    ```
-   git clone https://github.com/cxtaslim/RNA-SeqEZPZ.git
+   git clone https://github.com/yzhang18/RNA-SeqEZPZ-NF.git
    ```
    This step will copy all the required code into your local directory.
-2. Change the SLURM setting to reflect your HPC settings in your local copy of 
+2. There are three files that you can make changes to reflect the settings in your local copy of the code.
 
-   ```RNA-SeqEZPZ/scripts/slurm_config_var.sh```
-
-4. Go to the ```RNA-SeqEZPZ``` directory and download the singularity image:
    ```
-   # go to RNA-SeqEZPZ directory
-   cd RNA-SeqEZPZ
+   RNA-SeqEZPZ-NF/main.nf  ## Set up your input, output, genome file, gtf file, etc..
+   RNA-SeqEZPZ-NF/scripts/nextflow_config_var.config  ## Set up the variables for your local scheduler.
+   RNA-SeqEZPZ-NF/project_ex/nextflow.config  ## Set up the resource limit for processes. This is optional, since most parameters are set up in RNA-Seq-EZPZ-NF/nextflow.config, which is generated automatically by the pipeline. 
+   ```
+
+4. Go to the ```RNA-SeqEZPZ-NF``` directory and download the singularity image:
+   ```
+   # go to RNA-SeqEZPZ-NF directory
+   cd RNA-SeqEZPZ-NF
    # download the singularity image and save as rnaseq-pipe-container.sif
    singularity pull --name rnaseq-pipe-container.sif library://cxtaslim/pipelines/rna-seqezpz:latest
    ```
@@ -36,6 +41,7 @@ The following step-by-step is for a system with SLURM scheduler and it will run 
 
 ## Downloading hg19 reference files
 In order to run the pipeline, you will need to download reference files.
+
 These are the steps to get **human hg19** references to run this pipeline. Following these steps will enable you to select hg19 genome in the graphical interface.
 1. Go to ```RNA-SeqEZPZ``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
 
@@ -46,7 +52,7 @@ These are the steps to get **human hg19** references to run this pipeline. Follo
    ```
 3. Go to the directory created in step 1 and download hg19 fasta file to this directory
    ```
-   # go to RNA-SeqEZPZ/ref/hg19 directory
+   # go to RNA-SeqEZPZ-NF/ref/hg19 directory
    cd ref/hg19
    # download and unzip the fasta file from UCSC genome browser
    wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.fa.gz | gunzip -c > hg19.fa
@@ -112,16 +118,12 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
    hg38.refGene.gtf
    ```
 
+
 ## Tips on downloading other references
 1. Make sure both gtf and fasta files have the same chromosome names.
 3. In order for pathway analysis to work, gtf file MUST contains gene symbols.
 4. If you don't have ```chrom.sizes``` file for the genome, it will be created for you in the folder where the fasta file is.
 
-## Running test dataset using hg19
-1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:
-```
-   # go to RNA-SeqEZPZ folder
-   # if you are currently in ref/hg38 folder following step 7 above, go up to RNA-SeqEZPZ folder
    cd ../..
    # run the user interface
    bash scripts/run_shiny_analysis.sh filepath=project_ex
@@ -166,9 +168,9 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
 
    **Note**: this step only works because there is an existing samples.txt in the ```project_ex``` directory that was provided for you.
       
-5. At this point, you are ready to click on ```Run full analysis``` to run the entire RNA-Seq pipeline steps with the example datasets provided.
+4. At this point, you are ready to click on ```Run full analysis``` to run the entire RNA-Seq pipeline steps with the example datasets provided.
 
-6. After clicking on ```Run full analysis```, you can click on ```Log``` then click on ```Refresh list``` to see the content of ```run_rnaseq_full.out```
+5. After clicking on ```Run full analysis```, you can click on ```Log``` then click on ```Refresh list``` to see the content of ```run_rnaseq_full.out```
    which contains the progress of the pipeline.
   ![run_example_2](assets/run_example_2.png)
    In the screenshot above, the pipeline is currently doing trimming and performing quality control of reads.
@@ -190,8 +192,9 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
 
 12. [project_ex_out](project_ex_out) contains all the outputs automatically generated by the pipeline.
 
+
 Since test dataset provided is a small dataset that are provided to quickly test the installation of the pipeline, below we provided screenshots of the ```plots``` tab
-which were done on the full example dataset to illustrate the analysis that can be done on ```RNA-SeqEZPZ```.
+which were done on the full example dataset to illustrate the analysis that can be done on ```RNA-SeqEZPZ-NF```.
 
 Example of table feature where you can search by gene name and get its log Fold-Change, mean of count difference, and whether it is significantly up-regulated, down-regulated or not significant (NS).
 You can adjust the significance cut-offs then export the gene list with adjusted significance cut-offs.
@@ -209,6 +212,7 @@ Example of upset plot showing overlaps of genes regulated by EWSR1::FLI1 (iEF_EF
 
 Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs iEF_empty) and genes down-/up-regulated by EWSR1::ETV4 (iEF_EE4 vs iEF_empty)
 ![pathway_example](assets/pathway_example.png)
+
 
 ## Running your own dataset using zebrafish danRer11 genome.
 1. First, you would need to download zebrafish references. You can put these files in the ref directory under ```RNA-SeqEZPZ```
@@ -257,6 +261,7 @@ Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs i
 9. Once you're done filling out the form, you can click on ```Run full analysis``` to run the entire pipeline.
    
 Feel free to open an issue for any questions or problems.
+
 
 ## References
 <a id="1">[1]</a>

@@ -1,8 +1,0 @@
-/var/spool/slurmd/job5749653/slurm_script: line 4: /gpfs0/home2/gdtheisenlab/cxt050/Steve/virtual_server/rnaseq-singularity/project_ex/run_rnaseq_full.out: Permission denied
-Job Statistics for 5749653:
-           JobID       User               Start                 End    Elapsed     MaxRSS   TotalCPU      State Exit        NodeList                                  ReqTRES 
----------------- ---------- ------------------- ------------------- ---------- ---------- ---------- ---------- ---- --------------- ---------------------------------------- 
-         5749653     cxt050 2024-07-31T12:31:40 2024-07-31T12:31:42   00:00:02             00:00.017     FAILED 126+   r1pl-hpcf-n02         billing=1,cpu=1,mem=7720M,node=1 
-   5749653.batch            2024-07-31T12:31:40 2024-07-31T12:31:42   00:00:02          0  00:00.013     FAILED 126+   r1pl-hpcf-n02                                          
-  5749653.extern            2024-07-31T12:31:40 2024-07-31T12:31:42   00:00:02          0  00:00.003  COMPLETED  0:0   r1pl-hpcf-n02                                          
-CPU Efficiency: 0.00% of 00:00:02 core-walltime

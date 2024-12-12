@@ -15,5 +15,7 @@ SINGULARITYENV_port_num=$port_num \
 		--bind $img_dir/scripts:/scripts -B ~/.Xauthority \
 		$bind_filepath \
 		--bind $proj_dir/mypipe:/hostpipe \
+		--bind $img_dir/ref:/ref \
+		--bind $img_dir:/img_dir \
         	$img_dir/$img_name /bin/sh /scripts/app_simg.sbatch
 

@@ -17,6 +17,7 @@
 # bash scripts/run_shiny_analysis.sh time=1-2:20:30
 
 # clear python path to prevent mixed up of python packages
+date
 unset PYTHONPATH
 # get command line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -108,7 +109,9 @@ img_name=rnaseq-pipe-container.sif
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
 # getting Nextflow configuration
-source $img_dir/scripts/nextflow_config_var.config
+#source $img_dir/scripts/nextflow_config_var.config
+# skip load_nextflow line
+source <(grep -v "load_nextflow" scripts/nextflow_config_var.config )
 
 echo -e "Options used to run:"
 echo time="$time"

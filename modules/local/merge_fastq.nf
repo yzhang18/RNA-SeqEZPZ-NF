@@ -4,7 +4,7 @@
  */
 process MERGE_FASTQ {
     tag "merge_fastq"
-    publishDir params.merged_fastq,  mode: "copy", pattern: "*.{fastq.gz}"
+    publishDir params.merged_fastq,  mode: "symlink", pattern: "*.{fastq.gz}"
     publishDir params.sampledir,  mode: "copy", pattern: "merged_samples.csv"
     publishDir params.logdir, mode: "copy", pattern: "merge_fastq.out"
 

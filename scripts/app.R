@@ -1428,15 +1428,15 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   write.table(df,file=file.path(projdir,"tmp_samples.txt"),quote=FALSE,row.names=FALSE,col.names=FALSE,
               append = TRUE)
   tmp.samples.md5=tools::md5sum(file.path(projdir,"tmp_samples.txt"))
-  # only create samples.txt if the content changes
+  # rename tmp.samples.txt to samples.txt if the content changes
   # this is to allow nextflow to resume
-  print("check samples.txt content")
-  print("tmp.samples.md5")
-  print(tmp.samples.md5)
-  print("exist.samples.md5")
-  print(exist.samples.md5)
+  if(file.exists(file.path(projdir,"samples.txt"))){
   if(!tmp.samples.md5 == exist.samples.md5)
    file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
+  }else{
+   # there is no existing samples.txt just rename
+   file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
+  }
  })
  
  observeEvent(input$setup.run.analysis,{
@@ -1520,13 +1520,13 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                append = TRUE)
    tmp.samples.md5=tools::md5sum(file.path(projdir,"tmp_samples.txt"))
 
-   print("check samples.txt content")
-   print("tmp.samples.md5")
-   print(tmp.samples.md5)
-   print("exist.samples.md5")
-   print(exist.samples.md5)
+   if(file.exists(file.path(projdir,"samples.txt"))){
    if(!tmp.samples.md5 == exist.samples.md5)
     file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
+   }else{
+    # just rename there is no existing samples.txt
+    file.rename(file.path(projdir,"tmp_samples.txt"),file.path(projdir,"samples.txt"))
+   }
   #system("echo 'sbatch --help' > /hostpipe")
   # getting genome options
   if(genome=="other"){
@@ -1687,7 +1687,6 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
                       img.dir,'/scripts:/scripts,',hostfolderfa,":/ref,",
                       hostprojdir,':/mnt,/gpfs0:/gpfs0\"')
     }
-    # had to specify [1] don't know why
     print("nf.config")
     print(nf.config)
     writeLines(nf.config,"/img_dir/nextflow.config")
@@ -1695,7 +1694,12 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
     #            " && ml load nextflow/22.10.6.5843 && nextflow run -resume ",img.dir,
     #            "/main.nf -ansi-log false --inputdir=",hostprojdir," ",options,
     #            " &> run_rnaseq_full.out' > /hostpipe")
-    cmd=paste0("echo '",load_nextflow," && nextflow run -resume ",img.dir,
+    if(is.na(load_nextflow))
+     load_nextflow_cmd=""
+    else
+     load_nextflow_cmd=paste0(load_nextflow," && ")
+    cmd=paste0("echo '",load_nextflow_cmd,"cd ", hostprojdir, 
+               " && nextflow run -resume ",img.dir,
                "/main.nf -ansi-log false -with-report ",
                hostprojdir,"run_rnaseq_full.html --inputdir=",
                hostprojdir," ",options," &> ",hostprojdir,"run_rnaseq_full.out' > /hostpipe")
@@ -1711,6 +1715,9 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   projdir <- react.setup.proj.dir()
   # copy log (i.e. *.out) files to log folder to view
   files.to.copy <- list.files(projdir,pattern="\\.out$",full.names=TRUE)
+  # add run_shiny_analysis.out
+  if(file.exists("run_shiny_analysis.out")) 
+   files.to.copy <- c(files.to.copy,"run_shiny_analysis.out")
   if(run_nextflow)
    files.to.copy <- c(files.to.copy,file.path(projdir,".nextflow.log"))
   print("files.to.copy")

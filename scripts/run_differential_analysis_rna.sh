@@ -271,6 +271,7 @@ jid7=$(SINGULARITYENV_PYTHONPATH= \
 		SINGULARITYENV_proj_dir=$proj_dir \
 		SINGULARITYENV_input_dir=/mnt/outputs \
 		$run sbatch --output=$log_dir/multiqc.out \
+		--partition=$general_partition \
 		--job-name=multiqc \
 		--mail-type=FAIL \
 		--mail-user=$email \
@@ -316,6 +317,7 @@ for full documentation of differential analysis\n\
 see $work_dir/fastqc_rslt for more quality control report\n\n"
 
 jid8=$($run sbatch --dependency=afterok:$jid7 \
+		--partition=$general_partition \
 		--output=$log_dir/dummy.txt \
 		--mail-type=END \
 		--mail-user=$email \

@@ -202,6 +202,9 @@ echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 # scripts to run analysis are in $img_dir/scripts
 # reference to run analysis are in $img_dir/ref
 
+# getting SLURM configuration
+source $img_dir/scripts/slurm_config_var.sh
+
 work_dir=$proj_dir/outputs
 echo -e "All outputs will be stored in $work_dir\n"
 if [ ! -d $work_dir ]; then
@@ -244,6 +247,7 @@ cp run_rnaseq_full.out $log_dir/
 # skip checking job if not generating star index.
 if [[ $skip_run_star_index == 0 ]];then
 	tmp0=$($run sbatch --dependency=$jid0 \
+		--partition=$general_partition \
                 --time=5:00 \
                 --output=$log_dir/dummy_run_star_index.txt \
                 --job-name=run_star_index \
@@ -314,7 +318,8 @@ if [[ $skip_run_trim_qc == 0 ]]; then
         message=${message}"See progress in run_align_create_tracks_rna.out\n"
 
         tmp1=$($run sbatch --dependency=afterok:$jid2 \
-                --time=5:00 \
+                --partition=$general_partition \
+		--time=5:00 \
                 --output=$log_dir/dummy_run_trim_qc.txt \
                 --job-name=run_trim_qc \
                 --export message="$message",proj_dir=$proj_dir \
@@ -378,7 +383,8 @@ if [[ $skip_run_align_create_tracks_rna == 0 ]]; then
 	cp $proj_dir/run_rnaseq_full.out $log_dir/
 
 	tmp=$($run sbatch --dependency=afterok:$jid4c \
-               	--time=5:00 \
+               	--partition=$general_partition \
+		--time=5:00 \
                	--output=$log_dir/dummy_run_align_create_tracks_rna.txt \
                	--job-name=run_trim_qc \
                	--export message="$message",proj_dir=$proj_dir \
@@ -430,6 +436,7 @@ message=$message"trim folder contains the trimmed fastq files\n\n"
 cp $proj_dir/run_rnaseq_full.out $log_dir/
 
 tmp=$($run sbatch --dependency=afterok:$jid8 \
+		--partition=$general_partition \
 		--time=5:00 \
 		--output=$log_dir/dummy_run_differential_analysis_rna.txt \
 		--mail-type=END \

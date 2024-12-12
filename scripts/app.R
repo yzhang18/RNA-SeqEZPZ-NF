@@ -2,7 +2,9 @@
 
 # remove user library path to avoid confusion
 if(length(.libPaths())>1) .libPaths(.libPaths()[-1])
-run_nextflow <- TRUE
+
+run_nextflow <- FALSE
+
 library(shiny)
 library(GeneOverlap)
 library(gridExtra)
@@ -1715,9 +1717,11 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
   projdir <- react.setup.proj.dir()
   # copy log (i.e. *.out) files to log folder to view
   files.to.copy <- list.files(projdir,pattern="\\.out$",full.names=TRUE)
+
   # add run_shiny_analysis.out
   if(file.exists("run_shiny_analysis.out")) 
    files.to.copy <- c(files.to.copy,"run_shiny_analysis.out")
+
   if(run_nextflow)
    files.to.copy <- c(files.to.copy,file.path(projdir,".nextflow.log"))
   print("files.to.copy")

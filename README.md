@@ -211,50 +211,62 @@ Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs i
 ![pathway_example](assets/pathway_example.png)
 
 ## Running your own dataset using zebrafish danRer11 genome.
-1. First, you would need to download zebrafish references. You can put these files in the ref directory under ```RNA-SeqEZPZ```
+You would need to download zebrafish references and have your FASTQ files and project folder where you would save all the outputs under the same parent directory.
+When running the pipeline, you would then set the filepath to the parent directory. See example below.
+
+1. For example, in the following setting, you will put your references, fastq files and project folder in a folder under ```RNA-SeqEZPZ```
    ```
    # if you follow the steps to run test dataset, you can create ```RNA-SeqEZPZ/ref/danRer11``` with the following command
    mkdir -p ref/danRer11
    # go to danRer11 folder and download the reference files
-   cd danRer11
+   cd ref/danRer11
    wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/danRer11.fa.gz | gunzip -c > danRer11.fa
    wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/genes/danRer11.refGene.gtf.gz  | gunzip -c > danRer11.refGene.gtf
    wget https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/danRer11.chrom.sizes
    ```
 2. You would need to put your FASTQ files in directory under ```RNA-SeqEZPZ```. For example ```RNA-SeqEZPZ/raw_data/fastq```.
 3. Go to ```RNA-SeqEZPZ``` folder and run ```run_shiny_analysis.sh``` with filepath that contains both FASTQ, reference fasta, gtf files and also where you want to save your analysis.
-   <br />
-   For example, if your FASTQ files are inside ```RNA-SeqEZPZ/raw_data/fastq```, your reference are inside ```RNA-SeqEZPZ/ref``` and you want to save your analysis under the ```RNA-SeqEZPZ``` folder.
-   Since all of your folders are downstream of RNA-SeqEZPZ, assuming you are in RNA-SeqEZPZ folder, you can simply specify ```filepath=.```. The dot means setting filepath to the current folder.
-  ``` 
+   
+   In this example, since your FASTQ files are inside ```RNA-SeqEZPZ/raw_data/fastq```, your reference are inside ```RNA-SeqEZPZ/ref``` and you want to save your analysis under the ```RNA-SeqEZPZ``` folder, you can set filepath to where your RNA-SeqEZPZ is.
+   Assuming you are in RNA-SeqEZPZ folder, you can simply specify ```filepath=.```. The dot means setting filepath to the current folder.
+   ``` 
    # if you are currently in RNA-SeqEZPZ/ref/danRer11 folder following step 1 of running your own dataset,
    # you have to go up twice to go to RNA-SeqEZPZ folder
    cd ../..
    bash scripts/run_shiny_analysis.sh filepath=.
-  ``` 
-   <br />
-   A Firefox browser will be displayed that will enable you to run the full analysis.
-   <br />  
+   ```
+   **Note**: options for ```run_shiny_analysis.sh```:
+      - If needed you can also set the time=DD-HH:MM:SS. (Day-hours:minutes:seconds). This is usually needed when your HPC is reserved for maintenance.
+      - If you have more than 50 FASTQ files that you need to analyze, you would need to set max_nsamples=<number-of-FASTQ-files> option.
+      - You can also run it with run=debug option to get more messages when trouble shooting.
+      - example of command with time set to 1 day 12 hours 30 minutes and 40 seconds, filepath set to current folder, run=debug and maximum number of FASTQ files set to 100:
+         ```
+         bash scripts/run_shiny_analysis.sh filepath=. time=1-12:30:40 max_nsamples=100 run=debug
+         ```
+              
+      <br />
+      A Firefox browser will be displayed that will enable you to run the full analysis.
+      <br />  
 
-   ![run_analysis_screenshot](assets/run_analysis_screenshot.png)
+      ![run_analysis_screenshot](assets/run_analysis_screenshot.png)
 
-4. You will need to select project folder. 
-   In this case, you would click on ```Select project folder```, a window will appear.
-   You can create new folder and specified the folder name in the interface.
-   Click on ```Create new folder``` after clicking on root, it will allow you to put in name for the new folder.
-   Once you click on the plus sign, it will create the named folder under root which is RNA-SeqEZPZ.
-   In this example, I am creating a folder named ```my_project```
-   ![run_create_folder](assets/run_create_folder.png)
-   You will need to click on my_project and click ```select``` at the bottom right to select my_project as your project folder.
-   After clicking ```select```, you should see my_project under ```Select project folder``` button.
-   ![run_my_project](assets/run_my_project.png)
+   4. You will need to select project folder. 
+      In this case, you would click on ```Select project folder```, a window will appear.
+      You can create new folder and specified the folder name in the interface.
+      Click on ```Create new folder``` after clicking on root, it will allow you to put in name for the new folder.
+      Once you click on the plus sign, it will create the named folder under root which is RNA-SeqEZPZ.
+      In this example, I am creating a folder named ```my_project```
+      ![run_create_folder](assets/run_create_folder.png)
+      You will need to click on my_project and click ```select``` at the bottom right to select my_project as your project folder.
+      After clicking ```select```, you should see my_project under ```Select project folder``` button.
+      ![run_my_project](assets/run_my_project.png)
 
-5. Select your genome. If you are using genome that is neither hg19 or hg38, select ```other```.
-6. Type in your genome name. In this case, I'm going to type in ```danRer11```.
-7. Select your genome fasta file and genome GTF file you downloaded in step 1.
+   5. Select your genome. If you are using genome that is neither hg19 or hg38, select ```other```.
+   6. Type in your genome name. In this case, I'm going to type in ```danRer11```.
+   7. Select your genome fasta file and genome GTF file you downloaded in step 1.
    ![run_danrer](assets/run_danrer.png)
-8. Fill out the form. See step 3 for running test example to fill out the form for your own dataset.
-9. Once you're done filling out the form, you can click on ```Run full analysis``` to run the entire pipeline.
+   8. Fill out the form. See step 3 for running test example to fill out the form for your own dataset.
+   9. Once you're done filling out the form, you can click on ```Run full analysis``` to run the entire pipeline.
    
 Feel free to open an issue for any questions or problems.
 

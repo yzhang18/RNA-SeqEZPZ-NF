@@ -37,6 +37,7 @@ The following step-by-step is for a system with SLURM scheduler and it will run 
 ## Downloading hg19 reference files
 In order to run the pipeline, you will need to download reference files.
 These are the steps to get **human hg19** references to run this pipeline. Following these steps will enable you to select hg19 genome in the graphical interface.
+The tutorial below on running test dataset uses human hg19 so you need this to run the test dataset below.
 1. Go to ```RNA-SeqEZPZ``` directory and create a ```ref/hg19``` directory. **Note**: foldername MUST be ```ref/hg19```
 
    ```
@@ -118,8 +119,11 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
 4. If you don't have ```chrom.sizes``` file for the genome, it will be created for you in the folder where the fasta file is.
 
 ## Running test dataset using hg19
-1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run run_shiny_analysis.sh with filepath set to ```project_ex```:
-```
+1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run ```run_shiny_analysis.sh``` with filepath set to ```project_ex```.
+   <br/>
+   ***Note*** on ```filepath```: since you are using reference file downloaded following the steps above, you only need to set ```filepath``` to a location where FASTQ files and project directory
+   are either in the specified path or within its subdirectories. See the section [Running your own dataset using zebrafish danRer11 genome](#running-your-own-dataset-using-zebrafish-danRer11-genome). 
+   ```
    # go to RNA-SeqEZPZ folder
    # if you are currently in ref/hg38 folder following step 7 above, go up to RNA-SeqEZPZ folder
    cd ../..
@@ -132,14 +136,15 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
 
    ![run_analysis_screenshot](assets/run_analysis_screenshot.png)
 
-2. In order to run the test dataset, first you will need to select project folder. 
+3. In order to run the test dataset, first you will need to select project folder. 
    In this case, you would click on ```Select project folder```, a window will appear.
    Please click on ```root``` (make sure it is highlighted with blue background as pictured below) and click on ```Select``` button.
+   You are clicking on ```root``` because you set your ```filepath``` to ```project_ex``` which is called root in this case.
    ![run_example_0](assets/run_example_0.png)
 
    **Note**: If you selected the ```project folder``` successfully, under ```Select project folder``` you should see ```Click to load existing samples.txt``` button.
    
-3. Next, you will need to fill out the form.
+5. Next, you will need to fill out the form.
    Test dataset is a down-sampled of the public example dataset described in the manuscript. There are 6 samples:
    | fastq file name | description                                                                                               |
    | ----------------| ----------------------------------------------------------------------------------------------------------|
@@ -166,9 +171,9 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
 
    **Note**: this step only works because there is an existing samples.txt in the ```project_ex``` directory that was provided for you.
       
-5. At this point, you are ready to click on ```Run full analysis``` to run the entire RNA-Seq pipeline steps with the example datasets provided.
+6. At this point, you are ready to click on ```Run full analysis``` to run the entire RNA-Seq pipeline steps with the example datasets provided.
 
-6. After clicking on ```Run full analysis```, you can click on ```Log``` then click on ```Refresh list``` to see the content of ```run_rnaseq_full.out```
+7. After clicking on ```Run full analysis```, you can click on ```Log``` then click on ```Refresh list``` to see the content of ```run_rnaseq_full.out```
    which contains the progress of the pipeline.
   ![run_example_2](assets/run_example_2.png)
    In the screenshot above, the pipeline is currently doing trimming and performing quality control of reads.
@@ -210,7 +215,7 @@ Example of upset plot showing overlaps of genes regulated by EWSR1::FLI1 (iEF_EF
 Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs iEF_empty) and genes down-/up-regulated by EWSR1::ETV4 (iEF_EE4 vs iEF_empty)
 ![pathway_example](assets/pathway_example.png)
 
-## Running your own dataset using zebrafish danRer11 genome.
+### Running your own dataset using zebrafish danRer11 genome.
 You would need to download zebrafish references and have your FASTQ files and project folder where you would save all the outputs under the same parent directory.
 When running the pipeline, you would then set the filepath to the parent directory. See example below.
 

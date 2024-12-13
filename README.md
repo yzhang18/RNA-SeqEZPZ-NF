@@ -122,7 +122,8 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
 1. To run the pipeline, if you haven't already, go to the ```RNA-SeqEZPZ``` directory that you cloned on the first step, run ```run_shiny_analysis.sh``` with filepath set to ```project_ex```.
    <br/>
    ***Note*** on ```filepath```: since you are using reference file downloaded following the steps above, you only need to set ```filepath``` to a location where FASTQ files and project directory
-   are either in the specified path or within its subdirectories. See the section [Running your own dataset using zebrafish danRer11 genome](#running-your-own-dataset-using-zebrafish-danRer11-genome). 
+   are either in the specified path or within its subdirectories. See the section [Running your own dataset using zebrafish danRer11 genome](#running-your-own-dataset-using-zebrafish-danRer11-genome)
+   for running the pipeline using genome that's neither hg19 nor hg38. 
    ```
    # go to RNA-SeqEZPZ folder
    # if you are currently in ref/hg38 folder following step 7 above, go up to RNA-SeqEZPZ folder
@@ -217,9 +218,10 @@ Example of pathway analysis genes down-/up-regulated by EWSR1::FLI1 (iEF_EF vs i
 ![pathway_example](assets/pathway_example.png)
 
 ### Running your own dataset using zebrafish danRer11 genome.
-You would need to download zebrafish references and have your FASTQ files and project folder where you would save all the outputs under the same parent directory.
-When running the pipeline, you would then set the filepath to the parent directory. See example below.
-
+***Note*** on ```filepath```: You would need to download zebrafish references and have your FASTQ files and project folder where you would save all the outputs under the same parent directory.
+When running the pipeline, you would then set the ```filepath``` to a location where FASTQ, references files and project directory are either in the specified path
+or within its subdirectories. See example below.
+   
 1. For example, in the following setting, you will put your references, fastq files and project folder in a folder under ```RNA-SeqEZPZ```
    ```
    # if you follow the steps to run test dataset, you can create ```RNA-SeqEZPZ/ref/danRer11``` with the following command

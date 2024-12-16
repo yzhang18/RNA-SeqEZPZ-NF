@@ -234,7 +234,8 @@ or within its subdirectories. See example below.
    wget -O - https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/genes/danRer11.refGene.gtf.gz  | gunzip -c > danRer11.refGene.gtf
    wget https://hgdownload.soe.ucsc.edu/goldenPath/danRer11/bigZips/danRer11.chrom.sizes
    ```
-2. You would need to put your FASTQ files in directory under ```RNA-SeqEZPZ```. For example ```RNA-SeqEZPZ/raw_data/fastq```.
+2. You would need to put your FASTQ files in the same parent directory as the reference files in step 1 or its subdirectories. In this example, you would put it under ```RNA-SeqEZPZ``` directory.
+   For example ```RNA-SeqEZPZ/raw_data/fastq```. That way both reference files and FASTQ files are accessible by setting the filepath to RNA-SeqEZPZ directory.
 3. Go to ```RNA-SeqEZPZ``` folder and run ```run_shiny_analysis.sh``` with filepath that contains both FASTQ, reference fasta, gtf files and also where you want to save your analysis.
    
    In this example, since your FASTQ files are inside ```RNA-SeqEZPZ/raw_data/fastq```, your reference are inside ```RNA-SeqEZPZ/ref``` and you want to save your analysis under the ```RNA-SeqEZPZ``` folder, you can set

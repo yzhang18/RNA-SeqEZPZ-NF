@@ -146,7 +146,9 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
    **Note**: If you selected the ```project folder``` successfully, under ```Select project folder``` you should see ```Click to load existing samples.txt``` button.
    
 5. Next, you will need to fill out the form.
-   <a name="form"> How to fill out the form to create samples.txt </a>
+   <br />
+   <a name="form"> How to fill out the form to create samples.txt: </a>
+   <br />
    Test dataset is a down-sampled of the public example dataset described in the manuscript. There are 6 samples:
    | fastq file name | description                                                                                               |
    | ----------------| ----------------------------------------------------------------------------------------------------------|

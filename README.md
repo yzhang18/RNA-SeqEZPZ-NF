@@ -173,7 +173,7 @@ You can skip this step if you are not going to use hg38 genome in the graphical 
 
    You can click on ```Click to load samples.txt``` to automatically fill out the form.
 
-   **Note**: this step only works because there is an existing samples.txt in the ```project_ex``` directory that was provided for you.
+   **Note**: Loading samples.txt only works because there is an existing samples.txt in the ```project_ex``` directory that was provided for you.
       
 7. At this point, you are ready to click on ```Run full analysis``` to run the entire RNA-Seq pipeline steps with the example datasets provided.
 

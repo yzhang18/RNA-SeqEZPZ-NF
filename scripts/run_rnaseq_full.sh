@@ -280,7 +280,7 @@ fi
 
 ### trimming and QC
 date
-echo "Checking whether trimming already ran to completion"
+echo -e "\nChecking whether trimming already ran to completion"
 # set default to not skip trim
 skip_run_trim_qc=0
 cp $proj_dir/run_rnaseq_full.out $log_dir/
@@ -326,7 +326,7 @@ if [[ $skip_run_trim_qc == 0 ]]; then
         check_jid2=$(echo $jid2 | sed 's/:/,/g')
 # check to make sure jobs are completed. Print messages if not.
 msg_ok="\n\nDone trimming and QC.\n"
-msg_ok="${msg_ok}See run_trim_qc.out for more detailed info.\n\n\n"
+msg_ok="${msg_ok}See run_trim_qc.out for more detailed info."
 msg_fail="Trimming and/or QC failed. Please check run_trim_qc.out\n"
 jid_to_check=$check_jid2,$tmp1
 out_file=$proj_dir/run_rnaseq_full.out
@@ -345,7 +345,7 @@ fi
 
 ### skip alignment if STAR pass2 is done
 date
-echo "Checking whether alignment already ran to completion"
+echo -e "\nChecking whether alignment already ran to completion"
 # set default to not skip alignment
 skip_run_align_create_tracks_rna=0
 # check if star_pass2 files exist
@@ -376,6 +376,8 @@ if [[ $skip_run_align_create_tracks_rna == 0 ]]; then
 		run_align_create_tracks_rna.out
 	cp $proj_dir/run_rnaseq_full.out $log_dir/
 
+	message="\nDone aligning and creating tracks for visualization.\n"
+	message="${message}See run_align_create_tracks_rna.out for more info.\n"
 	tmp=$($run sbatch --dependency=afterok:$jid4c \
                	--partition=$general_partition \
 		--time=5:00 \
@@ -383,37 +385,34 @@ if [[ $skip_run_align_create_tracks_rna == 0 ]]; then
                	--job-name=run_trim_qc \
                	--export message="$message",proj_dir=$proj_dir \
                	--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out" | cut -f 4 -d' ')
-
-	# message if jobs failed and cancel jobs
-	check_jid4c=$(echo $jid4c | sed 's/:/,/g')
-	# check to make sure jobs are completed. Print messages if not.
-	msg_ok="\n\nDone alignment and created tracks for visualization.\n"
-        msg_ok="${msg_ok}See log run_align_create_tracks_rna.out.\n\n\n"
-	msg_fail="Alignment and/or track creation failed.\n"
-	msg_fail="${msg_fail}Please check run_align_create_tracks_rna.out\n"
-	jid_to_check=$check_jid4c,$tmp
-	out_file=$proj_dir/run_rnaseq_full.out
-	check_run_align_jid=$($run sbatch \
-        --partition=$general_partition \
-        --output=$log_dir/check_run_align.out \
-        --mail-type=END \
-        --mail-user=$email \
-        --wait \
-        --time=$time \
-        --parsable \
-        --job-name=check_run_align \
-        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
-        --wrap "bash $img_dir/scripts/check_job.sh")
 fi
 
 ### Running differential genes analysis
 cp $proj_dir/run_rnaseq_full.out $log_dir/
 cd $proj_dir
+date
 echo -e "Performing differential genes analysis.....\n"
 echo -e "See progress in run_differential_analysis_rna.out.\n"
+message=""
 . $img_dir/scripts/run_differential_analysis_rna.sh run=$run_debug padj=$padj time=$time \
 	batch_adjust=$batch_adjust &> run_differential_analysis_rna.out
 cp $proj_dir/run_differential_analysis_rna.out $log_dir/
+
+# Print messages when entire pipeline ran to completion.
+message="\n\nDifferential RNA-Seq analysis completed successfully.\n"
+message="${message}See log run_differential_analysis_rna.out\n\n"
+message="${message}Done running RNA-seq full analysis\n\n"
+message="${message}Output files are in $work_dir\n"
+message="${message}Output files for differential analysis are in\n"
+message="${message}$work_dir/diff_analysis_rslt\n"
+message="${message}RNA-seq_differential_analysis_report.html in \n"
+message="${message}$work_dir/diff_analysis_rslt/\n"
+message="${message}for full documentation of differential analysis\n"
+message="${message}bw_files folder contains the track files for visualization in IGV.\n"
+message="${message}STAR_2pass/Pass2/ contains the aligned bam files, and feature counts for each sample\n"
+message="${message}fastqc_rslt contains the Quality Control files.\n"
+message="${message}See multiqc_report.html for summary of all QC metrics\n"
+message="${message}trim folder contains the trimmed fastq files\n\n"
 
 tmp=$($run sbatch --dependency=afterok:$jid8 \
 		--partition=$general_partition \
@@ -426,36 +425,4 @@ tmp=$($run sbatch --dependency=afterok:$jid8 \
 		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_rnaseq_full.out; \
 		cp $proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
 
-## message if jobs failed and cancel jobs
-check_jid8=$(echo $jid8 | sed 's/:/,/g')
-# check to make sure jobs are completed. Print messages if not.
-msg_ok="\n\nDifferential RNA-Seq analysis completed successfully.\n"
-msg_ok="${msg_ok}See log run_differential_analysis_rna.out\n\n"
-msg_ok="${msg_ok}Done running RNA-seq full analysis\n\n"
-msg_ok="${msg_ok}Output files are in $work_dir\n"
-msg_ok="${msg_ok}Output files for differential analysis are in\n"
-msg_ok="${msg_ok}$work_dir/diff_analysis_rslt\n"
-msg_ok="${msg_ok}RNA-seq_differential_analysis_report.html in \n"
-msg_ok="${msg_ok}$work_dir/diff_analysis_rslt/\n"
-msg_ok="${msg_ok}for full documentation of differential analysis\n"
-msg_ok="${msg_ok}bw_files folder contains the track files for visualization in IGV.\n"
-msg_ok="${msg_ok}STAR_2pass/Pass2/ contains the aligned bam files, and feature counts for each sample\n"
-msg_ok="${msg_ok}fastqc_rslt contains the Quality Control files.\n"
-msg_ok="${msg_ok} See multiqc_report.html for summary of all QC metrics\n"
-msg_ok="${msg_ok}trim folder contains the trimmed fastq files\n\n"
-msg_fail="Differential RNA-Seq analysis failed. Please check run_differential_analysis_rna.out\n"
-jid_to_check=$check_jid8,$tmp
-out_file=$proj_dir/run_rnaseq_full.out
-check_run_diff_jid=$($run sbatch \
-        --partition=$general_partition \
-        --output=$log_dir/check_run_diff.out \
-        --mail-type=END \
-        --mail-user=$email \
-        --wait \
-        --time=$time \
-        --parsable \
-        --job-name=check_run_diff \
-        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
-        --wrap "bash $img_dir/scripts/check_job.sh")
-cp $proj_dir/run_rnaseq_full.out $log_dir/
 

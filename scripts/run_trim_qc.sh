@@ -241,7 +241,6 @@ for (( idx =0; idx <= len_row-1; idx++ ));do
 done
 
 ##### run multiqc
-echo -e "Running multiqc to combine all the quality control files Job id: $jid2\n"
 jid2=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_run=$run \
 	SINGULARITYENV_proj_dir=$proj_dir \
@@ -258,13 +257,14 @@ jid2=$(SINGULARITYENV_PYTHONPATH= \
 			--bind $img_dir/scripts:/scripts \
 			$img_dir/$img_name \
 				/bin/bash /scripts/multiqc_simg.sbatch"| cut -f 4 -d' ')
+echo -e "Running multiqc to combine all the quality control files Job id: $jid2\n"
 
 # message if jobs never satisfied
 check_jid=$(echo $jid | sed 's/:/,/g')
 # check to make sure jobs are completed. Print messages if not.
-msg_ok="Done trimming reads and quality control\n\n\
-msg_ok="${msg_ok}summary of quality control result is in $work_dir/trim/fastqc_rslt/multiqc_report.html\n\"
-msg_ok="${msg_ok}trimmed fastq files are in $work_dir/trim\n\n"
+msg_ok="Done trimming reads and quality control.\n\n"
+msg_ok="${msg_ok}Summary of quality control result is in $work_dir/trim/fastqc_rslt/multiqc_report.html\n"
+msg_ok="${msg_ok}Trimmed fastq files are in $work_dir/trim\n"
 msg_ok="$log_dir/multiqc.out contains the commands ran"
 msg_fail="Either trimming reads or running fastqc failed. Please check trim_fastqc_* files in $log_dir\n"
 jid_to_check=$check_jid,$jid2

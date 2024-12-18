@@ -46,6 +46,8 @@ jobname=($(sacct -j $jids --format=jobname%100 --noheader ))
 jobid=($(sacct -j $jids --format=jobid --noheader ))
 # unique states of jids
 state_uni=($(echo "${state[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+# if jobs failed for the following reasons, cancel all jobs in queue
+# and write message to run_rnaseq_full.out if file exists
 if [[ "${reason[*]}" == *"DependencyNeverSatisfied"* || "${state[*]}" == *"CANCELLED"* || \
 	"${state[*]}" == *"FAILED"* || "${reason[*]}" == *"FAILED"* ]]; then
         for i in "${!state[@]}"; do

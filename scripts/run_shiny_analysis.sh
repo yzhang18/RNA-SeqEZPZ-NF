@@ -141,13 +141,17 @@ jid=$(sbatch --time=$time \
 
 echo -e "\n\nYou need to have x11 display server such as Xming running.\n"
 
-status=$(squeue -j $jid -o "%t" -h)
-node=$(squeue -j $jid -o "%R" -h)
-while [[ $status != "R"* ]];do
+#status=$(squeue -j $jid -o "%t" -h)
+#node=$(squeue -j $jid -o "%R" -h)
+status=$(sacct -j $jid -Xn -Po state)
+node=$(sacct -j $jid -Xn -Po nodelist)
+while [[ $status != "RUNNING"* ]];do
 	echo -e "Please wait finding available node and setting up shiny app ....\n"
 	sleep 10
-	status=$(squeue -j $jid -o "%t" -h)
-	node=$(squeue -j $jid -o "%R" -h)
+	#status=$(squeue -j $jid -o "%t" -h)
+	#node=$(squeue -j $jid -o "%R" -h)
+	status=$(sacct -j $jid -Xn -Po state)
+	node=$(sacct -j $jid -Xn -Po nodelist)
 done
 
 # Extra check to make sure shiny app is already at listening point

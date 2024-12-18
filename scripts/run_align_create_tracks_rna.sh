@@ -314,25 +314,26 @@ tmp=$($run sbatch \
 
 # message if jobs never satisfied or cancelled
 check_jid3=$(echo $jid3 | sed 's/:/,/g')
-state=($(squeue -j $check_jid3 -h))
-
-while [ ${#state[@]} -ne 0 ];
-do
-        sleep 10
-        state=($(squeue -j $check_jid3 -h))
-done
-
-reason=$(squeue -j $tmp -o "%R" -h)
-state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
-if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-	scancel $tmp
-	echo -e "STAR 1st pass run failed. Please check star_pass1_* files in $log_dir\n"
-	exit 1
-fi
+# check to make sure jobs are completed. Print messages.
+msg_ok="STAR 1st pass completed successfully.\n"
+msg_fail="STAR 1st pass run failed. Please check star_pass1_* files in $log_dir\n"
+jid_to_check=$check_jid3,$tmp
+out_file=$proj_dir/run_align_create_tracks_rna.out
+check_run_star_pass1_jid=$($run sbatch \
+        --partition=$general_partition \
+        --output=$log_dir/check_run_star_pass1.out \
+        --mail-type=END \
+        --mail-user=$email \
+        --wait \
+        --time=$time \
+        --parsable \
+        --job-name=check_star_pass1 \
+        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
+        --wrap "bash $img_dir/scripts/check_job.sh")
 
 # STAR second pass
 genomeForPass2=$work_dir/STAR_2pass/GenomeForPass2
-
+mkdir -p $genomeForPass2
 # get all the junctions files for input to 2nd pass alignment
 cd $genomeForPass2
 sjFiles=($(find `pwd` -name '*_SJ.out.tab.Pass1.sjdb'))
@@ -404,14 +405,14 @@ for i in "${!groupname_array[@]}"; do
 	else
 		jid4=${jid4}:${tmp_jid}
 	fi
-	#set +x	
-done	
+	#set +x
+done
 
-# if there are replicates, combine the bw files for each replicate 
+# if there are replicates, combine the bw files for each replicate
 n_rep=$(printf "%s\n" "${repname_array[@]}" | sort -u | wc -l)
 echo number of replicates $n_rep
 if [[ n_rep -gt 1 ]]; then
-	#echo There is replicates	
+	#echo There is replicates
 	#set -x
 	cd $work_dir
 	# dummy sbatch waiting for previous jobs to finish
@@ -421,25 +422,27 @@ if [[ n_rep -gt 1 ]]; then
 	--output=$log_dir/dummy.txt \
 	--time=5:00 \
 	--wrap "echo dummy sbatch waiting for STAR 2nd pass to be finished"| cut -f 4 -d' ')
-	
-	# message if jobs never satisfied or cancelled
-	check_jid4=$(echo $jid4 | sed 's/:/,/g')
-	state=($(squeue -j $check_jid4 -h))
 
-	while [ ${#state[@]} -ne 0 ];
-	do
-        	sleep 10
-        	state=($(squeue -j $check_jid4 -h))
-	done
-				
-	reason=$(squeue -j $tmp -o "%R" -h)
-	state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
-	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-		scancel $tmp
-		echo -e "STAR 2nd pass run failed. Please check star_pass2_* files in $log_dir\n"
-		exit
-	fi	
-	
+	#message if jobs never satisfied or cancelled
+	#cancel jobs if dependency never satisfied
+	check_jid4=$(echo $jid4 | sed 's/:/,/g')
+	# check to make sure jobs are completed. Print messages if not.
+	msg_ok="STAR 2nd pass completed successfully.\n"
+	msg_fail="STAR 2nd pass run failed. Please check star_pass2_* files in $log_dir\n"
+	jid_to_check=$check_jid4,$tmp
+	out_file=$proj_dir/run_align_create_tracks_rna.out
+	check_star_pass2_jid=$($run sbatch \
+        	--partition=$general_partition \
+        	--output=$log_dir/check_star_pass2.out \
+        	--mail-type=END \
+        	--mail-user=$email \
+        	--wait \
+        	--time=$time \
+        	--parsable \
+        	--job-name=check_star_pass2 \
+        	--export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
+        	--wrap "bash $img_dir/scripts/check_job.sh")
+
 	# initialize job ids
 	jid4b=
 	cd $work_dir/bw_files
@@ -498,21 +501,22 @@ if [[ n_rep -gt 1 ]]; then
 		--wrap "echo dummy sbatch after combinebw is finished"| cut -f 4 -d' ')
 	# message if jobs never satisfied or canceled
 	check_jid4b=$(echo $jid4b | sed 's/:/,/g')
-	state=($(squeue -j $check_jid4b -h))
-
-	while [ ${#state[@]} -ne 0 ];
-	do
-        	sleep 10
-        	state=($(squeue -j $check_jid4b -h))
-	done
-				
-	reason=$(squeue -j $jid4c -o "%R" -h)
-	state=$(sacct -j $jid4c --format=state | tail -n +3 | head -n 1)
-	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-		scancel $jid4c
-		echo -e "Combining bw files failed. Please check combinebw_* files in $log_dir\n"
-		exit
-	fi	
+	# check to make sure jobs are completed. Print messages if not.
+	msg_ok="bw files were combined successfully.\n"
+	msg_fail="Combining bw files failed. Please check combinebw_* files in $log_dir\n"
+	jid_to_check=$check_jid4b,$jid4c
+	out_file=$proj_dir/run_align_create_tracks_rna.out
+	check_combine_jid=$($run sbatch \
+        --partition=$general_partition \
+        --output=$log_dir/check_combine.out \
+        --mail-type=END \
+        --mail-user=$email \
+        --wait \
+        --time=$time \
+        --parsable \
+        --job-name=check_combine \
+        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
+        --wrap "bash $img_dir/scripts/check_job.sh")
 else
 	echo There are no replicates
 	jid4c=$($run sbatch \
@@ -526,21 +530,22 @@ else
 		--wrap "echo dummy sbatch after STAR 2nd pass is finished. There are no replicates"| cut -f 4 -d' ')
 	# message if jobs never satisfied or cancelled
 	check_jid4=$(echo $jid4 | sed 's/:/,/g')
-	state=($(squeue -j $check_jid4 -h))
-
-	while [ ${#state[@]} -ne 0 ];
-	do
-        	sleep 10
-        	state=($(squeue -j $check_jid4 -h))
-	done
-			
-	reason=$(squeue -j $jid4c -o "%R" -h)
-	state=$(sacct -j $jid4c --format=state | tail -n +3 | head -n 1)
-	if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-		scancel $jid4c
-		echo -e "STAR 2nd pass run failed. Please check star_pass2_* files in $log_dir\n"
-		exit
-	fi	
+	# check to make sure jobs are completed. Print messages if not.
+	msg_ok="STAR 2nd run completed successfully.\n"
+	msg_fail="STAR 2nd pass run failed. Please check star_pass2_* files in $log_dir\n"
+	jid_to_check=$check_jid4,$jid4c
+	out_file=$proj_dir/run_align_create_tracks_rna.out
+	check_star_pass2=$($run sbatch \
+        --partition=$general_partition \
+        --output=$log_dir/check_star_pass2.out \
+        --mail-type=END \
+        --mail-user=$email \
+        --wait \
+        --time=$time \
+        --parsable \
+        --job-name=check_star_pass2 \
+        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
+        --wrap "bash $img_dir/scripts/check_job.sh")
 fi
 
 message="Done alignment using STAR 2-pass approach and created bw files for visualization\n\n\
@@ -561,5 +566,6 @@ tmp=$($run sbatch --dependency=afterok:$jid4c \
 		--job-name=run_align_create_tracks_rna \
 		--export message="$message",proj_dir=$proj_dir \
 		--wrap "echo -e \"$message\"$(date) >> $proj_dir/run_align_create_tracks_rna.out; \
-			cp $proj_dir/run_align_create_tracks_rna.out $log_dir/run_align_create_tracks_rna.out"| cut -f 4 -d' ')
+			cp $proj_dir/run_align_create_tracks_rna.out $log_dir/run_align_create_tracks_rna.out"| \
+			cut -f 4 -d' ')
 

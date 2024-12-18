@@ -247,23 +247,26 @@ jid6=$(SINGULARITYENV_PYTHONPATH= \
 
 # message if jobs never satisfied or cancelled
 check_jid5=$(echo $jid5 | sed 's/:/,/g')
-state=($(squeue -j $check_jid5 -h))
 
-while [ ${#state[@]} -ne 0 ];
-do
-        sleep 10
-        state=($(squeue -j $check_jid5 -h))
-done
+# check to make sure jobs are completed. If something is wrong, cancel all downstream jobs
+# Print messages.
+msg_ok="Feature counts completed successfully.\n"
+msg_fail="Feature counts failed. Please check featureCounts_* files in $log_dir\n"
+jid_to_check=$check_jid5,$jid6
+out_file=$proj_dir/run_differential_analysis_rna.out
+check_feature_counts_jid=$($run sbatch \
+        --partition=$general_partition \
+        --output=$log_dir/check_feature_counts.out \
+        --mail-type=END \
+        --mail-user=$email \
+        --wait \
+        --time=$time \
+        --parsable \
+        --job-name=check_feature_counts \
+        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
+        --wrap "bash $img_dir/scripts/check_job.sh")
 
-reason=$(squeue -j $jid6 -o "%R" -h)
-state=$(sacct -j $jid6 --format=state | tail -n +3 | head -n 1)
-if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-	scancel $jid6
-	echo -e "Feature counts failed. Please check featureCounts_* files in $log_dir\n"
-	# copy run_differential_analysis_rna.out to log_dir
-	cp $proj_dir/run_differential_analysis_rna.out $log_dir/
-	exit
-fi
+cp $proj_dir/run_differential_analysis_rna.out $log_dir/
 
 ##### re-run final multiqc
 jid7=$(SINGULARITYENV_PYTHONPATH= \
@@ -284,24 +287,24 @@ jid7=$(SINGULARITYENV_PYTHONPATH= \
 			/bin/bash /scripts/multiqc_simg.sbatch"| cut -f 4 -d' ')
 
 # message if jobs never satisfied or cancelled
+# if it is cancel jobs and print messages
 check_jid6=$(echo $jid6 | sed 's/:/,/g')
-state=($(squeue -j $check_jid6 -h))
-
-while [ ${#state[@]} -ne 0 ];
-do
-        sleep 10
-        state=($(squeue -j $check_jid6 -h))
-done
-
-reason=$(squeue -j $jid7 -o "%R" -h)
-state=$(sacct -j $jid7 --format=state | tail -n +3 | head -n 1)
-if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-	scancel $jid7
-	echo -e "SARTools run failed. Please check run_sartools.out in $log_dir\n"
-	# copy run_differential_analysis_rna.out to log_dir
-	cp $proj_dir/run_differential_analysis_rna.out $log_dir/
-	exit
-fi
+# check to make sure jobs are completed. Print messages if not.
+msg_ok="SARTools completed successfully.\n"
+msg_fail="SARTools run failed. Please check run_sartools.out in $log_dir\n"
+jid_to_check=$check_jid6,$jid7
+out_file=$proj_dir/run_differential_analysis_rna.out
+check_sartools_jid=$($run sbatch \
+        --partition=$general_partition \
+        --output=$log_dir/check_sartools.out \
+        --mail-type=END \
+        --mail-user=$email \
+        --wait \
+        --time=$time \
+        --parsable \
+        --job-name=check_sartools \
+        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
+        --wrap "bash $img_dir/scripts/check_job.sh")
 
 # delete intermediate bam files
 rm -r $proj_dir/outputs/STAR_2pass/Pass1 2> /dev/null || true

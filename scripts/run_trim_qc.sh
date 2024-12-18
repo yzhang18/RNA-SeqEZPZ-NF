@@ -241,6 +241,7 @@ for (( idx =0; idx <= len_row-1; idx++ ));do
 done
 
 ##### run multiqc
+echo -e "Running multiqc to combine all the quality control files Job id: $jid2\n"
 jid2=$(SINGULARITYENV_PYTHONPATH= \
 	SINGULARITYENV_run=$run \
 	SINGULARITYENV_proj_dir=$proj_dir \
@@ -260,30 +261,26 @@ jid2=$(SINGULARITYENV_PYTHONPATH= \
 
 # message if jobs never satisfied
 check_jid=$(echo $jid | sed 's/:/,/g')
-state=($(squeue -j $check_jid -h))
+# check to make sure jobs are completed. Print messages if not.
+msg_ok="Done trimming reads and quality control\n\n\
+msg_ok="${msg_ok}summary of quality control result is in $work_dir/trim/fastqc_rslt/multiqc_report.html\n\"
+msg_ok="${msg_ok}trimmed fastq files are in $work_dir/trim\n\n"
+msg_ok="$log_dir/multiqc.out contains the commands ran"
+msg_fail="Either trimming reads or running fastqc failed. Please check trim_fastqc_* files in $log_dir\n"
+jid_to_check=$check_jid,$jid2
+out_file=$proj_dir/run_trim_qc.out
+check_trim_jid=$($run sbatch \
+        --partition=$general_partition \
+        --output=$log_dir/check_trim.out \
+        --mail-type=END \
+        --mail-user=$email \
+        --wait \
+        --time=$time \
+        --parsable \
+        --job-name=check_trim \
+        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
+        --wrap "bash $img_dir/scripts/check_job.sh")
 
-while [ ${#state[@]} -ne 0 ];
-do
-        sleep 10
-        state=($(squeue -j $check_jid -h))
-done
-
-reason=$(squeue -j $jid2 -o "%R" -h)
-state=$(sacct -j $jid2 --format=state | tail -n +3 | head -n 1)
-if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-	scancel $jid2
-	echo -e "Either trimming reads or running fastqc failed. Please check trim_fastqc_* files in $log_dir\n"
-	exit
-else 
-	echo ""
-	echo "Running multiqc to combine all the quality control files Job id: $jid2"
-	echo "$log_dir/multiqc.out contains the commands ran"
-	echo ""
-fi
-
-message="Done trimming reads and quality control\n\n\
-summary of quality control result is in $work_dir/trim/fastqc_rslt/multiqc_report.html\n\
-trimmed fastq files are in $work_dir/trim\n\n"
 cp $proj_dir/run_trim_qc.out $log_dir/
 
 tmp=$($run sbatch --dependency=afterok:$jid2 \
@@ -298,18 +295,21 @@ tmp=$($run sbatch --dependency=afterok:$jid2 \
 
 # message if jobs never satisfied
 check_jid2=$(echo $jid2 | sed 's/:/,/g')
-state=($(squeue -j $check_jid2 -h))
+# check to make sure jobs are completed. Print messages if not.
+msg_ok="multiqc was completed successfully.\n"
+msg_fail="multiqc failed. Please check multiqc.out in $log_dir\n"
+jid_to_check=$check_jid2,$tmp
+out_file=$proj_dir/run_trim_qc.out
+check_multiqc_jid=$($run sbatch \
+        --partition=$general_partition \
+        --output=$log_dir/check_multiqc.out \
+        --mail-type=END \
+        --mail-user=$email \
+        --wait \
+        --time=$time \
+        --parsable \
+        --job-name=check_multiqc \
+        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
+        --wrap "bash $img_dir/scripts/check_job.sh")
 
-while [ ${#state[@]} -ne 0 ];
-do
-        sleep 10
-        state=($(squeue -j $check_jid2 -h))
-done
-
-reason=$(squeue -j $tmp -o "%R" -h)
-state=$(sacct -j $tmp --format=state | tail -n +3 | head -n 1)
-if [[ $reason == *"DependencyNeverSatisfied"* || $state == *"CANCELLED"* ]]; then
-	scancel $tmp
-	echo -e "multiqc failed. Please check multiqc.out in $log_dir\n"
-fi
 cp $proj_dir/run_trim_qc.out $log_dir/

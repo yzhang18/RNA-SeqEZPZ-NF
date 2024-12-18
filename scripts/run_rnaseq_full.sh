@@ -252,13 +252,14 @@ if [[ $skip_run_star_index == 0 ]];then
                 --time=5:00 \
                 --output=$log_dir/dummy_run_star_index.txt \
                 --job-name=run_star_index \
-                --export message="$message",proj_dir=$proj_dir \
+        	--wait \
+	        --export message="$message",proj_dir=$proj_dir \
                 --wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out; \
 						cp $proj_dir/run_rnaseq_full.out $log_dir/"| cut -f 4 -d' ')
 	# message if jobs never satisfied
 	check_jid0=$(echo $jid0 | sed 's/:/,/g')
 	# check to make sure jobs are completed. Print messages if not.
-	msg_ok="\n\nDone checking and generating STAR index as needed.\n"
+	msg_ok="Done checking and generating STAR index as needed.\n"
 	msg_fail="Checking and/or generating STAR index failed. Please check run_star_index.out\n"
 	jid_to_check=$check_jid0,$tmp0
 	out_file=$proj_dir/run_rnaseq_full.out
@@ -382,7 +383,8 @@ if [[ $skip_run_align_create_tracks_rna == 0 ]]; then
                	--partition=$general_partition \
 		--time=5:00 \
                	--output=$log_dir/dummy_run_align_create_tracks_rna.txt \
-               	--job-name=run_trim_qc \
+               	--job-name=check_run_align \
+		--wait \
                	--export message="$message",proj_dir=$proj_dir \
                	--wrap "echo -e \"$message\" >> $proj_dir/run_rnaseq_full.out" | cut -f 4 -d' ')
 fi
@@ -399,7 +401,7 @@ message=""
 cp $proj_dir/run_differential_analysis_rna.out $log_dir/
 
 # Print messages when entire pipeline ran to completion.
-message="\n\nDifferential RNA-Seq analysis completed successfully.\n"
+message="Differential RNA-Seq analysis completed successfully.\n"
 message="${message}See log run_differential_analysis_rna.out\n\n"
 message="${message}Done running RNA-seq full analysis\n\n"
 message="${message}Output files are in $work_dir\n"

@@ -1,0 +1,76 @@
+Wed Dec 18 16:36:44 EST 2024
+
+Running full RNA-seq analysis
+
+Options used to run:
+padj=0.05
+time=7-00:00:00
+genome=hg19
+batch_adjust=yes
+ncpus_trim=4
+
+
+Using singularity image and scripts in: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ 
+
+All outputs will be stored in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs
+
+Logs and scripts ran will be stored in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/logs
+
+
+Check and generate STAR index if genome has not been indexed yet....
+See run_star_index.out for more info
+
+
+Done checking and generating STAR index as needed.
+
+Wed Dec 18 16:57:14 EST 2024
+
+
+Wed Dec 18 16:57:22 EST 2024
+
+Checking whether trimming already ran to completion
+
+Trimming and QC.....see progress in run_trim_qc.out
+
+
+
+
+Done trimming and QC.
+See run_trim_qc.out for more detailed info.
+Wed Dec 18 17:06:16 EST 2024
+
+
+Wed Dec 18 17:06:25 EST 2024
+
+Checking whether alignment already ran to completion
+Aligning reads and creating tracks for visualization....
+
+See progress in run_align_create_tracks_rna.out.
+
+
+Done aligning and creating tracks for visualization.
+See run_align_create_tracks_rna.out for more info.
+
+Wed Dec 18 17:16:10 EST 2024
+Performing differential genes analysis.....
+
+See progress in run_differential_analysis_rna.out.
+
+Differential RNA-Seq analysis completed successfully.
+See log run_differential_analysis_rna.out
+
+Done running RNA-seq full analysis
+
+Output files are in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs
+Output files for differential analysis are in
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/diff_analysis_rslt
+RNA-seq_differential_analysis_report.html in 
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/diff_analysis_rslt/
+for full documentation of differential analysis
+bw_files folder contains the track files for visualization in IGV.
+STAR_2pass/Pass2/ contains the aligned bam files, and feature counts for each sample
+fastqc_rslt contains the Quality Control files.
+See multiqc_report.html for summary of all QC metrics
+trim folder contains the trimmed fastq files
+
+Wed Dec 18 17:17:35 EST 2024

@@ -1,0 +1,25 @@
+Wed Dec 18 16:36:44 EST 2024
+
+
+Using singularity image and scripts in: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ 
+
+Generating STAR genome index and get chromosome sizes file.
+
+Options used to run:
+time=7-00:00:00
+genome=hg19
+
+Generating STAR index.
+
+See /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/run_star_index.out to check the analysis progress
+all other logs will be stored in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/logs
+log files contain all the commands run
+
+Generating STAR index job id: 6096298
+
+run_star_index.sh completed successfully.
+STAR index files are in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/ref/hg19/STAR_index
+
+Wed Dec 18 16:56:46 EST 2024
+
+

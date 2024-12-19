@@ -1,0 +1,8 @@
+Job Statistics for 6096335:
+           JobID       User               Start                 End    Elapsed   TotalCPU      State        NodeList 
+---------------- ---------- ------------------- ------------------- ---------- ---------- ---------- --------------- 
+         6096335     cxt050 2024-12-18T16:57:10 2024-12-18T16:57:12   00:00:02  00:00.008  COMPLETED   r1pl-hpcf-n11 
+   6096335.batch            2024-12-18T16:57:10 2024-12-18T16:57:12   00:00:02  00:00.007  COMPLETED   r1pl-hpcf-n11 
+  6096335.extern            2024-12-18T16:57:10 2024-12-18T16:57:12   00:00:02  00:00.001  COMPLETED   r1pl-hpcf-n11 
+Requested Resources: billing=1,cpu=1,mem=7455M,node=1
+Maximum CPU Memory: 0; 	CPU Efficiency: 0.00% of 00:00:02 core-walltime

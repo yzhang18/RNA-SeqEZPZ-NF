@@ -1,0 +1,7 @@
+Sample	total_reads	avg_input_read_length	uniquely_mapped	uniquely_mapped_percent	avg_mapped_read_length	num_splices	num_annotated_splices	num_GTAG_splices	num_GCAG_splices	num_ATAC_splices	num_noncanonical_splices	mismatch_rate	deletion_rate	deletion_length	insertion_rate	insertion_length	multimapped	multimapped_percent	multimapped_toomany	multimapped_toomany_percent	unmapped_mismatches_percent	unmapped_tooshort_percent	unmapped_other_percent	unmapped_mismatches	unmapped_tooshort	unmapped_other
+iEF_EE4_rep1	19985.0	276.0	16569.0	82.91	276.14	13520.0	13456.0	13351.0	93.0	8.0	68.0	0.25	0.01	1.69	0.01	1.64	2862.0	14.32	6.0	0.03	0.0	2.62	0.13	0	522	26
+iEF_EE4_rep2	19974.0	274.0	16476.0	82.49	275.07	14192.0	14133.0	14011.0	104.0	16.0	61.0	0.25	0.01	2.08	0.01	1.75	2870.0	14.37	6.0	0.03	0.0	3.0	0.11	0	600	22
+iEF_EF_rep1	19972.0	273.0	16208.0	81.15	273.6	13353.0	13285.0	13141.0	135.0	11.0	66.0	0.25	0.01	1.58	0.01	1.73	3133.0	15.69	12.0	0.06	0.0	3.02	0.08	0	603	16
+iEF_EF_rep2	19973.0	276.0	16595.0	83.09	277.25	14294.0	14233.0	14094.0	122.0	11.0	67.0	0.25	0.01	1.73	0.01	1.85	2748.0	13.76	1.0	0.01	0.0	3.08	0.07	0	615	14
+iEF_empty_rep1	19973.0	273.0	16694.0	83.58	273.19	13106.0	13044.0	12944.0	98.0	6.0	58.0	0.25	0.01	1.75	0.01	1.7	2620.0	13.12	6.0	0.03	0.0	3.12	0.15	0	623	30
+iEF_empty_rep2	19967.0	275.0	16781.0	84.04	275.42	13465.0	13406.0	13310.0	84.0	7.0	64.0	0.26	0.01	1.81	0.01	1.73	2524.0	12.64	5.0	0.03	0.0	3.21	0.08	0	641	16

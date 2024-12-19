@@ -1,0 +1,69 @@
+Wed Dec 18 17:06:25 EST 2024
+
+Aligning reads to hg19 and create tracks for visualization
+
+Options used to run:
+padj=0.05
+time=7-00:00:00
+genome=hg19
+
+all outputs will be stored in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs
+See /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/run_align_create_tracks_rna.out to check the analysis progress
+All other logs including scripts ran will be stored in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/logs
+
+
+Using singularity image and scripts in: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ 
+
+Running STAR first pass for iEF_EF_rep1 job id: 6096657
+
+Running STAR first pass for iEF_EF_rep2 job id: 6096658
+
+Running STAR first pass for iEF_EE4_rep1 job id: 6096659
+
+Running STAR first pass for iEF_EE4_rep2 job id: 6096660
+
+Running STAR first pass for iEF_empty_rep1 job id: 6096661
+
+Running STAR first pass for iEF_empty_rep2 job id: 6096662
+
+STAR 1st pass completed successfully.
+
+Wed Dec 18 17:06:48 EST 2024
+
+
+Running STAR second pass for iEF_EF_rep1 job id: 6096666
+
+Running STAR second pass for iEF_EF_rep2 job id: 6096667
+
+Running STAR second pass for iEF_EE4_rep1 job id: 6096668
+
+Running STAR second pass for iEF_EE4_rep2 job id: 6096669
+
+Running STAR second pass for iEF_empty_rep1 job id: 6096670
+
+Running STAR second pass for iEF_empty_rep2 job id: 6096671
+
+number of replicates 2
+STAR 2nd pass completed successfully.
+
+Wed Dec 18 17:14:39 EST 2024
+
+
+iEF_EF_rep1_norm.bw
+Combining  bigwig replicates job id: 6096674
+
+iEF_empty_rep1_norm.bw iEF_empty_rep2_norm.bw
+Combining  bigwig replicates job id: 6096675
+
+bw files were combined successfully.
+
+Wed Dec 18 17:14:48 EST 2024
+
+
+Done alignment using STAR 2-pass approach and created bw files for visualization
+
+Tracks for each replicate and combined replicates are *norm.bw and comb.bw respectively
+in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs
+Aligned bam files are in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/STAR_2pass/Pass2
+
+Wed Dec 18 17:14:56 EST 2024

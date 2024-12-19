@@ -1,0 +1,8 @@
+Job Statistics for 6096441:
+           JobID       User               Start                 End    Elapsed   TotalCPU      State        NodeList 
+---------------- ---------- ------------------- ------------------- ---------- ---------- ---------- --------------- 
+         6096441     cxt050 2024-12-18T16:58:17 2024-12-18T16:58:19   00:00:02  00:00.008  COMPLETED   r1pl-hpcf-n03 
+   6096441.batch            2024-12-18T16:58:17 2024-12-18T16:58:19   00:00:02  00:00.007  COMPLETED   r1pl-hpcf-n03 
+  6096441.extern            2024-12-18T16:58:17 2024-12-18T16:58:19   00:00:02  00:00.001  COMPLETED   r1pl-hpcf-n03 
+Requested Resources: billing=1,cpu=1,mem=7455M,node=1
+Maximum CPU Memory: 0; 	CPU Efficiency: 0.00% of 00:00:02 core-walltime

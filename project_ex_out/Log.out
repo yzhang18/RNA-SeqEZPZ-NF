@@ -1,0 +1,337 @@
+STAR version=2.7.11b
+STAR compilation time,server,dir=2024-07-03T14:39:20+0000 :/opt/conda/conda-bld/star_1720017372352/work/source
+##### Command Line:
+/opt/miniforge3/envs/rna_env/bin/STAR-avx2 --runMode genomeGenerate --genomeDir /star_index_dir --runThreadN 20 --sjdbGTFfile /ref_gtf/hg19.refGene.gtf --genomeFastaFiles /ref_fa/hg19.fa --sjdbOverhang 100
+##### Initial USER parameters from Command Line:
+###### All USER parameters from Command Line:
+runMode                       genomeGenerate        ~RE-DEFINED
+genomeDir                     /star_index_dir     ~RE-DEFINED
+runThreadN                    20     ~RE-DEFINED
+sjdbGTFfile                   /ref_gtf/hg19.refGene.gtf     ~RE-DEFINED
+genomeFastaFiles              /ref_fa/hg19.fa        ~RE-DEFINED
+sjdbOverhang                  100     ~RE-DEFINED
+##### Finished reading parameters from all sources
+
+##### Final user re-defined parameters-----------------:
+runMode                           genomeGenerate   
+runThreadN                        20
+genomeDir                         /star_index_dir
+genomeFastaFiles                  /ref_fa/hg19.fa   
+sjdbGTFfile                       /ref_gtf/hg19.refGene.gtf
+sjdbOverhang                      100
+
+-------------------------------
+##### Final effective command line:
+/opt/miniforge3/envs/rna_env/bin/STAR-avx2   --runMode genomeGenerate      --runThreadN 20   --genomeDir /star_index_dir   --genomeFastaFiles /ref_fa/hg19.fa      --sjdbGTFfile /ref_gtf/hg19.refGene.gtf   --sjdbOverhang 100
+----------------------------------------
+
+Number of fastq files for each mate = 1
+ParametersSolo: --soloCellFilterType CellRanger2.2 filtering parameters:  3000 0.99 10
+Finished loading and checking parameters
+--genomeDir directory exists and will be overwritten: /star_index_dir/
+!!!!! WARNING: Could not move Log.out file from ./Log.out into /star_index_dir/Log.out. Will keep ./Log.out
+
+Dec 18 16:36:48 ... starting to generate Genome files
+/ref_fa/hg19.fa : chr # 0  "chr1" chrStart: 0
+/ref_fa/hg19.fa : chr # 1  "chr2" chrStart: 249298944
+/ref_fa/hg19.fa : chr # 2  "chr3" chrStart: 492568576
+/ref_fa/hg19.fa : chr # 3  "chr4" chrStart: 690749440
+/ref_fa/hg19.fa : chr # 4  "chr5" chrStart: 882114560
+/ref_fa/hg19.fa : chr # 5  "chr6" chrStart: 1063256064
+/ref_fa/hg19.fa : chr # 6  "chr7" chrStart: 1234436096
+/ref_fa/hg19.fa : chr # 7  "chrX" chrStart: 1393819648
+/ref_fa/hg19.fa : chr # 8  "chr8" chrStart: 1549271040
+/ref_fa/hg19.fa : chr # 9  "chr9" chrStart: 1695809536
+/ref_fa/hg19.fa : chr # 10  "chr10" chrStart: 1837105152
+/ref_fa/hg19.fa : chr # 11  "chr11" chrStart: 1972895744
+/ref_fa/hg19.fa : chr # 12  "chr12" chrStart: 2108162048
+/ref_fa/hg19.fa : chr # 13  "chr13" chrStart: 2242117632
+/ref_fa/hg19.fa : chr # 14  "chr14" chrStart: 2357460992
+/ref_fa/hg19.fa : chr # 15  "chr15" chrStart: 2464940032
+/ref_fa/hg19.fa : chr # 16  "chr16" chrStart: 2567700480
+/ref_fa/hg19.fa : chr # 17  "chr17" chrStart: 2658140160
+/ref_fa/hg19.fa : chr # 18  "chr18" chrStart: 2739404800
+/ref_fa/hg19.fa : chr # 19  "chr20" chrStart: 2817523712
+/ref_fa/hg19.fa : chr # 20  "chrY" chrStart: 2880700416
+/ref_fa/hg19.fa : chr # 21  "chr19" chrStart: 2940207104
+/ref_fa/hg19.fa : chr # 22  "chr22" chrStart: 2999451648
+/ref_fa/hg19.fa : chr # 23  "chr21" chrStart: 3050831872
+/ref_fa/hg19.fa : chr # 24  "chr6_ssto_hap7" chrStart: 3099066368
+/ref_fa/hg19.fa : chr # 25  "chr6_mcf_hap5" chrStart: 3104047104
+/ref_fa/hg19.fa : chr # 26  "chr6_cox_hap2" chrStart: 3109027840
+/ref_fa/hg19.fa : chr # 27  "chr6_mann_hap4" chrStart: 3114008576
+/ref_fa/hg19.fa : chr # 28  "chr6_apd_hap1" chrStart: 3118727168
+/ref_fa/hg19.fa : chr # 29  "chr6_qbl_hap6" chrStart: 3123445760
+/ref_fa/hg19.fa : chr # 30  "chr6_dbb_hap3" chrStart: 3128164352
+/ref_fa/hg19.fa : chr # 31  "chr17_ctg5_hap1" chrStart: 3132882944
+/ref_fa/hg19.fa : chr # 32  "chr4_ctg9_hap1" chrStart: 3134717952
+/ref_fa/hg19.fa : chr # 33  "chr1_gl000192_random" chrStart: 3135504384
+/ref_fa/hg19.fa : chr # 34  "chrUn_gl000225" chrStart: 3136290816
+/ref_fa/hg19.fa : chr # 35  "chr4_gl000194_random" chrStart: 3136552960
+/ref_fa/hg19.fa : chr # 36  "chr4_gl000193_random" chrStart: 3136815104
+/ref_fa/hg19.fa : chr # 37  "chr9_gl000200_random" chrStart: 3137077248
+/ref_fa/hg19.fa : chr # 38  "chrUn_gl000222" chrStart: 3137339392
+/ref_fa/hg19.fa : chr # 39  "chrUn_gl000212" chrStart: 3137601536
+/ref_fa/hg19.fa : chr # 40  "chr7_gl000195_random" chrStart: 3137863680
+/ref_fa/hg19.fa : chr # 41  "chrUn_gl000223" chrStart: 3138125824
+/ref_fa/hg19.fa : chr # 42  "chrUn_gl000224" chrStart: 3138387968
+/ref_fa/hg19.fa : chr # 43  "chrUn_gl000219" chrStart: 3138650112
+/ref_fa/hg19.fa : chr # 44  "chr17_gl000205_random" chrStart: 3138912256
+/ref_fa/hg19.fa : chr # 45  "chrUn_gl000215" chrStart: 3139174400
+/ref_fa/hg19.fa : chr # 46  "chrUn_gl000216" chrStart: 3139436544
+/ref_fa/hg19.fa : chr # 47  "chrUn_gl000217" chrStart: 3139698688
+/ref_fa/hg19.fa : chr # 48  "chr9_gl000199_random" chrStart: 3139960832
+/ref_fa/hg19.fa : chr # 49  "chrUn_gl000211" chrStart: 3140222976
+/ref_fa/hg19.fa : chr # 50  "chrUn_gl000213" chrStart: 3140485120
+/ref_fa/hg19.fa : chr # 51  "chrUn_gl000220" chrStart: 3140747264
+/ref_fa/hg19.fa : chr # 52  "chrUn_gl000218" chrStart: 3141009408
+/ref_fa/hg19.fa : chr # 53  "chr19_gl000209_random" chrStart: 3141271552
+/ref_fa/hg19.fa : chr # 54  "chrUn_gl000221" chrStart: 3141533696
+/ref_fa/hg19.fa : chr # 55  "chrUn_gl000214" chrStart: 3141795840
+/ref_fa/hg19.fa : chr # 56  "chrUn_gl000228" chrStart: 3142057984
+/ref_fa/hg19.fa : chr # 57  "chrUn_gl000227" chrStart: 3142320128
+/ref_fa/hg19.fa : chr # 58  "chr1_gl000191_random" chrStart: 3142582272
+/ref_fa/hg19.fa : chr # 59  "chr19_gl000208_random" chrStart: 3142844416
+/ref_fa/hg19.fa : chr # 60  "chr9_gl000198_random" chrStart: 3143106560
+/ref_fa/hg19.fa : chr # 61  "chr17_gl000204_random" chrStart: 3143368704
+/ref_fa/hg19.fa : chr # 62  "chrUn_gl000233" chrStart: 3143630848
+/ref_fa/hg19.fa : chr # 63  "chrUn_gl000237" chrStart: 3143892992
+/ref_fa/hg19.fa : chr # 64  "chrUn_gl000230" chrStart: 3144155136
+/ref_fa/hg19.fa : chr # 65  "chrUn_gl000242" chrStart: 3144417280
+/ref_fa/hg19.fa : chr # 66  "chrUn_gl000243" chrStart: 3144679424
+/ref_fa/hg19.fa : chr # 67  "chrUn_gl000241" chrStart: 3144941568
+/ref_fa/hg19.fa : chr # 68  "chrUn_gl000236" chrStart: 3145203712
+/ref_fa/hg19.fa : chr # 69  "chrUn_gl000240" chrStart: 3145465856
+/ref_fa/hg19.fa : chr # 70  "chr17_gl000206_random" chrStart: 3145728000
+/ref_fa/hg19.fa : chr # 71  "chrUn_gl000232" chrStart: 3145990144
+/ref_fa/hg19.fa : chr # 72  "chrUn_gl000234" chrStart: 3146252288
+/ref_fa/hg19.fa : chr # 73  "chr11_gl000202_random" chrStart: 3146514432
+/ref_fa/hg19.fa : chr # 74  "chrUn_gl000238" chrStart: 3146776576
+/ref_fa/hg19.fa : chr # 75  "chrUn_gl000244" chrStart: 3147038720
+/ref_fa/hg19.fa : chr # 76  "chrUn_gl000248" chrStart: 3147300864
+/ref_fa/hg19.fa : chr # 77  "chr8_gl000196_random" chrStart: 3147563008
+/ref_fa/hg19.fa : chr # 78  "chrUn_gl000249" chrStart: 3147825152
+/ref_fa/hg19.fa : chr # 79  "chrUn_gl000246" chrStart: 3148087296
+/ref_fa/hg19.fa : chr # 80  "chr17_gl000203_random" chrStart: 3148349440
+/ref_fa/hg19.fa : chr # 81  "chr8_gl000197_random" chrStart: 3148611584
+/ref_fa/hg19.fa : chr # 82  "chrUn_gl000245" chrStart: 3148873728
+/ref_fa/hg19.fa : chr # 83  "chrUn_gl000247" chrStart: 3149135872
+/ref_fa/hg19.fa : chr # 84  "chr9_gl000201_random" chrStart: 3149398016
+/ref_fa/hg19.fa : chr # 85  "chrUn_gl000235" chrStart: 3149660160
+/ref_fa/hg19.fa : chr # 86  "chrUn_gl000239" chrStart: 3149922304
+/ref_fa/hg19.fa : chr # 87  "chr21_gl000210_random" chrStart: 3150184448
+/ref_fa/hg19.fa : chr # 88  "chrUn_gl000231" chrStart: 3150446592
+/ref_fa/hg19.fa : chr # 89  "chrUn_gl000229" chrStart: 3150708736
+/ref_fa/hg19.fa : chr # 90  "chrM" chrStart: 3150970880
+/ref_fa/hg19.fa : chr # 91  "chrUn_gl000226" chrStart: 3151233024
+/ref_fa/hg19.fa : chr # 92  "chr18_gl000207_random" chrStart: 3151495168
+Chromosome sequence lengths: 
+chr1	249250621
+chr2	243199373
+chr3	198022430
+chr4	191154276
+chr5	180915260
+chr6	171115067
+chr7	159138663
+chrX	155270560
+chr8	146364022
+chr9	141213431
+chr10	135534747
+chr11	135006516
+chr12	133851895
+chr13	115169878
+chr14	107349540
+chr15	102531392
+chr16	90354753
+chr17	81195210
+chr18	78077248
+chr20	63025520
+chrY	59373566
+chr19	59128983
+chr22	51304566
+chr21	48129895
+chr6_ssto_hap7	4928567
+chr6_mcf_hap5	4833398
+chr6_cox_hap2	4795371
+chr6_mann_hap4	4683263
+chr6_apd_hap1	4622290
+chr6_qbl_hap6	4611984
+chr6_dbb_hap3	4610396
+chr17_ctg5_hap1	1680828
+chr4_ctg9_hap1	590426
+chr1_gl000192_random	547496
+chrUn_gl000225	211173
+chr4_gl000194_random	191469
+chr4_gl000193_random	189789
+chr9_gl000200_random	187035
+chrUn_gl000222	186861
+chrUn_gl000212	186858
+chr7_gl000195_random	182896
+chrUn_gl000223	180455
+chrUn_gl000224	179693
+chrUn_gl000219	179198
+chr17_gl000205_random	174588
+chrUn_gl000215	172545
+chrUn_gl000216	172294
+chrUn_gl000217	172149
+chr9_gl000199_random	169874
+chrUn_gl000211	166566
+chrUn_gl000213	164239
+chrUn_gl000220	161802
+chrUn_gl000218	161147
+chr19_gl000209_random	159169
+chrUn_gl000221	155397
+chrUn_gl000214	137718
+chrUn_gl000228	129120
+chrUn_gl000227	128374
+chr1_gl000191_random	106433
+chr19_gl000208_random	92689
+chr9_gl000198_random	90085
+chr17_gl000204_random	81310
+chrUn_gl000233	45941
+chrUn_gl000237	45867
+chrUn_gl000230	43691
+chrUn_gl000242	43523
+chrUn_gl000243	43341
+chrUn_gl000241	42152
+chrUn_gl000236	41934
+chrUn_gl000240	41933
+chr17_gl000206_random	41001
+chrUn_gl000232	40652
+chrUn_gl000234	40531
+chr11_gl000202_random	40103
+chrUn_gl000238	39939
+chrUn_gl000244	39929
+chrUn_gl000248	39786
+chr8_gl000196_random	38914
+chrUn_gl000249	38502
+chrUn_gl000246	38154
+chr17_gl000203_random	37498
+chr8_gl000197_random	37175
+chrUn_gl000245	36651
+chrUn_gl000247	36422
+chr9_gl000201_random	36148
+chrUn_gl000235	34474
+chrUn_gl000239	33824
+chr21_gl000210_random	27682
+chrUn_gl000231	27386
+chrUn_gl000229	19913
+chrM	16571
+chrUn_gl000226	15008
+chr18_gl000207_random	4262
+Genome sequence total length = 3137161264
+Genome size with padding = 3151757312
+Dec 18 16:37:43 ..... processing annotations GTF
+Processing pGe.sjdbGTFfile=/ref_gtf/hg19.refGene.gtf, found:
+		77529 transcripts
+		779083 exons (non-collapsed)
+		258374 collapsed junctions
+Total junctions: 258374
+Dec 18 16:37:52 ..... finished GTF processing
+
+Estimated genome size with padding and SJs: total=genome+SJ=3352757312 = 3151757312 + 201000000
+GstrandBit=32
+Number of SA indices: 5794620924
+Dec 18 16:38:09 ... starting to sort Suffix Array. This may take a long time...
+Number of chunks: 73;   chunks size limit: 740894552 bytes
+Dec 18 16:38:23 ... sorting Suffix Array chunks and saving them to disk...
+Writing 466746232 bytes into /star_index_dir//SA_2 ; empty space on disk = 120349400236032 bytes ... done
+Writing 461648432 bytes into /star_index_dir//SA_6 ; empty space on disk = 120348930473984 bytes ... done
+Writing 595183200 bytes into /star_index_dir//SA_1 ; empty space on disk = 120348473294848 bytes ... done
+Writing 517496680 bytes into /star_index_dir//SA_10 ; empty space on disk = 120347877703680 bytes ... done
+Writing 590904168 bytes into /star_index_dir//SA_11 ; empty space on disk = 120347357609984 bytes ... done
+Writing 572756328 bytes into /star_index_dir//SA_5 ; empty space on disk = 120346762018816 bytes ... done
+Writing 716911568 bytes into /star_index_dir//SA_0 ; empty space on disk = 120346187399168 bytes ... done
+Writing 696470384 bytes into /star_index_dir//SA_4 ; empty space on disk = 120345465978880 bytes ... done
+Writing 609658496 bytes into /star_index_dir//SA_19 ; empty space on disk = 120344765530112 bytes ... done
+Writing 676186056 bytes into /star_index_dir//SA_8 ; empty space on disk = 120344153161728 bytes ... done
+Writing 605076888 bytes into /star_index_dir//SA_7 ; empty space on disk = 120343473684480 bytes ... done
+Writing 675278680 bytes into /star_index_dir//SA_3 ; empty space on disk = 120342865510400 bytes ... done
+Writing 648482256 bytes into /star_index_dir//SA_13 ; empty space on disk = 120342190227456 bytes ... done
+Writing 641446856 bytes into /star_index_dir//SA_14 ; empty space on disk = 120341540110336 bytes ... done
+Writing 644733904 bytes into /star_index_dir//SA_18 ; empty space on disk = 120340894187520 bytes ... done
+Writing 681549632 bytes into /star_index_dir//SA_16 ; empty space on disk = 120340248264704 bytes ... done
+Writing 702842480 bytes into /star_index_dir//SA_17 ; empty space on disk = 120339560398848 bytes ... done
+Writing 662260176 bytes into /star_index_dir//SA_12 ; empty space on disk = 120338855755776 bytes ...Writing 712560320 bytes into /star_index_dir//SA_15 ; empty space on disk = 120338402770944 bytes ... done
+ done
+Writing 656586688 bytes into /star_index_dir//SA_9 ; empty space on disk = 120337538744320 bytes ... done
+Writing 466747104 bytes into /star_index_dir//SA_21 ; empty space on disk = 120336796352512 bytes ... done
+Writing 416707024 bytes into /star_index_dir//SA_35 ; empty space on disk = 120336326590464 bytes ... done
+Writing 686621552 bytes into /star_index_dir//SA_20 ; empty space on disk = 120335907160064 bytes ... done
+Writing 681472552 bytes into /star_index_dir//SA_22 ; empty space on disk = 120335219294208 bytes ... done
+Writing 678142360 bytes into /star_index_dir//SA_23 ; empty space on disk = 120334212661248 bytes ... done
+Writing 650726896 bytes into /star_index_dir//SA_25 ; empty space on disk = 120333533184000 bytes ... done
+Writing 662138904 bytes into /star_index_dir//SA_26 ; empty space on disk = 120332878872576 bytes ... done
+Writing 636081592 bytes into /star_index_dir//SA_28 ; empty space on disk = 120332216172544 bytes ...Writing 651339672 bytes into /star_index_dir//SA_27 ; empty space on disk = 120331851268096 bytes ... done
+ done
+Writing 568527232 bytes into /star_index_dir//SA_37 ; empty space on disk = 120330924326912 bytes ... done
+Writing 693551800 bytes into /star_index_dir//SA_24 ; empty space on disk = 120330353901568 bytes ... done
+Writing 647954456 bytes into /star_index_dir//SA_31 ; empty space on disk = 120329653452800 bytes ... done
+Writing 680932232 bytes into /star_index_dir//SA_36 ; empty space on disk = 120329003335680 bytes ... done
+Writing 668635816 bytes into /star_index_dir//SA_39 ; empty space on disk = 120328319664128 bytes ... done
+Writing 673458264 bytes into /star_index_dir//SA_34 ; empty space on disk = 120327648575488 bytes ... done
+Writing 688374008 bytes into /star_index_dir//SA_32 ; empty space on disk = 120326973292544 bytes ... done
+Writing 699635512 bytes into /star_index_dir//SA_33 ; empty space on disk = 120326281232384 bytes ... done
+Writing 662393432 bytes into /star_index_dir//SA_29 ; empty space on disk = 120325580783616 bytes ... done
+Writing 698202016 bytes into /star_index_dir//SA_38 ; empty space on disk = 120324918083584 bytes ... done
+Writing 712539264 bytes into /star_index_dir//SA_30 ; empty space on disk = 120324217634816 bytes ... done
+Writing 648239160 bytes into /star_index_dir//SA_40 ; empty space on disk = 120319691980800 bytes ... done
+Writing 678843832 bytes into /star_index_dir//SA_41 ; empty space on disk = 120316890185728 bytes ... done
+Writing 617472896 bytes into /star_index_dir//SA_48 ; empty space on disk = 120316210708480 bytes ... done
+Writing 404365504 bytes into /star_index_dir//SA_50 ; empty space on disk = 120315589951488 bytes ... done
+Writing 533296288 bytes into /star_index_dir//SA_55 ; empty space on disk = 120315183104000 bytes ... done
+Writing 738777072 bytes into /star_index_dir//SA_42 ; empty space on disk = 120314646233088 bytes ... done
+Writing 521098088 bytes into /star_index_dir//SA_59 ; empty space on disk = 120313903841280 bytes ... done
+Writing 675171776 bytes into /star_index_dir//SA_46 ; empty space on disk = 120313379553280 bytes ... done
+Writing 671001904 bytes into /star_index_dir//SA_47 ; empty space on disk = 120312704270336 bytes ... done
+Writing 572293192 bytes into /star_index_dir//SA_54 ; empty space on disk = 120312033181696 bytes ... done
+Writing 702227888 bytes into /star_index_dir//SA_44 ; empty space on disk = 120311458562048 bytes ... done
+Writing 551170504 bytes into /star_index_dir//SA_58 ; empty space on disk = 120310753918976 bytes ... done
+Writing 625234120 bytes into /star_index_dir//SA_52 ; empty space on disk = 120310200270848 bytes ... done
+Writing 619738224 bytes into /star_index_dir//SA_53 ; empty space on disk = 120309571125248 bytes ... done
+Writing 687110576 bytes into /star_index_dir//SA_51 ; empty space on disk = 120308950368256 bytes ... done
+Writing 722177432 bytes into /star_index_dir//SA_43 ; empty space on disk = 120308262502400 bytes ... done
+Writing 700123352 bytes into /star_index_dir//SA_57 ; empty space on disk = 120307536887808 bytes ... done
+Writing 666755184 bytes into /star_index_dir//SA_56 ; empty space on disk = 120306836439040 bytes ... done
+Writing 708037016 bytes into /star_index_dir//SA_45 ; empty space on disk = 120305980801024 bytes ... done
+Writing 643543720 bytes into /star_index_dir//SA_49 ; empty space on disk = 120305271963648 bytes ... done
+Writing 605645216 bytes into /star_index_dir//SA_60 ; empty space on disk = 120304626040832 bytes ... done
+Writing 615466944 bytes into /star_index_dir//SA_61 ; empty space on disk = 120304017866752 bytes ... done
+Writing 667827104 bytes into /star_index_dir//SA_62 ; empty space on disk = 120302113652736 bytes ... done
+Writing 589880376 bytes into /star_index_dir//SA_64 ; empty space on disk = 120301442564096 bytes ... done
+Writing 621442984 bytes into /star_index_dir//SA_68 ; empty space on disk = 120300851167232 bytes ... done
+Writing 651998568 bytes into /star_index_dir//SA_66 ; empty space on disk = 120300226215936 bytes ... done
+Writing 638512816 bytes into /star_index_dir//SA_70 ; empty space on disk = 120299571904512 bytes ... done
+Writing 542314312 bytes into /star_index_dir//SA_65 ; empty space on disk = 120298930176000 bytes ... done
+Writing 681641888 bytes into /star_index_dir//SA_71 ; empty space on disk = 120295960608768 bytes ...Writing 716913224 bytes into /star_index_dir//SA_72 ; empty space on disk = 120295327268864 bytes ... done
+ done
+Writing 602064768 bytes into /star_index_dir//SA_67 ; empty space on disk = 120294559711232 bytes ... done
+Writing 658347176 bytes into /star_index_dir//SA_63 ; empty space on disk = 120293955731456 bytes ... done
+Writing 619273176 bytes into /star_index_dir//SA_69 ; empty space on disk = 120293297225728 bytes ... done
+Dec 18 16:48:20 ... loading chunks from disk, packing SA...
+Dec 18 16:49:22 ... finished generating suffix array
+Dec 18 16:49:22 ... generating Suffix Array index
+Dec 18 16:53:43 ... completed Suffix Array index
+WARNING: long repeat for junction # 71984 : chr5 69194943 69195758; left shift = 10; right shift = 255
+WARNING: long repeat for junction # 71985 : chr5 69195132 69195947; left shift = 199; right shift = 255
+WARNING: long repeat for junction # 194957 : chr16 21414159 21414284; left shift = 4; right shift = 255
+Dec 18 16:53:44   Finished preparing junctions
+Dec 18 16:53:44 ..... inserting junctions into the genome indices
+Dec 18 16:54:14   Finished SA search: number of new junctions=258371, old junctions=0
+Dec 18 16:54:43   Finished sorting SA indicesL nInd=103347652
+Genome size with junctions=3203689883  3151757312   51932571
+GstrandBit1=32   GstrandBit=32
+Dec 18 16:55:54   Finished inserting junction indices
+Dec 18 16:56:22   Finished SAi
+Dec 18 16:56:22 ..... finished inserting junctions into genome
+Dec 18 16:56:22 ... writing Genome to disk ...
+Writing 3203689883 bytes into /star_index_dir//Genome ; empty space on disk = 120323177447424 bytes ... done
+SA size in bytes: 24329120379
+Dec 18 16:56:23 ... writing Suffix Array to disk ...
+Writing 24329120379 bytes into /star_index_dir//SA ; empty space on disk = 120319972999168 bytes ... done
+Dec 18 16:56:35 ... writing SAindex to disk
+Writing 8 bytes into /star_index_dir//SAindex ; empty space on disk = 120295646035968 bytes ... done
+Writing 120 bytes into /star_index_dir//SAindex ; empty space on disk = 120295646035968 bytes ... done
+Writing 1565873491 bytes into /star_index_dir//SAindex ; empty space on disk = 120295646035968 bytes ... done
+Dec 18 16:56:36 ..... finished successfully
+DONE: Genome generation, EXITING

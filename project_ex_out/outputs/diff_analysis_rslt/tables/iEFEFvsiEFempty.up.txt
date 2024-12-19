@@ -1,0 +1,2 @@
+Id	geneSymbol	iEF_emptyrep1	iEF_emptyrep2	iEF_EFrep1	iEF_EFrep2	iEF_EE4rep1	iEF_EE4rep2	norm.iEF_emptyrep1	norm.iEF_emptyrep2	norm.iEF_EFrep1	norm.iEF_EFrep2	norm.iEF_EE4rep1	norm.iEF_EE4rep2	baseMean	iEF_empty	iEF_EF	iEF_EE4	FoldChange	log2FoldChange	pvalue	padj	dispGeneEst	dispFit	dispMAP	dispersion	betaConv	maxCooks
+CCND1	NA	8	9	32	35	8	12	8	10	31	31	8	12	16.55	9	31	10	3.437	1.781	0.000463627444686583	0.0465945581910016	0	0.0626	0.0505	0.0505	TRUE	NA

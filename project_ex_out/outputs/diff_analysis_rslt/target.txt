@@ -1,0 +1,7 @@
+label	files	group	rep
+iEF_EFrep1	iEF_EF_rep1_counts.txt	iEF_EF	rep1
+iEF_EFrep2	iEF_EF_rep2_counts.txt	iEF_EF	rep2
+iEF_EE4rep1	iEF_EE4_rep1_counts.txt	iEF_EE4	rep1
+iEF_EE4rep2	iEF_EE4_rep2_counts.txt	iEF_EE4	rep2
+iEF_emptyrep1	iEF_empty_rep1_counts.txt	iEF_empty	rep1
+iEF_emptyrep2	iEF_empty_rep2_counts.txt	iEF_empty	rep2

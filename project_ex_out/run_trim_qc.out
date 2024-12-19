@@ -1,0 +1,115 @@
+Wed Dec 18 16:57:22 EST 2024
+
+Timming reads for low quality/adapter sequences then run Quality Control
+
+Options used to run:
+time=7-00:00:00
+ncpus_trim=4
+
+all outputs will be stored in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs
+See /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/run_quality_control.out to check the analysis progress
+All other logs and scripts ran will be stored in /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/logs
+
+
+Using singularity image and scripts in: /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ 
+
+Wed Dec 18 16:57:22 EST 2024
+Merging fastq files
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/A8_20-0647_714R1/A8_20-0647_iEF714R1_S57_L001_R1_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/A8_20-0647_714R1/A8_20-0647_iEF714R1_S57_L002_R1_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep1_r1_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/A8_20-0647_714R1/A8_20-0647_iEF714R1_S57_L001_R2_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/A8_20-0647_714R1/A8_20-0647_iEF714R1_S57_L002_R2_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep1_r2_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/B9_20-0656_714R2/B9_20-0656_iEF714R2_S66_L001_R1_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/B9_20-0656_714R2/B9_20-0656_iEF714R2_S66_L002_R1_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep2_r1_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/B9_20-0656_714R2/B9_20-0656_iEF714R2_S66_L001_R2_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/B9_20-0656_714R2/B9_20-0656_iEF714R2_S66_L002_R2_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep2_r2_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/C8_20-0649_563R1/C8_20-0649_iEF563R1_S59_L001_R1_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/C8_20-0649_563R1/C8_20-0649_iEF563R1_S59_L002_R1_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep1_r1_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/C8_20-0649_563R1/C8_20-0649_iEF563R1_S59_L001_R2_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/C8_20-0649_563R1/C8_20-0649_iEF563R1_S59_L002_R2_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep1_r2_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/D9_20-0658_563R2/D9_20-0658_iEF563R2_S68_L001_R1_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/D9_20-0658_563R2/D9_20-0658_iEF563R2_S68_L002_R1_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep2_r1_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/D9_20-0658_563R2/D9_20-0658_iEF563R2_S68_L001_R2_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/D9_20-0658_563R2/D9_20-0658_iEF563R2_S68_L002_R2_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep2_r2_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/H7_20-0646_197R1/H7_20-0646_iEF197R1_S56_L001_R1_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/H7_20-0646_197R1/H7_20-0646_iEF197R1_S56_L002_R1_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep1_r1_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/H7_20-0646_197R1/H7_20-0646_iEF197R1_S56_L001_R2_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/H7_20-0646_197R1/H7_20-0646_iEF197R1_S56_L002_R2_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep1_r2_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/A9_20-0655_197R2/A9_20-0655_iEF197R2_S65_L001_R1_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/A9_20-0655_197R2/A9_20-0655_iEF197R2_S65_L002_R1_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep2_r1_fastq.gz
+
+Merging /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/A9_20-0655_197R2/A9_20-0655_iEF197R2_S65_L001_R2_001.sub.fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/fastq/A9_20-0655_197R2/A9_20-0655_iEF197R2_S65_L002_R2_001.sub.fastq.gz
+and save them as /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep2_r2_fastq.gz
+
+Wed Dec 18 16:57:22 EST 2024
+0
+iEF_EF
+rep1
+iEF_EF_rep1
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep1_r1_fastq.gz
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep1_r2_fastq.gz
+Trimming and QCing /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep1_r1_fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep1_r2_fastq.gz Job id: 6096337
+
+1
+iEF_EF
+rep2
+iEF_EF_rep2
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep2_r1_fastq.gz
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep2_r2_fastq.gz
+Trimming and QCing /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep2_r1_fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EF_rep2_r2_fastq.gz Job id: 6096338
+
+2
+iEF_EE4
+rep1
+iEF_EE4_rep1
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep1_r1_fastq.gz
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep1_r2_fastq.gz
+Trimming and QCing /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep1_r1_fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep1_r2_fastq.gz Job id: 6096339
+
+3
+iEF_EE4
+rep2
+iEF_EE4_rep2
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep2_r1_fastq.gz
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep2_r2_fastq.gz
+Trimming and QCing /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep2_r1_fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_EE4_rep2_r2_fastq.gz Job id: 6096340
+
+4
+iEF_empty
+rep1
+iEF_empty_rep1
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep1_r1_fastq.gz
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep1_r2_fastq.gz
+Trimming and QCing /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep1_r1_fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep1_r2_fastq.gz Job id: 6096341
+
+5
+iEF_empty
+rep2
+iEF_empty_rep2
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep2_r1_fastq.gz
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep2_r2_fastq.gz
+Trimming and QCing /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep2_r1_fastq.gz /gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/merged_fastq/iEF_empty_rep2_r2_fastq.gz Job id: 6096342
+
+Running multiqc to combine all the quality control files Job id: 6096343
+
+/gpfs0/home2/gdtheisenlab/cxt050/RNA-SeqEZPZ/project_ex_run/outputs/logs/multiqc.out contains the commands ran
+Wed Dec 18 16:57:48 EST 2024
+
+
+Wed Dec 18 16:58:05 EST 2024
+multiqc was completed successfully.
+
+Wed Dec 18 16:58:07 EST 2024
+
+

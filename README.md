@@ -266,7 +266,7 @@ or within its subdirectories. See example below.
 
       ![run_analysis_screenshot](assets/run_analysis_screenshot.png)
 
-   4. You will need to select project folder. 
+ 4. You will need to select project folder. 
       In this case, you would click on ```Select project folder```, a window will appear.
       You can create new folder and specified the folder name in the interface.
       Click on root first then Click on ```Create new folder```, it will allow you to put in a name for the new folder.
@@ -277,8 +277,8 @@ or within its subdirectories. See example below.
       After clicking ```select```, you should see my_project under ```Select project folder``` button.
       ![run_my_project](assets/run_my_project.png)
 
-   5. Select your genome. If you are using genome that is neither hg19 or hg38, select ```other```.
-   6. Type in your genome name. In this case, I'm going to type in ```danRer11```.
+5. Select your genome. If you are using genome that is neither hg19 or hg38, select ```other```.
+6. Type in your genome name. In this case, I'm going to type in ```danRer11```.
    7. Select your genome fasta file and genome GTF file you downloaded in step 1.
    ![run_danrer](assets/run_danrer.png)
    8. Fill out the form. See [step 3](#form) for running test example to fill out the form for your own dataset.

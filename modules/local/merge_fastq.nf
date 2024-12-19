@@ -4,7 +4,6 @@
  */
 process MERGE_FASTQ {
     tag "merge_fastq"
-    //publishDir params.merged_fastq,  mode: "symlink", pattern: "*.{fastq.gz}"
     publishDir params.sampledir,  mode: "copy", pattern: "merged_samples.csv"
     publishDir params.logdir, mode: "copy", pattern: "merge_fastq.out"
 
@@ -23,6 +22,11 @@ process MERGE_FASTQ {
     sed -e 's/[[:space:]]*\$//' ${ch_samples} | sed 's/"*\$//g' | sed 's/^"*//g' | grep -v "^#" > samples_tmp.txt
 
     echo "sample,fastq_1,fastq_2,strandedness,groupname" > merged_samples.csv 
+
+    if [ ! -d  ${params.merged_fastq} ]; then
+        mkdir -p  ${params.merged_fastq}
+    fi
+
     while read line; do
         if [[ ! "\$line" =~ "^#" ]]; then
             read group control replicate spike email r1s r2s <<< \$line    
@@ -31,6 +35,9 @@ process MERGE_FASTQ {
             merged_r2=\${sample}_r2.fastq.gz
             cat \${r1s//,/ } > ${params.merged_fastq}/\${merged_r1}
             cat \${r2s//,/ } > ${params.merged_fastq}/\${merged_r2}
+            ln -s ${params.merged_fastq}/\${merged_r1} \${merged_r1}
+            ln -s ${params.merged_fastq}/\${merged_r2} \${merged_r2}
+
 
             echo "\${sample},${params.merged_fastq}/\${merged_r1},${params.merged_fastq}/\${merged_r2},unstranded,\${group}"
 
@@ -39,8 +46,6 @@ process MERGE_FASTQ {
    
  
     cat .command.log > merge_fastq.out
-    ln ${params.merged_fastq}/\${merged_r1} \${merged_r1}
-    ln ${params.merged_fastq}/\${merged_r2} \${merged_r2}
     """
 }
 

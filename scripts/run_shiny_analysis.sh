@@ -109,8 +109,7 @@ img_name=rnaseq-pipe-container.sif
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
 # getting Nextflow configuration
-#source $img_dir/scripts/nextflow_config_var.config
-# skip load_nextflow line
+#skip load_nextflow line
 source <(grep -v "load_nextflow" scripts/nextflow_config_var.config )
 
 echo -e "Options used to run:"
@@ -144,13 +143,15 @@ jid=$(sbatch --time=$time \
 
 echo -e "\n\nYou need to have x11 display server such as Xming running.\n"
 
-status=$(squeue -j $jid -o "%t" -h)
-node=$(squeue -j $jid -o "%R" -h)
-while [[ $status != "R"* ]];do
-	echo -e "Please wait finding available node and setting up shiny app ....\n"
-	sleep 10
-	status=$(squeue -j $jid -o "%t" -h)
-	node=$(squeue -j $jid -o "%R" -h)
+#status=$(squeue -j $jid -o "%t" -h)
+#node=$(squeue -j $jid -o "%R" -h)
+status=$(sacct -j $jid -Xn -Po state)
+node=$(sacct -j $jid -Xn -Po nodelist)
+while [[ $status != "RUNNING"* ]];do
+       #status=$(squeue -j $jid -o "%t" -h)
+       #node=$(squeue -j $jid -o "%R" -h)
+       status=$(sacct -j $jid -Xn -Po state)
+       node=$(sacct -j $jid -Xn -Po nodelist)
 done
 
 # Extra check to make sure shiny app is already at listening point

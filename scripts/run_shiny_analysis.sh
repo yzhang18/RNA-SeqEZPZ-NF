@@ -17,6 +17,7 @@
 # bash scripts/run_shiny_analysis.sh time=1-2:20:30
 
 # clear python path to prevent mixed up of python packages
+date
 unset PYTHONPATH
 # get command line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -107,8 +108,9 @@ img_name=rnaseq-pipe-container.sif
 
 echo -e "\nUsing singularity image and scripts in:" ${img_dir} "\n"
 
-# getting SLURM configuration
-source $img_dir/scripts/slurm_config_var.sh
+# getting Nextflow configuration
+#skip load_nextflow line
+source <(grep -v "load_nextflow" scripts/nextflow_config_var.config )
 
 echo -e "Options used to run:"
 echo time="$time"
@@ -146,12 +148,10 @@ echo -e "\n\nYou need to have x11 display server such as Xming running.\n"
 status=$(sacct -j $jid -Xn -Po state)
 node=$(sacct -j $jid -Xn -Po nodelist)
 while [[ $status != "RUNNING"* ]];do
-	echo -e "Please wait finding available node and setting up shiny app ....\n"
-	sleep 10
-	#status=$(squeue -j $jid -o "%t" -h)
-	#node=$(squeue -j $jid -o "%R" -h)
-	status=$(sacct -j $jid -Xn -Po state)
-	node=$(sacct -j $jid -Xn -Po nodelist)
+       #status=$(squeue -j $jid -o "%t" -h)
+       #node=$(squeue -j $jid -o "%R" -h)
+       status=$(sacct -j $jid -Xn -Po state)
+       node=$(sacct -j $jid -Xn -Po nodelist)
 done
 
 # Extra check to make sure shiny app is already at listening point

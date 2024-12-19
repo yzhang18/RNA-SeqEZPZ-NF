@@ -4,7 +4,7 @@
  */
 process MERGE_FASTQ {
     tag "merge_fastq"
-    publishDir params.merged_fastq,  mode: "symlink", pattern: "*.{fastq.gz}"
+    //publishDir params.merged_fastq,  mode: "symlink", pattern: "*.{fastq.gz}"
     publishDir params.sampledir,  mode: "copy", pattern: "merged_samples.csv"
     publishDir params.logdir, mode: "copy", pattern: "merge_fastq.out"
 
@@ -29,8 +29,8 @@ process MERGE_FASTQ {
             sample=\${group}_\${replicate}
             merged_r1=\${sample}_r1.fastq.gz
             merged_r2=\${sample}_r2.fastq.gz
-            cat \${r1s//,/ } > \${merged_r1}
-            cat \${r2s//,/ } > \${merged_r2}
+            cat \${r1s//,/ } > ${params.merged_fastq}/\${merged_r1}
+            cat \${r2s//,/ } > ${params.merged_fastq}/\${merged_r2}
 
             echo "\${sample},${params.merged_fastq}/\${merged_r1},${params.merged_fastq}/\${merged_r2},unstranded,\${group}"
 
@@ -39,6 +39,8 @@ process MERGE_FASTQ {
    
  
     cat .command.log > merge_fastq.out
+    ln ${params.merged_fastq}/\${merged_r1} \${merged_r1}
+    ln ${params.merged_fastq}/\${merged_r2} \${merged_r2}
     """
 }
 

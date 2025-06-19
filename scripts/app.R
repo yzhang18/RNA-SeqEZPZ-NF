@@ -1620,7 +1620,10 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
      nf.setup.time=trimws(nf.setup.time)
      print("email")
      print(email)
-     if(email=="NA")
+     # remove extra quote
+     addtl_opt <- gsub("\"","",addtl_opt)
+     print(addtl_opt)
+     if(email[1]=="NA")
       email=""
     nf.config=paste0(
     "params {
@@ -1628,64 +1631,75 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
       version = false
       monochrome_logs= false
     }\n\n",
-    "process {
-      // container path defined as absolute path to <img.dir> rnaseq-pipe-container.sif
-      container = 'file:///",img.dir,"/rnaseq-pipe-container.sif'
-      time = '",nf.setup.time,"'
-      queue = '",general_partition,"'
-      cpus = 1
-      email = '",email,"'
-      withLabel: hi_mem {
-         queue= '",high_mem_partition,"'
-         memory= '",high_mem,"g'
-      }
-      
-      withLabel: TRIM_FASTQC {
-         cpus = ",input$setup.ncpus.trim,"
-      }
-      
-      withLabel: short_time {
-         time = '30min'
-      }
-      
-      withLabel: hi_cpus {
-         cpus = 15
-      }
-      
-      // used for star index
-      withLabel: star {
-         queue = '",high_mem_partition,"'
-         cpus = ",input$setup.ncpus.star,"
-      }
-      
-      withLabel: very_hi_mem {
-         queue = '",high_mem_partition,"'  
-         memory = '",very_high_mem,"g'
-      }
-      // used for star pass1 and pass2
-      withLabel: hi_mem_cpus {
-        queue = '",high_mem_partition,"'
-        cpus = ",input$setup.ncpus.star,"
-    }
+    "process {\n",
+      "// container path defined as absolute path to <img.dir> rnaseq-pipe-container.sif\n",
+      " container = 'file:///",img.dir,"/rnaseq-pipe-container.sif'\n",
+      " time = '",nf.setup.time,"'\n",
+      " queue = '",general_partition,"'\n",
+      " cpus = 1\n",
+      " email = '",email,"'\n",
+      " clusterOptions = '",addtl_opt,"'\n\n",
 
-    }
-    singularity.enabled = true
-    singularity.autoMounts = true
+      "withLabel: hi_mem {\n",
+      "  queue= '",high_mem_partition,"'\n",
+      "  memory= '",high_mem,"g'\n",
+      "}\n\n",
+
+      "withLabel: TRIM_FASTQC {\n",
+      "  cpus = ",input$setup.ncpus.trim,"\n",
+      "}\n\n",
+      
+      "withLabel: short_time {\n",
+      "  time = '30min'\n",
+      "}\n\n",
+      
+      "withLabel: hi_cpus {\n",
+      "  cpus = 15\n",
+      "}\n\n",
+      
+      "// used for star index\n",
+      "withLabel: star {\n",
+      "   queue = '",high_mem_partition,"'\n",
+      "   cpus = ",input$setup.ncpus.star,"\n",
+      "}\n\n",
+      "withLabel: very_hi_mem {\n",
+      "  queue = '",high_mem_partition,"'\n",  
+      "  memory = '",very_high_mem,"g'\n",
+      "}\n\n",
+      "// used for star pass1 and pass2\n",
+      "withLabel: hi_mem_cpus {\n",
+      " queue = '",high_mem_partition,"'\n",
+      " cpus = ",input$setup.ncpus.star,"\n",
+    "}\n\n",
     
-    process.executor = '",executor,"'
-    dag.overwrite = true
-    report.overwrite = true
+    "}\n",
+    "singularity.enabled = true\n",
+    "singularity.autoMounts = true\n\n",
     
-    ")
+    "process.executor = '",executor,"'\n",
+    "// check job status in all partition in case job get reassigned to diff partition\n",
+    "executor.queueGlobalStatus = true\n",
+    "dag.overwrite = true\n",
+    "report.overwrite = true\n"
+    )
+    # get mount point to bind to singularity
+    mount_point=strsplit(hostprojdir,"/")[[1]][2];
+    mount_point_str=paste0(",/",mount_point,":/",mount_point,"\"")
+
     if(!genome=="other"){
      nf.config=paste0(nf.config,"singularity.runOptions = \"--bind ",
                       img.dir,"/scripts:/scripts,",
-                      hostprojdir,":/mnt,",img.dir,"/ref:/ref",",/gpfs0:/gpfs0\"")
+     #                 hostprojdir,":/mnt,",img.dir,"/ref:/ref",",/gpfs0:/gpfs0\"")
+     #                 hostprojdir,":/mnt,",img.dir,"/ref:/ref\"")
+			hostprojdir,":/mnt,",img.dir,"/ref:/ref",mount_point_str)
+
     }else{
      hostfolderfa=dirname(hostfa)
      nf.config=paste0(nf.config,'singularity.runOptions = \"--bind ',
                       img.dir,'/scripts:/scripts,',hostfolderfa,":/ref,",
-                      hostprojdir,':/mnt,/gpfs0:/gpfs0\"')
+     #                 hostprojdir,':/mnt,/gpfs0:/gpfs0\"')
+     #                 hostprojdir,':/mnt\"')
+		       hostprojdir,":/mnt,",mount_point_str)
     }
     print("nf.config")
     print(nf.config)

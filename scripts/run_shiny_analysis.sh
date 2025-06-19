@@ -137,6 +137,7 @@ fi
 export port_num filepath max_nsamples img_dir proj_dir img_name bind_filepath
 jid=$(sbatch --time=$time \
 	--partition=$general_partition \
+	$addtl_opt \
 	--export=port_num,filepath,max_nsamples,img_dir,proj_dir,img_name,bind_filepath \
 	--output=run_shiny_analysis.out \
 	--wrap "/bin/sh $img_dir/scripts/run_listen_app.sh"| cut -f 4 -d' ')
@@ -152,11 +153,12 @@ while [[ $status != "RUNNING"* ]];do
        #node=$(squeue -j $jid -o "%R" -h)
        status=$(sacct -j $jid -Xn -Po state)
        node=$(sacct -j $jid -Xn -Po nodelist)
+	echo -e "Please wait...\n"
 done
 
 # Extra check to make sure shiny app is already at listening point
 # Put this in because sometimes it takes time to load libraries
-while true; do 
+while true; do
 	# get the last line of run_shiny_analysis.out
 	last_line=$(tail -n 1 run_shiny_analysis.out)
 	# exit if shiny fail to load
@@ -190,3 +192,4 @@ ssh -tX "$node" 'export port_num='"'$port_num'"';
 scancel $jid
 # deleting the last lines which is server alive text
 head -n -1 ~/.ssh/config > temp && mv temp ~/.ssh/config
+rm ~/.ssh/config

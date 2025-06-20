@@ -192,4 +192,3 @@ ssh -tX "$node" 'export port_num='"'$port_num'"';
 scancel $jid
 # deleting the last lines which is server alive text
 head -n -1 ~/.ssh/config > temp && mv temp ~/.ssh/config
-rm ~/.ssh/config

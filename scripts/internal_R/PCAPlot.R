@@ -46,7 +46,13 @@ PCAPlot <- function (object, group=NULL,counts.trans,varInt,typeTrans, ntop = mi
       scale_y_continuous(expand=expansion(mult=c(0.1,0.1)))+
 	  scale_color_manual(values=col)+
       # need to specify shapes manually otherwise there is no shape after 6	
-      scale_shape_manual(values = shape_val)
+      scale_shape_manual(values = shape_val) +
+      # make group legend on top
+      guides(
+       color =	guide_legend(order = 1),
+       shape =	guide_legend(order =2)
+      )
+
   } else{
     p<-ggplot(pcaData, aes(x = PC1, y = PC2, color = group,shape=rep)) +
       geom_point(size =5) +
@@ -57,7 +63,12 @@ PCAPlot <- function (object, group=NULL,counts.trans,varInt,typeTrans, ntop = mi
      scale_y_continuous(expand=expansion(mult=c(0.1,0.1)))+
 	  scale_color_manual(values=col)+
       # need to specify shapes manually otherwise there is no shape after 6	
-      scale_shape_manual(values = shape_val)     
+      scale_shape_manual(values = shape_val) +
+      # make group legend on top
+      guides(
+	color = guide_legend(order = 1),
+        shape = guide_legend(order =2)
+      )     
   }
   print(p)
   rv = apply(counts.trans, 1, var, na.rm = TRUE)

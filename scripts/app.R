@@ -1714,7 +1714,7 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
      load_nextflow_cmd=paste0(load_nextflow," && ")
     cmd=paste0("echo '",load_nextflow_cmd,"cd ", hostprojdir, 
                " && nextflow run -resume ",img.dir,
-               "/main.nf -ansi-log false -with-report ",
+               "/main.nf -ansi-log true -with-report ",
                hostprojdir,"run_rnaseq_full.html --inputdir=",
                hostprojdir," ",options," &> ",hostprojdir,"run_rnaseq_full.out' > /hostpipe")
     print(cmd)

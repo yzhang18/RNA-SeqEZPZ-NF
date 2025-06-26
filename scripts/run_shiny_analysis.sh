@@ -160,7 +160,8 @@ done
 # Put this in because sometimes it takes time to load libraries
 while true; do
 	# get the last line of run_shiny_analysis.out
-	last_line=$(tail -n 1 run_shiny_analysis.out)
+       if [ -f run_shiny_analysis.out ]; then
+	  last_line=$(tail -n 1 run_shiny_analysis.out)
 	# exit if shiny fail to load
 	if grep -q "Execution halted" "run_shiny_analysis.out"; then exit 1; fi
 	# check if it contains listening
@@ -168,6 +169,9 @@ while true; do
 		break
 	fi
 	sleep 5
+	else
+	last_line=""
+	fi
 done
 
 # adding configuration to send signal every four minutes (240 secs)
@@ -192,3 +196,5 @@ ssh -tX "$node" 'export port_num='"'$port_num'"';
 scancel $jid
 # deleting the last lines which is server alive text
 head -n -1 ~/.ssh/config > temp && mv temp ~/.ssh/config
+# make permission stricter
+chmod 600 ~/.ssh/config

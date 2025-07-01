@@ -161,6 +161,7 @@ while [[ $status != "RUNNING"* ]];do
        status=$(sacct -j $jid -Xn -Po state)
        node=$(sacct -j $jid -Xn -Po nodelist)
 	echo -e "Please wait...\n"
+	sleep 5
 done
 
 # Extra check to make sure shiny app is already at listening point

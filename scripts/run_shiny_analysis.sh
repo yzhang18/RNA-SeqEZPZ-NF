@@ -127,10 +127,17 @@ port_num=$(singularity exec $img_dir/$img_name comm -23 \
 # if filepath not specified then bind host root
 if [[ -z "$filepath" ]];then
 	bind_filepath="--bind /:/root"
+	filepath=/
 else
         # get the long path
         filepath=$(readlink -f $filepath)
 	bind_filepath="--bind $filepath:/filepath"
+fi
+
+# if filepath doesn't exist, exit with error
+if [[ ! -e "$filepath" ]]; then
+        echo -e "\n\n Error: check your filepath.\n\n"
+        exit 1
 fi
 
 # Activate environment where shiny is installed and go to "app.R" directory

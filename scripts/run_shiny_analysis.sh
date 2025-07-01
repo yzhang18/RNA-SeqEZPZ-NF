@@ -195,6 +195,6 @@ ssh -tX "$node" 'export port_num='"'$port_num'"';
 ## this should not be run until firefox is closed
 scancel $jid
 # deleting the last lines which is server alive text
-head -n -1 ~/.ssh/config > temp && mv temp ~/.ssh/config
+head -n -1 ~/.ssh/config > temp && cp temp ~/.ssh/config && rm temp
 # make permission stricter
 chmod 600 ~/.ssh/config

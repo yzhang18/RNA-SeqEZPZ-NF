@@ -1830,10 +1830,30 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  #### Nextflow report tab #####
  output$nfreport <- renderUI({
   projdir <- react.setup.proj.dir()
+  # Check if the file exists
+  report_path <- file.path(projdir,"run_rnaseq_full.html")
+  if (!file.exists(report_path)) {
+    return(
+      tags$div(
+        style = "color: blue; font-weight: bold; padding: 20px;",
+    tags$p("Nextflow report not found. Possible reasons:"),
+    tags$ul( style = "color: black; font-weight:normal; padding: 20px;",
+      tags$li("The pipeline may not have finished."),
+      tags$li("The project folder might be incorrect."),
+      tags$li("The analysis may not have been run using RNA-SeqEZPZ-NF.")
+    )
+      )
+    )
+  }
+
   # path for nfreport html to be referred to in iframe
-  addResourcePath("nfreport", projdir)
+  # using unique alias so the path will be updated when 
+  # projdir is updated
+  uid <- paste0("nfreport_",as.integer(Sys.time()))
+  addResourcePath(uid,projdir)
   tags$iframe(seamless="seamless",
-              src="nfreport/run_rnaseq_full.html",
+              #src="nfreport/run_rnaseq_full.html",
+              src=file.path(uid,"run_rnaseq_full.html"),
               width="100%",
               height="1000")
  })
@@ -1841,10 +1861,29 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  #### QC tab #####
  output$multiqc <- renderUI({
   projdir <- react.setup.proj.dir()
+ # Check if the file exists
+  report_path <- file.path(projdir,"outputs","fastqc_rslt","multiqc_report.html")
+  if (!file.exists(report_path)) {
+    return(
+      tags$div(
+        style = "color: blue; font-weight: bold; padding: 20px;",
+    tags$p("QC report not found. Possible reasons:"),
+    tags$ul( style = "color: black; font-weight:normal;	padding: 20px;",
+      tags$li("The pipeline may not have finished."),
+      tags$li("The project folder might be incorrect.")
+    )	    
+      )
+    )
+  }
   # path for fastqc report html to be referred to in iframe
-  addResourcePath("fastqc_rslt", paste0(projdir,"outputs/fastqc_rslt"))
+  # using unique alias so the path will be updated when 
+  # projdir is updated
+  uid <- paste0("fastqc_rslt_",as.integer(Sys.time()))
+  addResourcePath(uid,file.path(projdir,"outputs","fastqc_rslt"))
+  #addResourcePath("fastqc_rslt", paste0(projdir,"outputs/fastqc_rslt"))
   tags$iframe(seamless="seamless",
-              src="fastqc_rslt/multiqc_report.html",
+              #src="fastqc_rslt/multiqc_report.html",
+              src=file.path(uid,"multiqc_report.html"),
               width="100%",
               height="1000")
  })
@@ -1852,10 +1891,31 @@ outputOptions(output, 'fileExists', suspendWhenHidden=FALSE)
  ## Differential genes analysis report ###
  output$diff_report <- renderUI({
   projdir <- react.setup.proj.dir()
+  # Check if the file exists
+  report_path <- file.path(projdir,"outputs","diff_analysis_rslt","RNA-seq_differential_analysis_report.html")
+  if (!file.exists(report_path)) {
+    return(
+      tags$div(
+        style = "color: blue; font-weight: bold; padding: 20px;",
+    tags$p("Differential genes analysis not found. Possible reasons:"),
+    tags$ul( style = "color: black; font-weight:normal;	padding: 20px;",
+      tags$li("The pipeline may not have finished."),
+      tags$li("The project folder might be incorrect.")
+    )	    
+      )
+    )
+  }
   # path for differential report html to be referred to in iframe
-  addResourcePath("diff_report_path",paste0(projdir,"outputs/diff_analysis_rslt/"))
+  # using unique alias so the path will be updated when 
+  # projdir is updated
+  uid <- paste0("diff_report_path_",as.integer(Sys.time()))
+  #addResourcePath("diff_report_path",paste0(projdir,"outputs/diff_analysis_rslt/"))
+  addResourcePath(uid,file.path(projdir,"outputs","diff_analysis_rslt"))
+  print("uid")
+  print(uid)
   tags$iframe(seamless="seamless", 
-              src= "diff_report_path/RNA-seq_differential_analysis_report.html",
+              #src= "diff_report_path/RNA-seq_differential_analysis_report.html",
+              src= file.path(uid,"RNA-seq_differential_analysis_report.html"),
               width="100%", 
               height=800)
  })

@@ -5,49 +5,41 @@ set -x
 # script to print message and cancel if jobs never satisfied or cancelled
 # change : to ;
 jids=${jid_to_check//:/,}
-# states of jobs that's not completed in sacct
-state_jids=($(sacct -j $jids --format=JobID,State --noheader | grep -v "COMPLETED"))
+# states of jobs in queue
+state_q=($(squeue -j $jids -h))
 
-# while jobs is not completed yet keep monitoring
-while [ ${#state_jids[@]} -ne 0 ];do
-        # get pending or running job ids
-	jids_pending_arr=($(sacct -j $jids -Xn -Po jobid,state | \
-		grep -E "PENDING|RUNNING" | awk -F "|" '{print $1}'))
-	jids_pending=$(IFS=','; echo "${jids_pending_arr[*]}") 
-        # only squeue pending to avoid error
-	reason=($(squeue -j $jids_pending -o "%R" -h))
-	state=($(sacct -j $jids --format=state --noheader ))
+# while jobs in queue keep monitoring
+while [ ${#state_q[@]} -ne 0 ];do
+        # if any job  has dependency that never satisfied or if they are cancelled or failed
+        # cancel all queued jobs.
+        reason=($(squeue -j $jids -o "%R" -h))
+        state=($(sacct -j $jids --format=state | tail -n +3 ))
 	# store jobname and jobids
-	jobname=($(sacct -j $jids --format=jobname%100 --noheader ))
-	jobid=($(sacct -j $jids --format=jobid --noheader ))
+	jobname=($(sacct -j $jids --format=jobname%100 | tail -n +3 ))
+	jobid=($(sacct -j $jids --format=jobid | tail -n +3 ))
 	# unique states of jids
 	state_uni=($(echo "${state[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
         if [[ "${reason[*]}" == *"DependencyNeverSatisfied"* || "${state[*]}" == *"CANCELLED"* || \
                 "${state[*]}" == *"FAILED"* || "${reason[*]}" == *"FAILED"* ]]; then
-		# if dependency that never satisfied or if they are cancelled or failed
-        	# cancel all queued jobs.
-		scancel "$jids_pending"
+		scancel "$jids"
 	elif [[ "${#state_uni[@]}" -eq 1 ]] && [[ "${state_uni[0]}" == *"COMPLETED"* ]] ;then
                 # jobs completed exit early
 		break
         else
                 sleep 10
         fi
-	# update states with pending jobs
-	state_jids=($(sacct -j $jids_pending --format=jobid,jobname%100,State --noheader | \
-		grep -v -E "COMPLETED|CANCELLED"))
-	echo ${state_jids[*]}
+	# update states of jobs in queue
+	state_q=($(squeue -j $jids -h))
+	echo $state_q
 done
 
 # jobs out of queue check and print error message 
-state=($(sacct -j $jids --format=state --noheader ))
+state=($(sacct -j $jids --format=state | tail -n +3 ))
 # store jobname and jobids
-jobname=($(sacct -j $jids --format=jobname%100 --noheader ))
-jobid=($(sacct -j $jids --format=jobid --noheader ))
+jobname=($(sacct -j $jids --format=jobname%100 | tail -n +3 ))
+jobid=($(sacct -j $jids --format=jobid | tail -n +3 ))
 # unique states of jids
 state_uni=($(echo "${state[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
-# if jobs failed for the following reasons, cancel all jobs in queue
-# and write message to run_rnaseq_full.out if file exists
 if [[ "${reason[*]}" == *"DependencyNeverSatisfied"* || "${state[*]}" == *"CANCELLED"* || \
 	"${state[*]}" == *"FAILED"* || "${reason[*]}" == *"FAILED"* ]]; then
         for i in "${!state[@]}"; do

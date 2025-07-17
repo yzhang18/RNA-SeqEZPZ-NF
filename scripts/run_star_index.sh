@@ -296,20 +296,19 @@ echo ""
 
 # check to make sure jobs are completed. Print messages if not.
 msg_ok="run_star_index.sh completed successfully.\n"
-msg_ok="${msg_ok}STAR index files are in ${star_index_dir}\n"
+msg_ok="${msg_ok}STAR index files are in ${genome_dir}/${ref_ver}/STAR_index.\n"
 msg_fail="One of the steps in run_star_index.sh failed\n"
 jid_to_check=$jid0
-out_file=$proj_dir/run_star_index.out
-check_star_index_jid=$($run sbatch \
+check_run_star_index_jid=$($run sbatch \
 	--partition=$general_partition \
-        --output=$log_dir/check_star_index.out \
+        --output=$log_dir/check_run_star_index.out \
         --mail-type=END \
         --mail-user=$email \
         --wait \
         --time=$time \
         --parsable \
-        --job-name=check_star_index \
-        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail" \
+        --job-name=check_run_star_index \
+        --export=out_file="$out_file",jid_to_check="$jid_to_check",msg_ok="$msg_ok",msg_fail="$msg_fail",debug="$debug" \
 	--wrap "bash $img_dir/scripts/check_job.sh")
 fi # skip run_star_index
 cp $proj_dir/samples.txt $log_dir/

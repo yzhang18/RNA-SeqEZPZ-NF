@@ -9,6 +9,7 @@ RNA-SeqEZPZ-NF is another implementation of [RNA-SeqEZPZ](https://github.com/cxt
 <br />
 
 ## Installation
+This pipeline uses Singularity image and Nextflow, which should make it easy to setup. However, the initial setup can sometimes be tricky. Please do not hesitate to create a new issue if you need help with installation or setup.
 
 In order to use the pipeline, you will need to have Singularity and Nextflow installed in your HPC. See installation instructions at https://docs.sylabs.io/guides/3.0/user-guide/installation.html and https://www.nextflow.io/docs/latest/install.html
 
